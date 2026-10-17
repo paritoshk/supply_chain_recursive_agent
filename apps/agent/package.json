@@ -1,0 +1,32 @@
+{
+  "name": "supplier-chief-of-staff",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#*": "./agent/*"
+  },
+  "scripts": {
+    "build": "eve build",
+    "deploy": "eve deploy",
+    "dev": "eve dev",
+    "eval": "eve eval",
+    "start": "eve start",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@ai-sdk/openai-compatible": "latest",
+    "@supply-agent/core": "workspace:*",
+    "ai": "^7.0.137",
+    "eve": "^0.80.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "24.x",
+    "just-bash": "^3.6.0",
+    "typescript": "^7.0.2"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

@@ -1,0 +1,15 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`seed > snapshot of shape and content hash 1`] = `
+{
+  "consumption": 107,
+  "lots": 409,
+  "material_suppliers": 140,
+  "materials": 66,
+  "quotes": 183,
+  "rfqs": 101,
+  "sha256": "acaf0eb8cd04dc97eab0e5dc8480e4e748d306a1cd8031dcab1dd63bf70645b3",
+  "sites": 8,
+  "suppliers": 30,
+}
+`;

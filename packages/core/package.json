@@ -1,0 +1,39 @@
+{
+  "name": "@supply-agent/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types.ts",
+    "./store": "./src/store.ts",
+    "./logic": "./src/logic/index.ts",
+    "./tools": "./src/tools/index.ts",
+    "./seed": "./src/seed/index.ts",
+    "./crusoe": "./src/crusoe.ts",
+    "./faults": "./src/faults.ts",
+    "./negotiation": "./src/negotiation.ts",
+    "./sim": "./src/sim/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:seed": "tsx src/scripts/seed.ts",
+    "smoke:crusoe": "tsx src/scripts/crusoe-smoke.ts",
+    "smoke:live": "tsx src/scripts/live-smoke.ts",
+    "bench:persona": "tsx src/scripts/persona-bench.ts",
+    "sim": "tsx src/scripts/sim.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^4.0.96",
+    "p-limit": "^7.3.3",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  }
+}

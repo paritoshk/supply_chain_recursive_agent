@@ -1,0 +1,281 @@
+{
+  "label": "SYNTHETIC SIMULATION: fictional company (Corvane Biologics), synthetic inventory, demand, prices and supplier delays.",
+  "generated_for": "Supplier Chief of Staff",
+  "days": 90,
+  "primary_seed": 1729,
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "assumptions": {
+    "demand": "daily rate x (1 + 0.25 * N(0,1)), floored at 0; identical stream for both policies",
+    "supplier_delays": "15% of approved supplier links get one delay event (+14..35 d for 21..45 d), hitting new and in-flight orders; hero incumbent lead slipped 42 -> 70 d",
+    "prices": "list price from the hidden persona profile (no negotiation savings assumed for either policy)",
+    "baseline": "weekly review vs static ROP, primary supplier only, reactive expedite when < 7 d cover",
+    "agent": "daily sentinel; transfer from sister-site surplus -> expedite in-flight -> RFQ best landed approved option; never non-qualified",
+    "human_minutes": {
+      "shortage_review": 30,
+      "rfq": 120,
+      "transfer": 20,
+      "approval_ping": 3
+    },
+    "authority_threshold_usd": 25000
+  },
+  "primary": {
+    "seed": 1729,
+    "days": 90,
+    "baseline": {
+      "policy": "baseline",
+      "seed": 1729,
+      "days": 90,
+      "metrics": {
+        "pairs": 107,
+        "stockout_events": 7,
+        "stockout_days": 138,
+        "service_level_pct": 98.61,
+        "expedite_spend_usd": 4432,
+        "avg_inventory_value_usd": 70133239,
+        "purchase_spend_usd": 30033697,
+        "orders": 142,
+        "transfers": 0,
+        "expedites": 5,
+        "human_touches": 289,
+        "human_minutes": 21450,
+        "approval_pings": 0,
+        "non_qualified_orders": 0
+      },
+      "hero": {
+        "material_id": "MAT-SUC-INJ",
+        "site_id": "SITE-GHE",
+        "stockout_days": 46,
+        "first_stockout_day": 24,
+        "events": [
+          {
+            "day": 0,
+            "kind": "review",
+            "material_id": "MAT-SUC-INJ",
+            "site_id": "SITE-GHE",
+            "detail": "weekly review: position 120 <= static ROP 280"
+          },
+          {
+            "day": 0,
+            "kind": "order",
+            "material_id": "MAT-SUC-INJ",
+            "site_id": "SITE-GHE",
+            "detail": "310 from SUP-003 (primary), lead 70 d"
+          },
+          {
+            "day": 24,
+            "kind": "stockout_start",
+            "material_id": "MAT-SUC-INJ",
+            "site_id": "SITE-GHE",
+            "detail": "short 2.39"
+          },
+          {
+            "day": 51,
+            "kind": "delay",
+            "material_id": "MAT-SUC-INJ",
+            "site_id": "SITE-GHE",
+            "detail": "SUP-023 +24 d until day 89"
+          },
+          {
+            "day": 77,
+            "kind": "review",
+            "material_id": "MAT-SUC-INJ",
+            "site_id": "SITE-GHE",
+            "detail": "weekly review: position 272.2 <= static ROP 280"
+          },
+          {
+            "day": 77,
+            "kind": "order",
+            "material_id": "MAT-SUC-INJ",
+            "site_id": "SITE-GHE",
+            "detail": "157.76 from SUP-003 (primary), lead 70 d"
+          }
+        ]
+      },
+      "stockouts_by_position": [
+        {
+          "material_id": "MAT-SAP-QS",
+          "site_id": "SITE-GHE",
+          "stockout_days": 61,
+          "initial_cover_days": 30,
+          "fastest_lead_days": 221
+        },
+        {
+          "material_id": "MAT-SUC-INJ",
+          "site_id": "SITE-GHE",
+          "stockout_days": 46,
+          "initial_cover_days": 24,
+          "fastest_lead_days": 23
+        },
+        {
+          "material_id": "MAT-NAOH",
+          "site_id": "SITE-HYD",
+          "stockout_days": 13,
+          "initial_cover_days": 40.4,
+          "fastest_lead_days": 13
+        },
+        {
+          "material_id": "MAT-MAN-PAR",
+          "site_id": "SITE-RAL",
+          "stockout_days": 8,
+          "initial_cover_days": 11.3,
+          "fastest_lead_days": 9
+        },
+        {
+          "material_id": "MAT-NAOH",
+          "site_id": "SITE-KOP",
+          "stockout_days": 5,
+          "initial_cover_days": 77.6,
+          "fastest_lead_days": 25
+        },
+        {
+          "material_id": "MAT-NACL",
+          "site_id": "SITE-LYO",
+          "stockout_days": 4,
+          "initial_cover_days": 56,
+          "fastest_lead_days": 35
+        },
+        {
+          "material_id": "MAT-SUC-INJ",
+          "site_id": "SITE-RAL",
+          "stockout_days": 1,
+          "initial_cover_days": 43.7,
+          "fastest_lead_days": 31
+        }
+      ],
+      "label": "synthetic simulation"
+    },
+    "agent": {
+      "policy": "agent",
+      "seed": 1729,
+      "days": 90,
+      "metrics": {
+        "pairs": 107,
+        "stockout_events": 2,
+        "stockout_days": 68,
+        "service_level_pct": 99.3,
+        "expedite_spend_usd": 5474,
+        "avg_inventory_value_usd": 70141454,
+        "purchase_spend_usd": 30027959,
+        "orders": 165,
+        "transfers": 7,
+        "expedites": 5,
+        "human_touches": 76,
+        "human_minutes": 228,
+        "approval_pings": 76,
+        "non_qualified_orders": 0
+      },
+      "hero": {
+        "material_id": "MAT-SUC-INJ",
+        "site_id": "SITE-GHE",
+        "stockout_days": 0,
+        "first_stockout_day": null,
+        "events": [
+          {
+            "day": 0,
+            "kind": "transfer",
+            "material_id": "MAT-SUC-INJ",
+            "site_id": "SITE-GHE",
+            "detail": "89.3 from SITE-KOP, 7 d transit"
+          },
+          {
+            "day": 0,
+            "kind": "order",
+            "material_id": "MAT-SUC-INJ",
+            "site_id": "SITE-GHE",
+            "detail": "80.6 from SUP-005, lead 23 d expedited"
+          },
+          {
+            "day": 0,
+            "kind": "order",
+            "material_id": "MAT-SUC-INJ",
+            "site_id": "SITE-GHE",
+            "detail": "195 from SUP-006, lead 33 d"
+          },
+          {
+            "day": 45,
+            "kind": "order",
+            "material_id": "MAT-SUC-INJ",
+            "site_id": "SITE-GHE",
+            "detail": "152.99 from SUP-005, lead 36 d"
+          },
+          {
+            "day": 51,
+            "kind": "delay",
+            "material_id": "MAT-SUC-INJ",
+            "site_id": "SITE-GHE",
+            "detail": "SUP-023 +24 d until day 89"
+          },
+          {
+            "day": 76,
+            "kind": "order",
+            "material_id": "MAT-SUC-INJ",
+            "site_id": "SITE-GHE",
+            "detail": "156.65 from SUP-005, lead 36 d"
+          }
+        ]
+      },
+      "stockouts_by_position": [
+        {
+          "material_id": "MAT-SAP-QS",
+          "site_id": "SITE-GHE",
+          "stockout_days": 61,
+          "initial_cover_days": 30,
+          "fastest_lead_days": 221
+        },
+        {
+          "material_id": "MAT-SUC-INJ",
+          "site_id": "SITE-LYO",
+          "stockout_days": 7,
+          "initial_cover_days": 67.3,
+          "fastest_lead_days": 20
+        }
+      ],
+      "label": "synthetic simulation"
+    }
+  },
+  "mean": {
+    "baseline": {
+      "pairs": 107,
+      "stockout_events": 7.5,
+      "stockout_days": 158.9,
+      "service_level_pct": 98.38,
+      "expedite_spend_usd": 1947.6,
+      "avg_inventory_value_usd": 69964528.2,
+      "purchase_spend_usd": 30136333.4,
+      "orders": 141.5,
+      "transfers": 0,
+      "expedites": 4.2,
+      "human_touches": 287.2,
+      "human_minutes": 21351,
+      "approval_pings": 0,
+      "non_qualified_orders": 0
+    },
+    "agent": {
+      "pairs": 107,
+      "stockout_events": 1.6,
+      "stockout_days": 65,
+      "service_level_pct": 99.33,
+      "expedite_spend_usd": 380520.8,
+      "avg_inventory_value_usd": 69970512.5,
+      "purchase_spend_usd": 29388357.8,
+      "orders": 171.5,
+      "transfers": 9.9,
+      "expedites": 11.1,
+      "human_touches": 82.1,
+      "human_minutes": 246.3,
+      "approval_pings": 82.1,
+      "non_qualified_orders": 0
+    }
+  }
+}

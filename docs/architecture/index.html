@@ -1,0 +1,1064 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Supplier Chief of Staff · Architecture · Rev A</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Inter+Tight:wght@300;400;500&family=Geist+Mono:wght@400;500&display=block" rel="stylesheet" />
+<style>
+  /* Design system v1 tokens (declared fresh for this document) */
+  :root {
+    --n-0: #FFFFFF; --n-5: #FDFDFC; --n-10: #FAF9F8; --n-20: #EAE8E5; --n-30: #D4D2CF;
+    --n-50: #908E87; --n-70: #5B5957; --n-80: #3D3B39; --n-90: #141311;
+    --accent: #F25C05;
+    --ok: #16A34A; --warn: #D97706; --crit: #DC2626; --info: #2563EB;
+    --font-display: "Inter Tight", "Inter", system-ui, sans-serif;
+    --font-body: "Inter", system-ui, sans-serif;
+    --font-label: "Geist Mono", ui-monospace, monospace;
+  }
+  @page { size: A4 landscape; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: var(--n-20); font-family: var(--font-body); color: var(--n-90); font-weight: 400;
+         -webkit-font-smoothing: antialiased; font-feature-settings: "tnum" 1, "cv11" 1; }
+  @media screen { body { padding: 24px 0; } .sheet { margin: 0 auto 24px; box-shadow: 0 1px 0 var(--n-30); } }
+  @media print { body { background: none; } }
+
+  .sheet { width: 297mm; height: 209.8mm; position: relative; background: var(--n-5); overflow: hidden;
+           break-after: page; page-break-after: always; }
+  .sheet:last-of-type { break-after: auto; page-break-after: auto; }
+
+  /* crop marks */
+  .crop { position: absolute; width: 5mm; height: 5mm; border-color: var(--n-90); border-style: solid; border-width: 0; }
+  .crop.tl { left: 2.5mm; top: 2.5mm; border-right-width: .5px; border-bottom-width: .5px; }
+  .crop.tr { right: 2.5mm; top: 2.5mm; border-left-width: .5px; border-bottom-width: .5px; }
+  .crop.bl { left: 2.5mm; bottom: 2.5mm; border-right-width: .5px; border-top-width: .5px; }
+  .crop.br { right: 2.5mm; bottom: 2.5mm; border-left-width: .5px; border-top-width: .5px; }
+
+  /* sheet frame */
+  .frame { position: absolute; inset: 7.5mm; border: 1px solid var(--n-90); display: grid;
+           grid-template-columns: 4.5mm 1fr; grid-template-rows: 4.5mm 1fr; }
+  .zones { grid-column: 2; grid-row: 1; display: grid; grid-template-columns: repeat(6, 1fr); border-bottom: 1px solid var(--n-20); }
+  .zones span, .rows span { font: 400 7px/1 var(--font-label); color: var(--n-50); letter-spacing: .06em;
+           display: flex; align-items: center; justify-content: center; }
+  .zones span + span { border-left: 1px solid var(--n-20); }
+  .rows { grid-column: 1; grid-row: 2; display: grid; grid-template-rows: repeat(4, 1fr); border-right: 1px solid var(--n-20); }
+  .rows span + span { border-top: 1px solid var(--n-20); }
+  .corner { grid-column: 1; grid-row: 1; border-right: 1px solid var(--n-20); border-bottom: 1px solid var(--n-20); }
+  .inner { grid-column: 2; grid-row: 2; position: relative; display: grid; min-height: 0;
+           grid-template-rows: auto minmax(0, 1fr) 31mm; }
+
+  /* header */
+  .head { padding: 5mm 7mm 0 7mm; display: grid; grid-template-columns: 1fr auto; gap: 8mm; align-items: start; }
+  .eyebrow { font: 400 8px/1.2 var(--font-label); letter-spacing: .06em; text-transform: uppercase; color: var(--n-50); }
+  .eyebrow .idx { color: var(--n-70); margin-right: 6px; }
+  h1 { font: 300 24px/1.16 var(--font-display); letter-spacing: -0.012em; margin: 2.2mm 0 1.6mm; color: var(--n-90); }
+  h1 .muted { color: var(--n-50); }
+  .lead { font: 400 10.5px/1.5 var(--font-body); color: var(--n-80); max-width: 168mm; margin: 0; letter-spacing: .005em; }
+  .tags { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; max-width: 80mm; padding-top: 1mm; }
+  .tag { font: 400 7px/1 var(--font-label); letter-spacing: .06em; text-transform: uppercase; color: var(--n-70);
+         border: 1px solid var(--n-30); border-radius: 100px; padding: 3px 7px 3px; white-space: nowrap; background: var(--n-0); }
+
+  /* diagram region */
+  .body { min-height: 0; padding: 3mm 7mm 2mm 7mm; position: relative; }
+  .body.split { display: grid; grid-template-columns: minmax(0, 1fr) 62mm; gap: 6mm; }
+  .fig { width: 100%; height: 100%; min-height: 0; position: relative; }
+  .fig > svg { width: 100%; height: 100%; display: block; }
+  .side { display: flex; flex-direction: column; gap: 3.2mm; border-left: 1px solid var(--n-20); padding-left: 5mm; min-height: 0; overflow: hidden; }
+
+  /* footer: notes + title block (flush to the frame, bottom-right) */
+  .foot { display: grid; grid-template-columns: minmax(0, 1fr) 104mm; border-top: 1px solid var(--n-20); min-height: 0; }
+  .notes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6mm; padding: 3mm 7mm 2.5mm 7mm; align-content: start; }
+  .note .eyebrow { margin-bottom: 1.3mm; }
+  .note p, .side p { margin: 0; font: 400 9px/1.48 var(--font-body); color: var(--n-80); letter-spacing: .005em; }
+  .note p code, .side p code, td code, .lead code { font-family: var(--font-body); font-weight: 500; color: var(--n-90); font-size: inherit; }
+
+  .tb { border-left: 1px solid var(--n-90); border-top: 1px solid var(--n-90); display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr; grid-template-rows: 1.25fr 1fr 1fr; }
+  .tb > div { border-right: 1px solid var(--n-30); border-bottom: 1px solid var(--n-30); padding: 1.3mm 2mm; min-width: 0;
+              display: flex; flex-direction: column; justify-content: space-between; }
+  .tb.compact { grid-template-columns: 1fr 1fr; grid-template-rows: auto; margin: 3mm -7mm 0 -5mm; flex: none; }
+  .tb.compact > div { height: 8.6mm; } .tb.compact > div:nth-child(2n), .tb.compact > .s2 { border-right: 0; }
+  .split-sheet .inner { grid-template-rows: auto minmax(0, 1fr); }
+  .split-sheet .body.split { padding-right: 0; padding-bottom: 0; grid-template-columns: minmax(0, 1fr) 66mm; }
+  .split-sheet .fig { padding-bottom: 3mm; }
+  .split-sheet .side { padding-right: 7mm; padding-top: 1mm; overflow: visible; }
+  .split-sheet .side > .legend { margin-top: auto; }
+  .tb .k { font: 400 6px/1 var(--font-label); letter-spacing: .06em; text-transform: uppercase; color: var(--n-50); }
+  .tb .v { font: 400 9px/1.2 var(--font-body); color: var(--n-90); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tb .v.big { font: 400 12px/1.15 var(--font-display); }
+  .tb .s2 { grid-column: span 2; } .tb .s3 { grid-column: span 3; } .tb .s4 { grid-column: span 4; }
+  .tb .r { border-right: 0; } .tb .b { border-bottom: 0; }
+
+  /* legend */
+  .legend { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; font: 400 7px/1 var(--font-label);
+            letter-spacing: .06em; text-transform: uppercase; color: var(--n-70); }
+  .legend i { display: inline-block; width: 14px; height: 9px; border: 1px solid var(--n-30); background: var(--n-0); border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+  .legend i.ink { border-color: var(--n-90); }
+  .legend i.acc { border-color: var(--accent); }
+  .legend i.dash { border-style: dashed; border-color: var(--n-50); background: transparent; }
+  .legend i.line { width: 16px; height: 0; border: 0; border-top: 1px solid var(--n-90); border-radius: 0; vertical-align: 2px; }
+  .legend i.dline { width: 16px; height: 0; border: 0; border-top: 1px dashed var(--n-90); border-radius: 0; vertical-align: 2px; background: none; }
+
+  /* mermaid host */
+  .mmd-host { width: 100%; height: 100%; display: flex; align-items: flex-start; justify-content: center; }
+  .mmd-host svg { width: 100%; height: 100%; max-width: none !important; }
+  .mmd-host svg text, .mmd-host svg foreignObject div, .mmd-host svg span, .mmd-host svg p { font-family: var(--font-body) !important; }
+  .three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; height: 100%; }
+  .three > div { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 0; padding: 0 5mm; }
+  .three > div + div { border-left: 1px solid var(--n-20); }
+  .three .cap { font: 400 13px/1.25 var(--font-display); margin: 1mm 0 1.5mm; }
+  .three .cap .eyebrow { display: block; margin-bottom: 1mm; }
+  .three .sub { font: 400 8.5px/1.45 var(--font-body); color: var(--n-70); margin-top: 1mm; }
+
+  /* sheet 9 */
+  .results { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 7mm; height: 100%; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--n-20); border-bottom: 1px solid var(--n-20); }
+  .stat { padding: 2.2mm 3mm 2.4mm 0; }
+  .stat + .stat { padding-left: 3mm; border-left: 1px solid var(--n-20); }
+  .stat .fig-n { font: 300 26px/1.05 var(--font-display); letter-spacing: -0.01em; font-variant-numeric: tabular-nums; margin-top: 1.2mm; }
+  .stat .fig-n.pending { color: var(--n-30); }
+  .stat .fig-n.acc { color: var(--accent); }
+  .stat .cap2 { font: 400 8px/1.35 var(--font-body); color: var(--n-70); margin-top: .8mm; }
+  .charts { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 0; margin-top: 2.5mm; min-height: 0; }
+  .chart { padding: 2mm 3mm 1mm 0; min-height: 0; display: grid; grid-template-rows: auto minmax(0,1fr); }
+  .chart:nth-child(even) { padding-left: 4mm; border-left: 1px solid var(--n-20); }
+  .chart:nth-child(n+3) { border-top: 1px solid var(--n-20); }
+  .chart h3 { font: 400 12px/1.2 var(--font-display); margin: 0 0 1mm; display: flex; justify-content: space-between; align-items: baseline; }
+  .chart h3 .eyebrow { font-size: 7px; }
+  .chart svg { width: 100%; height: 100%; display: block; }
+  table.checks { width: 100%; border-collapse: collapse; font: 400 8.6px/1.4 var(--font-body); color: var(--n-80); }
+  table.checks th { font: 400 6.8px/1.2 var(--font-label); letter-spacing: .06em; text-transform: uppercase; color: var(--n-50);
+                    text-align: left; padding: 0 2mm 1.4mm 0; border-bottom: 1px solid var(--n-30); vertical-align: bottom; }
+  table.checks td { padding: 1.7mm 2mm 1.7mm 0; border-bottom: 1px solid var(--n-20); vertical-align: top; }
+  table.checks td.id { font: 400 7.4px/1.4 var(--font-label); letter-spacing: .04em; color: var(--n-90); white-space: nowrap; }
+  table.checks td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; padding-right: 0; }
+  .st-ok { color: var(--ok); } .st-crit { color: var(--crit); } .st-warn { color: var(--warn); } .st-pend { color: var(--n-50); }
+  .placeholder-flag { font: 400 7px/1 var(--font-label); letter-spacing: .06em; text-transform: uppercase; color: var(--n-70);
+                      border: 1px dashed var(--n-50); border-radius: 100px; padding: 3px 7px; }
+  .mission-row { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 3mm; border-top: 1px solid var(--n-20); }
+  .mission-row div { padding: 1.8mm 2mm 0 0; }
+  .mission-row .n { font: 300 17px/1.1 var(--font-display); font-variant-numeric: tabular-nums; }
+  .mission-row .n.pending { color: var(--n-30); }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ 01 -->
+<section class="sheet" data-n="1" data-title="System context" data-scale="NTS">
+  <div class="inner">
+    <div class="head">
+      <div>
+        <div class="eyebrow"><span class="idx">[01]</span>System context · C4 level 1</div>
+        <h1>Supplier Chief of Staff, in context. <span class="muted">Who it talks to, and what it trusts.</span></h1>
+        <p class="lead">A recursive supply agent for Corvane Biologics, a fictional specialty-pharma manufacturer with eight sites. It watches inventory, works a shortage end to end, and messages a planner only when a decision is above its authority. All company data is synthetic.</p>
+      </div>
+      <div class="tags"><span class="tag">Synthetic data</span><span class="tag">Corvane Biologics (fictional)</span><span class="tag">eve on Vercel</span></div>
+    </div>
+    <div class="body"><div class="fig" id="fig-c4-1"></div></div>
+    <div class="foot">
+      <div class="notes">
+        <div class="note"><div class="eyebrow">[01] Proactive, cheaply</div><p>A sentinel scans every material and site every 30 minutes in code. No model runs until a position breaches its reorder point.</p></div>
+        <div class="note"><div class="eyebrow">[02] Authority</div><p>Purchases at or under <code>$25,000</code> with an accepted verdict become a draft PO on their own. Everything else asks the planner on Telegram.</p></div>
+        <div class="note"><div class="eyebrow">[03] Never</div><p>It never qualifies a supplier, changes a formulation, releases a batch or sends a real PO. Web discoveries stay discovery candidates.</p></div>
+      </div>
+      <div class="tb-slot"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 02 -->
+<section class="sheet" data-n="2" data-title="Containers" data-scale="NTS">
+  <div class="inner">
+    <div class="head">
+      <div>
+        <div class="eyebrow"><span class="idx">[02]</span>Containers · C4 level 2</div>
+        <h1>One Vercel project, one shared core. <span class="muted">Models call tools; tools call code.</span></h1>
+        <p class="lead">The eve app owns channels, the schedule, the planner, the workflow and the sub-agents. Every rule, number and tool body lives in <code>packages/core</code> and is unit-tested; the app only wraps core tools with <code>coreTool()</code>.</p>
+      </div>
+      <div class="tags"><span class="tag">apps/agent</span><span class="tag">packages/core</span><span class="tag">TypeScript · Zod</span></div>
+    </div>
+    <div class="body"><div class="fig" id="fig-c4-2"></div></div>
+    <div class="foot">
+      <div class="notes">
+        <div class="note"><div class="eyebrow">[01] Durable workflow</div><p><code>run_mission</code> is an eve workflow tool. Mission setup, run records, finishing and approval are durable steps, so a redeploy or crash resumes instead of repeating a purchase.</p></div>
+        <div class="note"><div class="eyebrow">[02] One state blob</div><p>The <code>Store</code> loads one JSON snapshot, runs a tool, and saves only when the tool wrote. Upstash Redis key <code>scos:state</code> on Vercel; <code>.data/state.json</code> locally.</p></div>
+        <div class="note"><div class="eyebrow">[03] Host-compatible contracts</div><p>Every tool returns <code>ToolOutput</code> with <code>ingestion_status</code>, <code>source</code> and <code>citations</code>, so the agent can later drop into the host manufacturing platform unchanged.</p></div>
+      </div>
+      <div class="tb-slot"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 03 -->
+<section class="sheet" data-n="3" data-title="Recursive agent tree" data-scale="NTS">
+  <div class="inner">
+    <div class="head">
+      <div>
+        <div class="eyebrow"><span class="idx">[03]</span>Recursive agent tree · components and models</div>
+        <h1>Agents that spawn agents. <span class="muted">The judge never shares a model with the doers.</span></h1>
+        <p class="lead">The planner hands a shortage to one workflow. It fans out to three sub-agents in parallel; sourcing spawns one negotiator per approved supplier, and each negotiator bargains with a simulated supplier. An independent verifier on a different model grades the result against checks written before any work began.</p>
+      </div>
+      <div class="tags"><span class="tag">ctx.agent</span><span class="tag">Crusoe Managed Inference</span><span class="tag">MODEL_* per role</span></div>
+    </div>
+    <div class="body"><div class="fig" id="fig-tree"></div></div>
+    <div class="foot">
+      <div class="notes">
+        <div class="note"><div class="eyebrow">[01] Definition of done first</div><p><code>prepareMission</code> computes need quantity and need-by date in code, then writes five checks: covers_need, lands_in_time, qualified_only, comparable_quotes, grounded.</p></div>
+        <div class="note"><div class="eyebrow">[02] Offers clamped in code</div><p>Each persona has a hidden <code>SupplierProfile</code>. <code>clampOffer</code> forces every reply inside its floor, list, lead time and MOQ; <code>accept_offer</code> stores only the supplier's last offer.</p></div>
+        <div class="note"><div class="eyebrow">[03] Bounded recursion</div><p>At most three attempts. A loop guard stops when the next attempt's context is identical to one already tried. Scout runs once; its candidates are reused.</p></div>
+      </div>
+      <div class="tb-slot"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 04 -->
+<section class="sheet split-sheet" data-n="4" data-title="Sequence · happy path" data-scale="NTS">
+  <div class="inner">
+    <div class="head">
+      <div>
+        <div class="eyebrow"><span class="idx">[04]</span>UML sequence · happy path</div>
+        <h1>From a code-only scan to a draft PO. <span class="muted">One tap on the phone, at most.</span></h1>
+        <p class="lead">Hero scenario: injectable-grade sucrose at Ghent has 120 kg released (30 kg quarantined does not count), burns 5 kg a day and has a 42-day lead time. That is 24 days of cover against a 280 kg reorder point.</p>
+      </div>
+      <div class="tags"><span class="tag">MAT-SUC-INJ</span><span class="tag">SITE-GHE</span><span class="tag">RFQ-102</span></div>
+    </div>
+    <div class="body split">
+      <div class="fig mmd-host" id="seq-happy"></div>
+      <div class="side">
+        <div><div class="eyebrow">[01] Trigger</div><p><code>schedules/sentinel.ts</code> runs <code>lowStockScan()</code> on cron <code>*/30</code>. It skips positions that already have an open mission, then posts the worst breach to <code>TELEGRAM_CHAT_ID</code>.</p></div>
+        <div><div class="eyebrow">[02] Parallel branches</div><p>Transfer, sourcing and scout run through <code>Promise.allSettled</code>, so one failing branch never sinks the mission.</p></div>
+        <div><div class="eyebrow">[03] Numbers</div><p>Cover, reorder point and landed cost come from <code>coverDays</code>, <code>reorderPoint</code> and <code>normalizeQuote</code>. The judge recomputes every check from the store in code (<code>evaluateChecks</code>); the verifier model then checks the doers&rsquo; claims against those facts.</p></div>
+        <div><div class="eyebrow">[04] Approval</div><p>Within <code>$25,000</code> and accepted: auto-approve. Otherwise <code>ctx.ask</code> renders Approve and Reject as Telegram inline buttons.</p></div>
+        <div class="legend"><span><i class="line"></i>call</span><span><i class="dline"></i>return</span><span><i class="acc"></i>independent judge</span></div>
+        <div class="tb-slot"></div>
+      </div>
+    </div>
+    
+  </div>
+</section>
+
+<!-- ============================================================ 05 -->
+<section class="sheet split-sheet" data-n="5" data-title="Sequence · recovery" data-scale="NTS">
+  <div class="inner">
+    <div class="head">
+      <div>
+        <div class="eyebrow"><span class="idx">[05]</span>UML sequence · fault recovery</div>
+        <h1>Faults are expected. <span class="muted">The mission still ends, honestly labelled.</span></h1>
+        <p class="lead">Fault injection (<code>FAULTS=persona_timeout,crusoe_429</code>): one supplier never answers, the inference API rate-limits, and the incumbent announces a lead-time slip. The verifier sends the planner back with specific feedback, then escalates what no re-plan can fix.</p>
+      </div>
+      <div class="tags"><span class="tag">persona_timeout</span><span class="tag">crusoe_429</span><span class="tag">degraded</span></div>
+    </div>
+    <div class="body split">
+      <div class="fig mmd-host" id="seq-recovery"></div>
+      <div class="side">
+        <div><div class="eyebrow">[01] Backoff</div><p><code>crusoe.ts</code> retries 429 and 503 with exponential backoff and full jitter, honouring <code>Retry-After</code>, under a process-wide concurrency limit. Crusoe limits are per model (30 RPM, or 600 with billing), so separate models per role also spread load.</p></div>
+        <div><div class="eyebrow">[02] Timeout</div><p>A silent persona raises <code>PersonaTimeoutError</code> after 45 s. Sourcing continues with the other negotiators and notes the gap.</p></div>
+        <div><div class="eyebrow">[03] Re-plan</div><p>The next attempt carries <code>verifier_feedback</code>. If the context is identical to a previous attempt, the loop guard stops instead of spinning.</p></div>
+        <div><div class="eyebrow">[04] Degraded, not hung</div><p>A mission that is not accepted, or has fewer than two quotes, ends <code>degraded</code>. The human sees the verifier's note before approving.</p></div>
+        <div class="legend"><span><i class="line"></i>call</span><span><i class="dline"></i>return</span><span><i class="line" style="border-top-color:#F25C05"></i>re-plan verdict</span></div>
+        <div class="tb-slot"></div>
+      </div>
+    </div>
+    
+  </div>
+</section>
+
+<!-- ============================================================ 06 -->
+<section class="sheet" data-n="6" data-title="State machines" data-scale="NTS">
+  <div class="inner">
+    <div class="head">
+      <div>
+        <div class="eyebrow"><span class="idx">[06]</span>UML state machines</div>
+        <h1>Three lifecycles, enforced in code. <span class="muted">A cheaper quote never skips a state.</span></h1>
+        <p class="lead">Qualification is the regulated one: the agent reads it and never moves it. RFQs move only through tools, and missions always reach a terminal state.</p>
+      </div>
+      <div class="tags"><span class="tag">canPromote()</span><span class="tag">RfqStatus</span><span class="tag">MissionStatus</span></div>
+    </div>
+    <div class="body">
+      <div class="three">
+        <div>
+          <div class="cap"><span class="eyebrow">[A] MaterialSupplier.qualification_state</span>Supplier qualification</div>
+          <div class="mmd-host" id="st-qual"></div>
+          <div class="sub">One step at a time, by humans. Development-stage sources stop at technically_suitable. Only quality_approved and released_for_use are purchasable.</div>
+        </div>
+        <div>
+          <div class="cap"><span class="eyebrow">[B] RFQ.status</span>RFQ lifecycle</div>
+          <div class="mmd-host" id="st-rfq"></div>
+          <div class="sub">Quotes are created only by <code>accept_offer</code> from the supplier's last stored offer, never from numbers a model types.</div>
+        </div>
+        <div>
+          <div class="cap"><span class="eyebrow">[C] Mission.status</span>Mission lifecycle</div>
+          <div class="mmd-host" id="st-mission"></div>
+          <div class="sub">Up to three attempts. Not accepted, or fewer than two quotes, ends degraded. A mission never hangs.</div>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <div class="notes">
+        <div class="note"><div class="eyebrow">[01] Usable stock</div><p>Only released lots count as cover. Quarantined and rejected stock never does, and announced capacity is not available capacity.</p></div>
+        <div class="note"><div class="eyebrow">[02] Draft only</div><p><code>PurchaseOrder.status</code> is the literal <code>draft</code>. Sending a PO stays a human action in the ERP.</p></div>
+        <div class="note"><div class="eyebrow">[03] Missing prices</div><p>A quote-only material keeps <code>unit_price: null</code> plus an <code>rfq_reason</code>. Nothing estimates a price.</p></div>
+      </div>
+      <div class="tb-slot"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 07 -->
+<section class="sheet" data-n="7" data-title="Data model" data-scale="NTS">
+  <div class="inner">
+    <div class="head">
+      <div>
+        <div class="eyebrow"><span class="idx">[07]</span>UML class diagram · packages/core/src/types.ts</div>
+        <h1>The data model. <span class="muted">Host names where they exist, new entities where they don't.</span></h1>
+        <p class="lead">Field names for the host-compatible entities match the host manufacturing platform exactly, so the agent can move in later without a mapping layer. Everything is keyed by human-readable <code>external_id</code>s such as MAT-SUC-INJ, LOT-GHE-0001 and RFQ-102.</p>
+      </div>
+      <div class="tags"><span class="tag">Zod schemas</span><span class="tag">external_id keys</span></div>
+    </div>
+    <div class="body"><div class="fig" id="fig-cls"></div></div>
+    <div class="foot">
+      <div class="notes">
+        <div class="note"><div class="eyebrow">[01] Tool contract</div><p><code>ToolOutput {ingestion_status, source, citations[]}</code>. Each citation lists the external_ids it relied on, so every claim in a Finding traces back to rows.</p></div>
+        <div class="note"><div class="eyebrow">[02] Alert payload</div><p><code>Finding {headline, severity: info | watch | action, detail, cited_tool_calls}</code> is what every mission leaves behind, in the host's format.</p></div>
+        <div class="note"><div class="eyebrow">[03] Hidden profile</div><p><code>SupplierProfile</code> is derived from the MaterialSupplier link and a seed. The buyer agent never sees it; it only bounds the persona's offers.</p></div>
+      </div>
+      <div class="tb-slot"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 08 -->
+<section class="sheet" data-n="8" data-title="Deployment" data-scale="NTS">
+  <div class="inner">
+    <div class="head">
+      <div>
+        <div class="eyebrow"><span class="idx">[08]</span>UML deployment · nodes, artifacts, secrets</div>
+        <h1>Deployed on Vercel. <span class="muted">Each secret goes to one service.</span></h1>
+        <p class="lead">One Vercel project runs the eve runtime: functions for the channels and the planner, Vercel Cron for the sentinel, and durable workflow steps for missions. State lives in Upstash Redis through the Vercel Marketplace; inference runs on Crusoe.</p>
+      </div>
+      <div class="tags"><span class="tag">eve deploy</span><span class="tag">Node 24</span><span class="tag">Vercel env (encrypted)</span></div>
+    </div>
+    <div class="body"><div class="fig" id="fig-deploy"></div></div>
+    <div class="foot">
+      <div class="notes">
+        <div class="note"><div class="eyebrow">[01] Crusoe and You.com</div><p><code>CRUSOE_API_KEY</code> as a Bearer token to Crusoe only; <code>CRUSOE_BASE_URL</code> and <code>MODEL_PLANNER</code> / <code>WORKER</code> / <code>PERSONA</code> / <code>VERIFIER</code> route models. <code>YOU_DOT_COM_API_KEY</code> goes to You.com only.</p></div>
+        <div class="note"><div class="eyebrow">[02] Telegram</div><p><code>TELEGRAM_BOT_TOKEN</code> for the Bot API, <code>TELEGRAM_WEBHOOK_SECRET_TOKEN</code> to verify inbound webhooks, <code>TELEGRAM_CHAT_ID</code> as the sentinel's proactive target.</p></div>
+        <div class="note"><div class="eyebrow">[03] State</div><p><code>KV_REST_API_URL</code> and <code>KV_REST_API_TOKEN</code> (or <code>UPSTASH_REDIS_REST_*</code>) for Upstash. openFDA needs no key. <code>FAULTS</code> is a demo-only switch.</p></div>
+      </div>
+      <div class="tb-slot"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 09 -->
+<section class="sheet" data-n="9" data-title="Results" data-scale="NTS">
+  <div class="inner">
+    <div class="head">
+      <div>
+        <div class="eyebrow"><span class="idx">[09]</span>Results · baseline vs agent · definition of done</div>
+        <h1>Does it prevent stockouts? <span class="muted" id="res-tail">Measured on the synthetic plant.</span></h1>
+        <p class="lead" id="res-lead">Baseline: a planner reacting to the same consumption with no agent. Agent: sentinel, missions and approvals running on the same seed and horizon. Every figure on this sheet is read from a results file at export time.</p>
+      </div>
+      <div class="tags" id="res-tags"></div>
+    </div>
+    <div class="body">
+      <div class="results">
+        <div style="display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0">
+          <div class="stats" id="res-stats"></div>
+          <div class="charts" id="res-charts"></div>
+        </div>
+        <div style="min-height:0;display:flex;flex-direction:column">
+          <div class="eyebrow" style="margin-bottom:2mm">Definition of done · written by prepareMission, graded by the verifier</div>
+          <table class="checks">
+            <thead><tr><th>Check</th><th>Passes when</th><th>Computed in code</th><th>Judge recomputes with</th><th style="text-align:right">Pass rate</th></tr></thead>
+            <tbody id="res-checks"></tbody>
+          </table>
+          <div class="mission-row" id="res-missions"></div>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <div class="notes">
+        <div class="note"><div class="eyebrow">[01] Source</div><p id="res-source">Reads <code>docs/sim-results.json</code> when present, otherwise <code>docs/architecture/data.json</code>. Re-run the export to refresh.</p></div>
+        <div class="note"><div class="eyebrow">[02] Pass rate</div><p>Share of verifier verdicts in which the check passed, across all mission attempts in the run. A failed check is what triggers a re-plan.</p></div>
+        <div class="note"><div class="eyebrow">[03] Human minutes</div><p id="res-hm">Planner minutes over the whole horizon: shortage reviews, RFQs, transfers and approval taps, at fixed minutes per touch. With the agent, mostly approval taps.</p></div>
+      </div>
+      <div class="tb-slot"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ Mermaid sources -->
+<script type="text/plain" id="src-seq-happy">
+sequenceDiagram
+  participant S as Sentinel
+  participant T as Telegram
+  participant P as Planner
+  participant W as run_mission
+  participant X as transfer
+  participant R as sourcing
+  participant N as negotiator ×N
+  participant SP as persona ×N
+  participant C as scout
+  participant V as verifier
+  S->>S: lowStockScan()
+  S->>T: alert
+  T->>P: new session
+  P->>W: run_mission
+  Note over W: prepareMission, 5 checks
+  par ctx.agent fan-out
+    W->>X: brief
+    X-->>W: transfer
+  and
+    W->>R: brief
+    R->>N: RFQ-102, one each
+    loop ≤ 3 turns
+      N->>SP: message_supplier
+      SP-->>N: clamped offer
+    end
+    N-->>R: accept_offer
+    R-->>W: compare_quotes
+  and
+    W->>C: brief
+    C-->>W: candidates, openFDA
+  end
+  W->>V: grade
+  V-->>W: accept
+  alt ≤ $25k
+    W->>W: auto-approve
+  else above authority
+    W->>T: ctx.ask
+    T-->>W: Approve
+  end
+  W->>W: apply_approval, draft PO
+  W-->>P: result
+  P->>T: summary
+</script>
+
+<script type="text/plain" id="src-seq-recovery">
+sequenceDiagram
+  participant W as run_mission
+  participant R as sourcing
+  participant NA as negotiator A
+  participant NC as negotiator C
+  participant CR as Crusoe API
+  participant V as verifier
+  participant T as Telegram
+  Note over W,V: attempt 1
+  W->>R: brief
+  par
+    R->>NA: negotiate
+    NA->>CR: persona turn
+    CR-->>NA: 429, Retry-After
+    Note over NA,CR: backoff + jitter
+    NA->>CR: retry
+    CR-->>NA: lead slipped to 70 d
+    NA-->>R: quote A
+  and
+    R->>NC: negotiate
+    NC->>CR: persona turn
+    Note over NC,CR: 45 s, PersonaTimeoutError
+    NC-->>R: failed, skip C
+  end
+  R-->>W: quotes A, B
+  W->>V: grade
+  V-->>W: replan, A misses need_by
+  Note over W,V: attempt 2, verifier_feedback, new context
+  W->>R: brief + feedback
+  R-->>W: only B lands in time
+  W->>V: grade
+  V-->>W: escalate
+  W->>T: ctx.ask + verifier note
+  T-->>W: Approve
+  W->>W: draft PO, degraded
+</script>
+
+<script type="text/plain" id="src-st-qual">
+stateDiagram-v2
+  direction TB
+  [*] --> discovery_candidate : scout finds on web
+  discovery_candidate --> technically_suitable : spec review
+  technically_suitable --> quality_approved : audit and QA
+  quality_approved --> released_for_use : first lot released
+  released_for_use --> [*]
+</script>
+
+<script type="text/plain" id="src-st-rfq">
+stateDiagram-v2
+  direction TB
+  [*] --> draft : draft_rfq
+  draft --> sent : first message_supplier
+  sent --> quoted : accept_offer
+  quoted --> approved : apply_approval
+  quoted --> rejected : Reject
+  quoted --> expired : valid_until passed
+  approved --> [*] : draft PO
+  rejected --> [*]
+  expired --> [*]
+</script>
+
+<script type="text/plain" id="src-st-mission">
+stateDiagram-v2
+  direction TB
+  [*] --> planning : open or reuse
+  planning --> running : prepareMission
+  running --> verifying : branches settled
+  verifying --> running : replan, attempt below 3
+  verifying --> completed : accept, 2+ quotes
+  verifying --> degraded : escalate or loop guard
+  running --> failed : unrecoverable
+  completed --> [*]
+  degraded --> [*]
+  failed --> [*]
+</script>
+
+
+
+<script type="module">
+  window.__ready = false;
+  window.__errors = [];
+  window.__fit = [];
+  window.addEventListener("error", (e) => window.__errors.push(String(e.message || e)));
+
+  const C = { ink: "#141311", n80: "#3D3B39", n70: "#5B5957", n50: "#908E87", n30: "#D4D2CF", n20: "#EAE8E5",
+              n10: "#FAF9F8", n5: "#FDFDFC", n0: "#FFFFFF", acc: "#F25C05" };
+  const TOTAL = document.querySelectorAll(".sheet").length;
+
+  // ---------------------------------------------------------------- sheet chrome
+  for (const sheet of document.querySelectorAll(".sheet")) {
+    const n = Number(sheet.dataset.n);
+    const inner = sheet.querySelector(".inner");
+    const frame = document.createElement("div");
+    frame.className = "frame";
+    frame.innerHTML = `<div class="corner"></div><div class="zones">${"ABCDEF".split("").map((z) => `<span>${z}</span>`).join("")}</div><div class="rows">${[1, 2, 3, 4].map((r) => `<span>${r}</span>`).join("")}</div>`;
+    frame.appendChild(inner);
+    sheet.appendChild(frame);
+    for (const k of ["tl", "tr", "bl", "br"]) { const c = document.createElement("div"); c.className = `crop ${k}`; sheet.appendChild(c); }
+    const slot = sheet.querySelector(".tb-slot");
+    const dwg = `SCOS-${String(n).padStart(3, "0")}`;
+    if (sheet.classList.contains("split-sheet")) { slot.outerHTML = `<div class="tb compact">
+      <div class="s2"><span class="k">Project</span><span class="v big">Supplier Chief of Staff</span></div>
+      <div class="s2"><span class="k">Title</span><span class="v">${sheet.dataset.title}</span></div>
+      <div><span class="k">Dwg</span><span class="v">${dwg}</span></div>
+      <div><span class="k">Rev</span><span class="v">A</span></div>
+      <div><span class="k">Sheet</span><span class="v">${n} of ${TOTAL}</span></div>
+      <div><span class="k">Scale</span><span class="v">${sheet.dataset.scale || "NTS"}</span></div>
+      <div class="s2 b"><span class="k">Client · Date</span><span class="v">Corvane Biologics (fictional) · 2026-10-17</span></div>
+    </div>`; continue; }
+    slot.outerHTML = `<div class="tb">
+      <div class="s3"><span class="k">Project</span><span class="v big">Supplier Chief of Staff</span></div>
+      <div class="r"><span class="k">Dwg</span><span class="v">${dwg}</span></div>
+      <div class="s2"><span class="k">Title</span><span class="v">${sheet.dataset.title}</span></div>
+      <div><span class="k">Rev</span><span class="v">A</span></div>
+      <div class="r"><span class="k">Sheet</span><span class="v">${n} of ${TOTAL}</span></div>
+      <div class="s2 b"><span class="k">Client</span><span class="v">Corvane Biologics (fictional)</span></div>
+      <div class="b"><span class="k">Scale</span><span class="v">${sheet.dataset.scale || "NTS"}</span></div>
+      <div class="r b"><span class="k">Date</span><span class="v">2026-10-17</span></div>
+    </div>`;
+  }
+  // sheets with a side column: footer only carries the title block
+
+  // ---------------------------------------------------------------- SVG kit
+  const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  function wrap(text, width, fs) {
+    const max = Math.max(6, Math.floor(width / (fs * 0.53)));
+    const out = [];
+    for (const para of String(text).split("\n")) {
+      let line = "";
+      for (const w of para.split(" ")) {
+        if ((line + " " + w).trim().length > max && line) { out.push(line); line = w; } else line = (line + " " + w).trim();
+      }
+      out.push(line);
+    }
+    return out;
+  }
+  const defs = `<defs>
+    <marker id="arr" viewBox="0 0 8 8" refX="7.2" refY="4" markerWidth="8" markerHeight="8" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+      <path d="M0.5,0.8 L7.2,4 L0.5,7.2" fill="none" stroke="${C.ink}" stroke-width="1"/></marker>
+    <marker id="arrA" viewBox="0 0 8 8" refX="7.2" refY="4" markerWidth="8" markerHeight="8" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+      <path d="M0.5,0.8 L7.2,4 L0.5,7.2" fill="none" stroke="${C.acc}" stroke-width="1"/></marker>
+  </defs>`;
+  function svg(w, h, body) {
+    return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">${defs}${body}</svg>`;
+  }
+  const mono = (x, y, t, o = {}) => `<text x="${x}" y="${y}" font-family="Geist Mono" font-size="${o.fs || 7.2}" letter-spacing="0.5" fill="${o.fill || C.n50}" text-anchor="${o.anchor || "start"}">${esc(String(t).toUpperCase())}</text>`;
+  function textBlock(x, y, lines, o = {}) {
+    const fs = o.fs || 9.2, lh = o.lh || fs * 1.38;
+    return lines.map((l, i) => `<text x="${x}" y="${y + i * lh}" font-family="${o.font || "Inter"}" font-size="${fs}" font-weight="${o.weight || 400}" fill="${o.fill || C.n70}" text-anchor="${o.anchor || "start"}">${esc(l)}</text>`).join("");
+  }
+  /** C4/UML box: mono label, display title, wrapped body, optional mono footer lines. */
+  function box(b) {
+    const { x, y, w, h } = b;
+    const stroke = b.accent ? C.acc : b.ink ? C.ink : C.n30;
+    let s = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="${b.fill || C.n0}" stroke="${stroke}" stroke-width="${b.accent ? 1.4 : 1}" ${b.dashed ? 'stroke-dasharray="4 3"' : ""}/>`;
+    let cy = y + 15;
+    if (b.label) { s += mono(x + 10, cy, b.label, { fill: b.accent ? C.acc : C.n50 }); cy += 16; }
+    if (b.title) { s += `<text x="${x + 10}" y="${cy}" font-family="Inter Tight" font-size="${b.tfs || 13}" font-weight="400" fill="${C.ink}">${esc(b.title)}</text>`; cy += (b.tfs || 13) * 0.6 + 8; }
+    if (b.body) { const lines = wrap(b.body, w - 20, b.fs || 9); s += textBlock(x + 10, cy, lines, { fs: b.fs || 9 }); cy += lines.length * (b.fs || 9) * 1.38; }
+    if (b.meta) { cy += 3; for (const m of [].concat(b.meta)) { s += mono(x + 10, cy, m, { fill: C.n80, fs: 6.8 }); cy += 10.5; } }
+    return s;
+  }
+  function person(b) {
+    const { x, y, w, h } = b; const cx = x + w / 2;
+    return `<circle cx="${cx}" cy="${y - 13}" r="12" fill="${C.n0}" stroke="${C.ink}"/>` + box({ ...b, ink: true });
+  }
+  function boundary(b) {
+    const stroke = b.accent ? C.acc : C.n50;
+    return `<rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="10" fill="none" stroke="${stroke}" stroke-width="${b.accent ? 1.4 : 1}" stroke-dasharray="5 4"/>` +
+      mono(b.x + 12, b.y + 15, b.label, { fill: b.accent ? C.acc : C.n70, fs: 7.2 }) +
+      (b.sub ? mono(b.x + 12, b.y + 26, b.sub, { fill: C.n50, fs: 6.6 }) : "");
+  }
+  /** Orthogonal polyline edge with arrow head(s) and an optional label at [lx,ly]. */
+  function edge(pts, o = {}) {
+    const col = o.accent ? C.acc : C.ink;
+    const m = o.accent ? "arrA" : "arr";
+    const d = pts.map((p, i) => `${i ? "L" : "M"}${p[0]},${p[1]}`).join(" ");
+    let s = `<path d="${d}" fill="none" stroke="${col}" stroke-width="1" ${o.dashed ? 'stroke-dasharray="4 3"' : ""} ${o.noEnd ? "" : `marker-end="url(#${m})"`} ${o.both ? `marker-start="url(#${m})"` : ""}/>`;
+    if (o.label) {
+      const lines = [].concat(o.label); const fs = o.fs || 8.2;
+      const wpx = Math.max(...lines.map((l) => l.length)) * fs * 0.52 + 8;
+      const hpx = lines.length * fs * 1.3 + 4;
+      const [lx, ly] = o.at || pts[0];
+      const anchor = o.anchor || "middle";
+      const rx = anchor === "middle" ? lx - wpx / 2 : anchor === "start" ? lx - 4 : lx - wpx + 4;
+      s += `<rect x="${rx}" y="${ly - fs - 1}" width="${wpx}" height="${hpx}" fill="${C.n5}"/>`;
+      s += textBlock(lx, ly, lines, { fs, fill: o.accent ? C.acc : C.n80, anchor, lh: fs * 1.3 });
+    }
+    return s;
+  }
+  function stack(b, n = 3) { // offset copies behind a box, for "× N"
+    let s = "";
+    for (let i = n - 1; i >= 1; i--) s += `<rect x="${b.x + i * 4}" y="${b.y + i * 4}" width="${b.w}" height="${b.h}" rx="6" fill="${C.n0}" stroke="${C.n30}" ${b.dashed ? 'stroke-dasharray="4 3"' : ""}/>`;
+    return s + box(b);
+  }
+  function node3d(b) { // UML deployment node
+    const d = 7, { x, y, w, h } = b;
+    const stroke = b.accent ? C.acc : C.ink;
+    let s = `<path d="M${x},${y} L${x + d},${y - d} L${x + w + d},${y - d} L${x + w + d},${y + h - d} L${x + w},${y + h}" fill="none" stroke="${stroke}" stroke-width="1" ${b.dashed ? 'stroke-dasharray="4 3"' : ""}/>`;
+    s += `<path d="M${x + w},${y} L${x + w + d},${y - d}" stroke="${stroke}" stroke-width="1"/>`;
+    s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${C.n0}" stroke="${stroke}" stroke-width="1" ${b.dashed ? 'stroke-dasharray="4 3"' : ""}/>`;
+    let cy = y + 15;
+    if (b.label) { s += mono(x + 10, cy, b.label, { fill: C.n50 }); cy += 16; }
+    if (b.title) { s += `<text x="${x + 10}" y="${cy}" font-family="Inter Tight" font-size="13" fill="${C.ink}">${esc(b.title)}</text>`; cy += 16; }
+    if (b.body) { const lines = wrap(b.body, w - 20, 8.8); s += textBlock(x + 10, cy, lines, { fs: 8.8 }); cy += lines.length * 8.8 * 1.38; }
+    if (b.secrets) { cy += 4; s += `<line x1="${x + 10}" x2="${x + w - 10}" y1="${cy - 8}" y2="${cy - 8}" stroke="${C.n20}"/>`; for (const k of b.secrets) { s += mono(x + 10, cy + 2, k, { fill: C.n80, fs: 6.8 }); cy += 10.5; } }
+    return s;
+  }
+  function artifact(b) { // UML artifact with dog-ear
+    const { x, y, w, h } = b; const e = 7;
+    let s = `<path d="M${x},${y} L${x + w - e},${y} L${x + w},${y + e} L${x + w},${y + h} L${x},${y + h} Z" fill="${C.n0}" stroke="${b.accent ? C.acc : C.n30}" stroke-width="${b.accent ? 1.4 : 1}"/>`;
+    s += `<path d="M${x + w - e},${y} L${x + w - e},${y + e} L${x + w},${y + e}" fill="none" stroke="${b.accent ? C.acc : C.n30}"/>`;
+    s += mono(x + 8, y + 13, b.label || "artifact", { fs: 6.6, fill: b.accent ? C.acc : C.n50 });
+    s += `<text x="${x + 8}" y="${y + 27}" font-family="Inter Tight" font-size="11" fill="${C.ink}">${esc(b.title)}</text>`;
+    if (b.body) s += textBlock(x + 8, y + 40, wrap(b.body, w - 16, 8.2), { fs: 8.2 });
+    if (b.keys) { let cy = y + 40; for (const k of b.keys) { s += mono(x + 8, cy, k, { fill: C.n80, fs: 6.6 }); cy += 10; } }
+    return s;
+  }
+  const put = (id, html) => { document.getElementById(id).innerHTML = html; };
+
+  // ---------------------------------------------------------------- [01] C4 L1
+  {
+    let s = "";
+    s += person({ x: 20, y: 196, w: 170, h: 118, label: "Person", title: "Supply planner", body: "Corvane supply team. Gets proactive alerts and approves purchases above authority with one tap." });
+    s += box({ x: 262, y: 196, w: 172, h: 118, label: "External system", title: "Telegram", body: "Bot @supplychief_bot. Messages, plus inline Approve and Reject buttons for decisions." });
+    s += box({ x: 506, y: 176, w: 212, h: 158, accent: true, label: "Software system", title: "Supplier Chief of Staff", tfs: 15, body: "eve agent on Vercel. A code-only sentinel, a planner, parallel sub-agents, simulated supplier negotiations and an independent verifier. Numbers come from code; models explain them." });
+    s += box({ x: 806, y: 14, w: 184, h: 100, label: "External system", title: "Crusoe Managed Inference", body: "Nemotron models for planner, workers, personas and verifier." });
+    s += box({ x: 806, y: 128, w: 184, h: 92, label: "External system", title: "You.com", body: "Search and research over MCP, with citations. Candidates only." });
+    s += box({ x: 806, y: 234, w: 184, h: 92, label: "External system", title: "openFDA", body: "Drug shortage and enforcement reports, public API." });
+    s += box({ x: 806, y: 340, w: 184, h: 106, dashed: true, label: "Simulated", title: "Supplier personas", body: "One persona per approved supplier, clamped in code to a hidden commercial profile. Stand-in for supplier email." });
+    s += box({ x: 506, y: 368, w: 212, h: 78, label: "External system · datastore", title: "Upstash Redis", body: "Whole supply state as one JSON value, key scos:state." });
+    s += box({ x: 262, y: 368, w: 172, h: 78, dashed: true, label: "Not connected", title: "Corvane ERP", body: "Replaced by a deterministic synthetic seed." });
+    s += edge([[190, 255], [262, 255]], { both: true, label: ["alerts", "Approve / Reject"], at: [226, 238] });
+    s += edge([[434, 255], [506, 255]], { both: true, label: ["webhook in", "Bot API out"], at: [470, 238] });
+    // bus to externals
+    s += `<path d="M718,255 L746,255" stroke="${C.ink}" fill="none"/><path d="M746,64 L746,393" stroke="${C.ink}" fill="none"/>`;
+    s += edge([[746, 64], [806, 64]], { label: "inference", at: [751, 58], anchor: "start" });
+    s += edge([[746, 174], [806, 174]], { label: "search", at: [751, 168], anchor: "start" });
+    s += edge([[746, 280], [806, 280]], { label: "queries", at: [751, 274], anchor: "start" });
+    s += edge([[746, 393], [806, 393]], { label: "RFQ turns", at: [751, 387], anchor: "start" });
+    s += edge([[612, 334], [612, 368]], { both: true, label: "read / write state", at: [624, 355], anchor: "start" });
+    s += edge([[434, 407], [506, 407]], { dashed: true, label: "seeded", at: [470, 399] });
+    s += `<text x="20" y="22" font-family="Inter Tight" font-size="11" fill="${C.n50}">Scope: Corvane Biologics supply network · 8 sites · ~60 materials · 30 approved suppliers</text>`;
+    s += `<g transform="translate(20,40)">${mono(0, 0, "Legend", { fs: 6.8 })}
+      <rect x="0" y="8" width="16" height="10" rx="2" fill="${C.n0}" stroke="${C.acc}" stroke-width="1.4"/>${mono(22, 16, "System in scope", { fs: 6.6, fill: C.n70 })}
+      <rect x="0" y="24" width="16" height="10" rx="2" fill="${C.n0}" stroke="${C.n30}"/>${mono(22, 32, "External system", { fs: 6.6, fill: C.n70 })}
+      <rect x="0" y="40" width="16" height="10" rx="2" fill="none" stroke="${C.n50}" stroke-dasharray="3 2"/>${mono(22, 48, "Simulated / not connected", { fs: 6.6, fill: C.n70 })}</g>`;
+    put("fig-c4-1", svg(1000, 452, s));
+  }
+
+  // ---------------------------------------------------------------- [02] C4 L2
+  {
+    let s = "";
+    s += person({ x: 10, y: 52, w: 122, h: 92, label: "Person", title: "Supply planner", body: "Phone, Telegram app." });
+    s += box({ x: 10, y: 196, w: 122, h: 96, label: "External", title: "Telegram", body: "Bot API and webhooks." });
+    s += edge([[71, 144], [71, 196]], { both: true });
+    s += boundary({ x: 150, y: 6, w: 632, h: 304, label: "Vercel project · apps/agent · eve runtime", sub: "supplier-chief-of-staff · Node 24" });
+    // row 1
+    s += box({ x: 166, y: 40, w: 132, h: 76, label: "Channel", title: "telegram.ts", fs: 8.5, body: "@supplychief_bot. Webhook in, HITL buttons out." });
+    s += box({ x: 328, y: 40, w: 132, h: 76, label: "Schedule", title: "sentinel.ts", fs: 8.5, body: "Cron */30. lowStockScan() in code." });
+    s += box({ x: 490, y: 40, w: 132, h: 76, label: "Channel", title: "eve.ts", fs: 8.5, body: "Web chat and REPL. Vercel OIDC." });
+    s += box({ x: 652, y: 40, w: 116, h: 76, label: "Tools", title: "tools/*", fs: 8.5, body: "Planner tools via coreTool()." });
+    s += edge([[328, 78], [298, 78]], { label: "alert", at: [313, 72] });
+    s += edge([[132, 244], [142, 244], [142, 92], [166, 92]], { both: true });
+    // row 2
+    s += box({ x: 166, y: 134, w: 294, h: 74, label: "Root agent · planner", title: "agent.ts + instructions.md", fs: 8.5, body: "Nemotron 3.5 Super VL on Crusoe. $2 token cap per session. Answers quick questions, delegates missions." });
+    s += box({ x: 490, y: 134, w: 278, h: 74, accent: true, label: "Workflow tool", title: "run_mission.ts", fs: 8.5, body: "\"use workflow\". Durable steps: prepareMission, recordRun, finishMission, applyApproval. ≤ 3 attempts." });
+    s += edge([[232, 116], [232, 134]], {});
+    s += edge([[540, 116], [540, 126], [420, 126], [420, 134]], {});
+    s += edge([[460, 171], [490, 171]], { label: "calls", at: [475, 165] });
+    // row 3: sub-agents
+    s += `<path d="M629,208 L629,218" stroke="${C.ink}" fill="none"/><path d="M232,218 L706,218" stroke="${C.ink}" fill="none"/>`;
+    s += mono(478, 214, "ctx.agent · parallel", { fs: 6.6, fill: C.n70, anchor: "middle" });
+    for (const [x, w] of [[166, 132], [328, 132], [490, 132], [652, 116]]) s += edge([[x + 66, 218], [x + 66, 228]], {});
+    s += box({ x: 166, y: 228, w: 132, h: 74, label: "Sub-agent", title: "transfer", fs: 8.2, body: "Sister-site stock moves." });
+    s += box({ x: 328, y: 228, w: 132, h: 74, label: "Sub-agent", title: "sourcing", fs: 8.2, body: "RFQ, spawns negotiator ×N." });
+    s += box({ x: 490, y: 228, w: 132, h: 74, label: "Sub-agent", title: "scout", fs: 8, body: "Skills you-web, you-research. MCP youcom, youresearch. openFDA." });
+    s += box({ x: 652, y: 228, w: 116, h: 74, label: "Sub-agent · judge", title: "verifier", fs: 8.2, body: "Different model." });
+    // core
+    s += edge([[466, 310], [466, 328]], { label: "imports @supply-agent/core", at: [474, 322], anchor: "start" });
+    s += boundary({ x: 150, y: 328, w: 632, h: 132, label: "packages/core · @supply-agent/core", sub: "pure TypeScript · unit-tested · no framework" });
+    const core = [
+      ["types.ts", "Zod contracts. Host-compatible entities."],
+      ["store.ts", "Store + Persistence: file or Upstash."],
+      ["logic/", "coverDays, reorderPoint, normalizeQuote, priceInventory, canPromote."],
+      ["tools/", "Tool bodies returning ToolOutput."],
+      ["negotiation.ts", "Profiles, clampOffer, acceptOffer."],
+      ["crusoe.ts", "Client: backoff, concurrency, MODEL_*."],
+    ];
+    core.forEach(([t, b], i) => { s += box({ x: 162 + i * 102, y: 362, w: 94, h: 92, title: t, tfs: 11, fs: 8, body: b }); });
+    // externals
+    s += box({ x: 806, y: 14, w: 184, h: 90, label: "External", title: "Crusoe Inference", fs: 8.5, body: "Agent models through eve; persona calls through crusoe.ts." });
+    s += box({ x: 806, y: 112, w: 184, h: 92, label: "External", title: "You.com", fs: 8.2, body: "MCP api.you.com/mcp (you-search, you-contents) and /mcp/research. REST for discover_suppliers." });
+    s += box({ x: 806, y: 222, w: 184, h: 70, label: "External", title: "openFDA", fs: 8.5, body: "check_regulatory, from core." });
+    s += box({ x: 806, y: 340, w: 184, h: 100, label: "External · datastore", title: "Upstash Redis", fs: 8.5, body: "scos:state, one JSON value. REST with Bearer token." });
+    s += edge([[782, 50], [806, 50]], { label: "agents", at: [794, 44] });
+    s += edge([[782, 150], [806, 150]], { label: "MCP", at: [794, 144] });
+    s += edge([[782, 364], [794, 364], [794, 257], [806, 257]], {});
+    s += edge([[782, 410], [806, 410]], { both: true });
+    put("fig-c4-2", svg(1000, 464, s));
+  }
+
+  // ---------------------------------------------------------------- [03] agent tree
+  {
+    let s = "";
+    s += box({ x: 8, y: 160, w: 158, h: 150, ink: true, label: "Root agent", title: "Planner", tfs: 15, fs: 8.6, body: "Telegram conversation. Calls run_mission for any stockout risk; answers quick questions itself.", meta: ["Nemotron 3.5 Super VL", "MODEL_PLANNER"] });
+    s += box({ x: 190, y: 120, w: 176, h: 230, label: "Workflow tool · code", title: "run_mission", tfs: 14, fs: 8.6, body: "prepareMission (code) writes the definition of done:\ncovers_need\nlands_in_time\nqualified_only\ncomparable_quotes\ngrounded\nThen fans out, grades, re-plans or asks.", meta: ["≤ 3 attempts · loop guard"] });
+    s += edge([[166, 235], [190, 235]], {});
+    s += boundary({ x: 382, y: 6, w: 372, h: 426, label: "Doers · MODEL_WORKER", sub: "Nemotron 3.5 Super VL" });
+    s += box({ x: 398, y: 40, w: 168, h: 98, label: "Sub-agent", title: "transfer", fs: 8.4, body: "Sister-site surplus that covers the need in time.", meta: ["cover_projection · price_inventory", "propose_transfer"] });
+    s += box({ x: 398, y: 160, w: 168, h: 122, label: "Sub-agent", title: "sourcing", fs: 8.4, body: "Approved suppliers only. Drafts the RFQ, negotiates through children, recommends.", meta: ["find_suppliers · draft_rfq", "compare_quotes"] });
+    s += box({ x: 398, y: 304, w: 168, h: 120, label: "Sub-agent · attempt 1", title: "scout", fs: 8.4, body: "Discovery candidates only.", meta: ["skills you-web · you-research", "MCP youcom: search, contents", "MCP youresearch: research", "discover_suppliers · openFDA", "find_suppliers · match_spec"] });
+    // bus
+    s += `<path d="M366,235 L382,235" stroke="${C.ink}" fill="none"/><path d="M382,89 L382,363" stroke="${C.ink}" fill="none"/>`;
+    s += edge([[382, 89], [398, 89]], {}); s += edge([[382, 221], [398, 221]], {}); s += edge([[382, 363], [398, 363]], {});
+    s += stack({ x: 590, y: 146, w: 140, h: 82, label: "Sub-sub-agent × N", title: "negotiator", fs: 8.2, body: "One per approved supplier.", meta: ["message_supplier · accept_offer"] });
+    s += edge([[566, 187], [590, 187]], { label: "spawn", at: [578, 181] });
+    s += stack({ x: 590, y: 270, w: 140, h: 104, dashed: true, label: "Simulated × N", title: "supplier persona", fs: 8.2, body: "In character, but every offer is clamped to a hidden profile.", meta: ["Nemotron 3 Nano 30B-A3B", "MODEL_PERSONA"] });
+    s += edge([[660, 236], [660, 270]], { both: true, label: "≤ 3 turns", at: [668, 256], anchor: "start" });
+    // judge
+    s += boundary({ x: 774, y: 6, w: 218, h: 266, accent: true, label: "Judge · MODEL_VERIFIER", sub: "a different model from the doers" });
+    s += box({ x: 788, y: 42, w: 190, h: 218, accent: true, label: "Sub-agent · independent", title: "verifier", tfs: 15, fs: 8.6, body: "Two-part judge. evaluateChecks (code) recomputes covers_need, lands_in_time, qualified_only and comparable_quotes from the store. The verifier model then flags any doer claim that contradicts those facts (grounded). Unfixable gaps escalate at once.", meta: ["Nemotron 3 Super 120B-A12B", "or Inkling-Small (self-serve)", "no tools · facts in, verdict out", "evaluateChecks · propose_transfer · compare_quotes"] });
+    s += edge([[754, 150], [788, 150]], { accent: true, label: ["results", "+ brief"], at: [771, 128] });
+    s += box({ x: 774, y: 292, w: 218, h: 140, label: "Decision", title: "accept · replan · escalate", tfs: 12, fs: 8.4, body: "accept, ≤ $25k: auto-approve.\naccept above $25k, or escalate: ctx.ask on Telegram.\nApproved: apply_approval writes a draft PO.\nreplan: next attempt with feedback." });
+    s += edge([[883, 260], [883, 292]], {});
+    s += edge([[800, 432], [800, 452], [278, 452], [278, 350]], { dashed: true, label: "replan with verifier feedback · attempt ≤ 3 · stop if context repeats", at: [540, 456] });
+    put("fig-tree", svg(1000, 462, s));
+  }
+
+  // ---------------------------------------------------------------- [07] class diagram
+  {
+    const W = 106, X = (c) => 6 + c * 126.5, Y = [22, 186, 342];
+    const B = {};
+    function cls(id, c, r, host, fields, o = {}) {
+      const x = X(c), y = Y[r], h = 38 + fields.length * 11.2 + 6;
+      B[id] = { x, y, w: W, h };
+      const st = host ? C.acc : C.n30;
+      let t = `<rect x="${x}" y="${y}" width="${W}" height="${h}" rx="3" fill="${C.n0}" stroke="${st}" stroke-width="${host ? 1.3 : 1}"/>`;
+      t += mono(x + W / 2, y + 11, host ? "«host»" : "«new»", { anchor: "middle", fs: 6.4, fill: host ? C.acc : C.n50 });
+      t += `<text x="${x + W / 2}" y="${y + 25}" font-family="Inter Tight" font-size="11.5" fill="${C.ink}" text-anchor="middle">${esc(o.name || id)}</text>`;
+      t += `<line x1="${x}" x2="${x + W}" y1="${y + 32}" y2="${y + 32}" stroke="${host ? C.acc : C.n30}"/>`;
+      fields.forEach((f, i) => { t += `<text x="${x + 7}" y="${y + 45 + i * 11.2}" font-family="Inter" font-size="8.2" fill="${C.n80}">${esc(f)}</text>`; });
+      return t;
+    }
+    const L = (id, y0 = 51) => [B[id].x, B[id].y + y0], Rt = (id, y0 = 51) => [B[id].x + B[id].w, B[id].y + y0];
+    const T = (id, dx = W / 2) => [B[id].x + dx, B[id].y], Bt = (id, dx = W / 2) => [B[id].x + dx, B[id].y + B[id].h];
+    const mult = (x, y, t, a = "start") => `<text x="${x}" y="${y}" font-family="Inter" font-size="7.6" fill="${C.n70}" text-anchor="${a}">${t}</text>`;
+    function assoc(pts, m1, m2, o = {}) { // plain association with multiplicities near each end
+      const d = pts.map((p, i) => `${i ? "L" : "M"}${p[0]},${p[1]}`).join(" ");
+      let t = `<path d="${d}" fill="none" stroke="${C.ink}" stroke-width="1" ${o.dashed ? 'stroke-dasharray="4 3" marker-end="url(#arr)"' : ""}/>`;
+      const [a, b] = [pts[0], pts[1]], [y2, z] = [pts[pts.length - 2], pts[pts.length - 1]];
+      // start label above the line, end label below it, both just outside their box
+      const off = (p, q, below) => (p[1] === q[1] ? [p[0] + (q[0] > p[0] ? 3 : -3), p[1] + (below ? 9 : -3), q[0] > p[0] ? "start" : "end"] : [p[0] + 3, p[1] + (q[1] > p[1] ? 9 : -3), "start"]);
+      if (m1) { const [x, y, an] = off(a, b, false); t += mult(x, y, m1, an); }
+      if (m2) { const [x, y, an] = off(z, y2, true); t += mult(x, y, m2, an); }
+      return t;
+    }
+    let s = "";
+    s += cls("WorkOrder", 0, 0, true, ["product_id", "site_id", "qty", "due_date"]);
+    s += cls("BillOfMaterials", 1, 0, true, ["product_id", "line_items[]", "material_external_id"]);
+    s += cls("Material", 2, 0, false, ["substance", "grade", "compendia[]", "sourcing_mode"]);
+    s += cls("MaterialSupplier", 3, 0, false, ["qualification_state", "supply_stage", "price_low?  price_high?", "dmf  cep", "biosecure_review"]);
+    s += cls("Supplier", 4, 0, true, ["external_id", "name", "country", "type"]);
+    s += cls("Offer", 5, 0, true, ["price?", "currency", "moq", "lead_days", "seen_at"]);
+    s += cls("Part", 6, 0, true, ["mpn", "manufacturer", "category"]);
+    s += cls("Finding", 7, 0, true, ["headline", "severity", "detail", "cited_tool_calls[]"]);
+    s += cls("InventoryItem", 0, 1, true, ["external_id", "sku", "quantity_on_hand", "reorder_point", "lead_time_days?", "unit_cost?"]);
+    s += cls("Lot", 1, 1, false, ["qty", "status", "expiry_date", "received_at"]);
+    s += cls("Site", 2, 1, false, ["region", "stage", "lat  lng", "capacity_status"]);
+    s += cls("Consumption", 3, 1, false, ["daily_rate", "lead_time_days?", "safety_days"]);
+    s += cls("SupplierProfile", 4, 1, false, ["list_price  floor_price", "base_lead_days", "expedite?", "personality"]);
+    s += cls("NegotiationThread", 5, 1, false, ["status", "turns[]", "quote_id?"], { name: "Negotiation" });
+    s += cls("RFQ", 6, 1, false, ["material_id  site_id", "qty", "need_by", "status"]);
+    s += cls("Mission", 7, 1, false, ["trigger", "status", "summary"]);
+    s += cls("PurchaseOrder", 4, 2, false, ["qty", "unit_price?", "status: draft"]);
+    s += cls("Quote", 5, 2, false, ["unit_price?", "incoterm", "freight", "lead_time_days", "simulated: true"]);
+    s += cls("ToolOutput", 6, 2, true, ["ingestion_status", "source", "citations[]"]);
+    s += cls("AgentRun", 7, 2, false, ["parent_id", "role", "model", "tokens_in  tokens_out"]);
+    const gap1 = Y[1] - 14, gap2 = Y[2] - 12;
+    s += assoc([Rt("WorkOrder", 40), L("BillOfMaterials", 40)], "", "", { dashed: true });
+    s += assoc([Rt("BillOfMaterials", 62), L("Material", 62)], "", "", { dashed: true });
+    s += assoc([L("MaterialSupplier"), Rt("Material")], "*", "1");
+    s += assoc([L("Supplier"), Rt("MaterialSupplier")], "1", "*");
+    s += assoc([Rt("Supplier"), L("Offer")], "1", "*");
+    s += assoc([L("Part"), Rt("Offer")], "1", "*");
+    s += assoc([Bt("Material", 26), [X(2) + 26, gap1], [X(1) + 53, gap1], T("Lot", 53)], "1", "*");
+    s += assoc([L("Site"), Rt("Lot")], "1", "*");
+    s += assoc([L("Lot"), Rt("InventoryItem")], "", "", { dashed: true });
+    s += assoc([L("Consumption"), Rt("Site")], "*", "1");
+    s += assoc([T("Consumption", 22), [X(3) + 22, gap1 + 6], [X(2) + 80, gap1 + 6], Bt("Material", 80)], "*", "1");
+    s += assoc([Bt("MaterialSupplier", 84), [X(3) + 84, gap1 - 6], [X(4) + 53, gap1 - 6], T("SupplierProfile")], "", "", { dashed: true });
+    s += assoc([L("NegotiationThread"), Rt("SupplierProfile")], "1", "1");
+    s += assoc([L("RFQ"), Rt("NegotiationThread")], "1", "*");
+    s += assoc([L("Mission"), Rt("RFQ")], "1", "*");
+    s += assoc([T("Mission"), Bt("Finding")], "1", "*");
+    s += assoc([Bt("Mission"), T("AgentRun")], "1", "*");
+    s += assoc([L("AgentRun"), Rt("ToolOutput")], "", "", { dashed: true });
+    s += assoc([Bt("NegotiationThread"), T("Quote")], "1", "0..1");
+    s += assoc([Bt("RFQ", 18), [X(6) + 18, gap2], [X(5) + 92, gap2], T("Quote", 92)], "1", "*");
+    s += assoc([L("Quote"), Rt("PurchaseOrder")], "1", "0..1");
+    // legend
+    const lx = 8, ly = 352;
+    s += mono(lx, ly, "Legend", { fs: 6.8 });
+    s += `<rect x="${lx}" y="${ly + 10}" width="18" height="11" rx="2" fill="${C.n0}" stroke="${C.acc}" stroke-width="1.3"/>` + textBlock(lx + 26, ly + 19, ["Host-compatible: field names match the host platform"], { fs: 8.6, fill: C.n80 });
+    s += `<rect x="${lx}" y="${ly + 28}" width="18" height="11" rx="2" fill="${C.n0}" stroke="${C.n30}"/>` + textBlock(lx + 26, ly + 37, ["New in this prototype"], { fs: 8.6, fill: C.n80 });
+    s += `<path d="M${lx},${ly + 52} L${lx + 18},${ly + 52}" stroke="${C.ink}"/>` + textBlock(lx + 26, ly + 55, ["Association, with multiplicity (1, *, 0..1)"], { fs: 8.6, fill: C.n80 });
+    s += `<path d="M${lx},${ly + 68} L${lx + 18},${ly + 68}" stroke="${C.ink}" stroke-dasharray="4 3" marker-end="url(#arr)"/>` + textBlock(lx + 26, ly + 71, ["Derived or soft reference: Lot rolls up to InventoryItem,", "MaterialSupplier derives SupplierProfile, AgentRun.tool_calls", "return ToolOutput, BOM lines point at material_external_id"], { fs: 8.6, fill: C.n80 });
+    s += textBlock(lx, ly + 112, ["Keys are external_ids (MAT-SUC-INJ, RFQ-102). ? marks a nullable field: a missing price stays null."], { fs: 8.2, fill: C.n50 });
+    put("fig-cls", svg(1000, 470, s));
+  }
+
+  // ---------------------------------------------------------------- [08] deployment
+  {
+    let s = "";
+    s += node3d({ x: 10, y: 40, w: 150, h: 82, label: "Device", title: "Planner's phone", body: "Telegram app. Approve and Reject buttons." });
+    s += node3d({ x: 10, y: 196, w: 150, h: 112, label: "Cloud", title: "Telegram Bot API", body: "Delivers webhooks to Vercel; receives sendMessage.", secrets: ["TELEGRAM_BOT_TOKEN"] });
+    s += edge([[85, 122], [85, 189]], { both: true, label: "app", at: [92, 160], anchor: "start" });
+    // vercel
+    s += node3d({ x: 196, y: 22, w: 460, h: 300, label: "«execution environment»", title: "Vercel · project supplier-chief-of-staff" });
+    s += mono(206, 72, "eve runtime · Fluid compute · Node 24", { fs: 6.8, fill: C.n70 });
+    s += artifact({ x: 208, y: 84, w: 140, h: 64, label: "function", title: "channels/telegram", body: "POST webhook, secret-token header." });
+    s += artifact({ x: 358, y: 84, w: 140, h: 64, label: "function", title: "channels/eve", body: "Web chat and REPL, Vercel OIDC." });
+    s += artifact({ x: 508, y: 84, w: 136, h: 64, label: "Vercel Cron", title: "schedules/sentinel", body: "*/30 * * * *, code-only scan." });
+    s += artifact({ x: 208, y: 158, w: 216, h: 64, label: "durable workflow", title: "tools/run_mission", body: "Steps survive redeploys; ctx.ask waits for a tap." });
+    s += artifact({ x: 434, y: 158, w: 210, h: 64, label: "agents", title: "planner + 5 sub-agents", body: "transfer, sourcing, negotiator, scout, verifier." });
+    s += artifact({ x: 208, y: 232, w: 436, h: 80, accent: true, label: "environment variables · encrypted", title: "Secrets, scoped per service",
+      keys: [] });
+    s += mono(216, 286, "CRUSOE_API_KEY · CRUSOE_BASE_URL · MODEL_PLANNER / WORKER / PERSONA / VERIFIER", { fs: 6.6, fill: C.n80 });
+    s += mono(216, 297, "YOU_DOT_COM_API_KEY · TELEGRAM_BOT_TOKEN · TELEGRAM_WEBHOOK_SECRET_TOKEN · TELEGRAM_CHAT_ID", { fs: 6.6, fill: C.n80 });
+    s += mono(216, 308, "KV_REST_API_URL · KV_REST_API_TOKEN · FAULTS (demo only)", { fs: 6.6, fill: C.n80 });
+    s += edge([[167, 262], [196, 262]], { both: true, label: ["HTTPS", "webhook"], at: [181, 244], fs: 7.4 });
+    // state
+    s += node3d({ x: 196, y: 352, w: 230, h: 100, label: "Vercel Marketplace", title: "Upstash Redis", body: "Key scos:state holds the whole Store snapshot.", secrets: ["KV_REST_API_URL · KV_REST_API_TOKEN"] });
+    s += edge([[310, 322], [310, 345]], { both: true, label: "REST · Bearer", at: [318, 338], anchor: "start" });
+    s += node3d({ x: 446, y: 352, w: 210, h: 100, dashed: true, label: "Local development", title: "eve dev", body: "Same agent; state in .data/state.json (filePersistence); env from .env.local." });
+    // externals
+    s += node3d({ x: 696, y: 22, w: 294, h: 168, label: "Cloud · api.inference.crusoecloud.com/v1", title: "Crusoe Managed Inference", body: "Chat Completions-compatible. Planner and workers: Nemotron 3.5 Super VL. Personas: Nemotron 3 Nano 30B-A3B. Verifier: Nemotron 3 Super 120B-A12B, or an Inkling-Small self-serve deployment.", secrets: ["CRUSOE_API_KEY · Bearer", "MODEL_* per role"] });
+    s += node3d({ x: 696, y: 220, w: 294, h: 92, label: "Cloud", title: "You.com", body: "MCP api.you.com/mcp and /mcp/research for the scout, plus search REST. Cited results.", secrets: ["YOU_DOT_COM_API_KEY · Bearer"] });
+    s += node3d({ x: 696, y: 342, w: 294, h: 92, label: "Cloud · public", title: "openFDA", body: "Drug shortages and enforcement. No key; rate-limited." });
+    s += `<path d="M656,170 L676,170" stroke="${C.ink}" fill="none"/><path d="M676,106 L676,388" stroke="${C.ink}" fill="none"/>`;
+    s += edge([[676, 106], [696, 106]], {}); s += edge([[676, 266], [696, 266]], {}); s += edge([[676, 388], [696, 388]], {});
+    put("fig-deploy", svg(1000, 462, s));
+  }
+
+  // ---------------------------------------------------------------- [09] results
+  async function loadResults() {
+    const tryJson = async (u) => { try { const r = await fetch(u, { cache: "no-store" }); return r.ok ? await r.json() : null; } catch { return null; } };
+    const base = await tryJson("./data.json");
+    const sim = await tryJson("../sim-results.json");
+    if (!sim) return { data: base, source: "docs/architecture/data.json" };
+    // accept either the data.json shape, or {baseline:{...}, agent:{...}}
+    const merged = structuredClone(base);
+    const ALIAS = { service_level: "service_level_pct" };
+    const pick = (o, id) => o?.[id] ?? o?.[ALIAS[id]] ?? null;
+    // simulator shape: {days, seeds[], primary:{baseline:{metrics,hero}, agent:{...}}, mean:{baseline, agent}}
+    const pair = sim.mean?.baseline ? { b: sim.mean.baseline, a: sim.mean.agent }
+      : sim.baseline && sim.agent ? { b: sim.baseline.metrics ?? sim.baseline, a: sim.agent.metrics ?? sim.agent } : null;
+    if (Array.isArray(sim.metrics)) merged.metrics = sim.metrics;
+    else if (pair) merged.metrics = merged.metrics.map((m) => ({ ...m, baseline: pick(pair.b, m.id), agent: pick(pair.a, m.id) }));
+    if (pair) merged.extra = { b: pair.b, a: pair.a, heroB: sim.primary?.baseline?.hero ?? null, heroA: sim.primary?.agent?.hero ?? null };
+    if (sim.assumptions) merged.assumptions = sim.assumptions;
+    if (sim.days) merged.run = { ...merged.run, horizon_days: sim.days, seeds: sim.seeds?.length ?? null, primary_seed: sim.primary_seed ?? null };
+    if (sim.missions) merged.missions = { ...merged.missions, ...sim.missions };
+    if (Array.isArray(sim.checks)) merged.checks = sim.checks;
+    if (sim.run) merged.run = { ...merged.run, ...sim.run };
+    merged.status = sim.status ?? "measured";
+    return { data: merged, source: "docs/sim-results.json" };
+  }
+  const fmt = (v, unit) => v == null ? "—" : unit === "%" ? `${(+v).toFixed(1)}%` : Number.isInteger(+v) ? (+v).toLocaleString("en-US") : (+v).toFixed(1);
+  function barChart(m, isLead) {
+    const W = 300, H = 112, x0 = 62, x1 = 262, rows = [["Baseline", m.baseline, C.n30], ["Agent", m.agent, isLead ? C.acc : C.ink]];
+    const max = m.unit === "%" ? 100 : Math.max(1, ...rows.map((r) => +r[1] || 0)) * 1.08;
+    let s = "";
+    rows.forEach(([lab, v, col], i) => {
+      const y = 16 + i * 44;
+      s += `<text x="0" y="${y + 17}" font-family="Geist Mono" font-size="7.2" letter-spacing=".5" fill="${C.n50}">${lab.toUpperCase()}</text>`;
+      if (v == null) {
+        s += `<rect x="${x0}" y="${y}" width="${(x1 - x0) * 0.62}" height="18" fill="none" stroke="${C.n30}" stroke-dasharray="3 3"/>`;
+        s += `<text x="${x0 + 8}" y="${y + 12.5}" font-family="Geist Mono" font-size="6.8" letter-spacing=".5" fill="${C.n50}">AWAITING SIM RUN</text>`;
+        s += `<text x="${W}" y="${y + 13}" font-family="Inter" font-size="11" fill="${C.n30}" text-anchor="end">—</text>`;
+      } else {
+        const w = Math.max(1, (x1 - x0 - 4) * (+v / max));
+        s += `<rect x="${x0}" y="${y}" width="${w}" height="26" fill="${col}"/>`;
+        s += `<text x="${W}" y="${y + 17}" font-family="Inter" font-size="11.5" fill="${C.ink}" text-anchor="end" style="font-variant-numeric:tabular-nums">${fmt(v, m.unit)}</text>`;
+      }
+    });
+    s += `<line x1="${x0}" x2="${x0}" y1="6" y2="${H - 4}" stroke="${C.ink}"/>`;
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMinYMid meet">${s}</svg>`;
+  }
+  const CHECKS = [
+    ["covers_need", "Transfer plus purchase is at least need_qty.", "need_qty = ROP − released + daily × lead", "cover_projection"],
+    ["lands_in_time", "Every chosen source delivers by need_by.", "need_by = today + (cover − safety days)", "compare_quotes"],
+    ["qualified_only", "Every purchase source is quality_approved or released_for_use.", "isApproved(qualification_state)", "find_suppliers"],
+    ["comparable_quotes", "At least two normalized quotes, or a reason why not.", "normalizeQuote → landed USD / unit", "compare_quotes"],
+    ["grounded", "Every number in the recommendation appears in a tool output.", "ToolOutput.citations", "all tool outputs"],
+  ];
+  async function renderResults() {
+    const { data, source } = await loadResults();
+    const placeholder = data.status === "placeholder";
+    document.getElementById("res-tags").innerHTML = (placeholder ? `<span class="placeholder-flag">Placeholder · awaiting sim run</span>` : `<span class="tag">Simulated</span>`) +
+      `<span class="tag">Synthetic simulation</span>` + (data.run?.horizon_days ? `<span class="tag">${data.run.horizon_days}-day horizon</span>` : "") + (data.run?.seeds ? `<span class="tag">mean of ${data.run.seeds} seeds</span>` : data.run?.seed != null ? `<span class="tag">seed ${data.run.seed}</span>` : "");
+    document.getElementById("res-source").innerHTML = `Rendered from <code>${source}</code>${placeholder ? ". No simulation results yet; write <code>docs/sim-results.json</code> and re-run the export." : `: fictional company, synthetic demand, prices and supplier delays${data.run?.seeds ? `; bars are the mean of ${data.run.seeds} seeds` : ""}. Not a forecast.`}`;
+    const ms = data.metrics.map((m) => m.id === "human_minutes" && data.extra ? { ...m, unit: `min, ${data.run?.horizon_days ?? ""} days` } : m.id === "stockout_days" && data.extra ? { ...m, unit: "pair-days" } : m);
+    if (data.assumptions) {
+      const a = data.assumptions, hm = a.human_minutes;
+      document.getElementById("res-lead").textContent = `Baseline: ${a.baseline}. Agent: ${a.agent}. Both see the same demand and the same injected supplier delays; only the decision policy differs.`;
+      if (hm) document.getElementById("res-hm").textContent = `Planner minutes over the whole horizon, at ${hm.shortage_review} per shortage review, ${hm.rfq} per RFQ, ${hm.transfer} per transfer and ${hm.approval_ping} per approval tap. With the agent, mostly approval taps.`;
+    }
+    const delta = (m) => {
+      if (m.baseline == null || m.agent == null) return null;
+      if (m.unit === "%") return `${(m.agent - m.baseline >= 0 ? "+" : "")}${(m.agent - m.baseline).toFixed(1)} pt`;
+      if (!m.baseline) return `${m.agent - m.baseline}`;
+      return `${Math.round(((m.agent - m.baseline) / m.baseline) * 100)}%`;
+    };
+    document.getElementById("res-stats").innerHTML = ms.map((m, i) => {
+      const d = delta(m);
+      return `<div class="stat"><div class="eyebrow">${m.label}</div><div class="fig-n ${d == null ? "pending" : i === 1 ? "acc" : ""}">${d ?? "—"}</div><div class="cap2">${d == null ? "agent vs baseline, pending" : `agent vs baseline · ${m.better} is better`}</div></div>`;
+    }).join("");
+    document.getElementById("res-charts").innerHTML = ms.map((m, i) => `<div class="chart"><h3>${m.label}<span class="eyebrow">${m.unit}</span></h3>${barChart(m, false)}</div>`).join("");
+    const rate = Object.fromEntries((data.checks || []).map((c) => [c.id, c.pass_rate]));
+    document.getElementById("res-checks").innerHTML = CHECKS.map(([id, when, code, tool]) => {
+      const r = rate[id];
+      const cls = r == null ? "st-pend" : r >= 0.95 ? "st-ok" : r >= 0.8 ? "st-warn" : "st-crit";
+      return `<tr><td class="id">${id}</td><td>${when}</td><td>${code}</td><td>${tool}</td><td class="num ${cls}">${r == null ? "eval pending" : `${(r * 100).toFixed(0)}%`}</td></tr>`;
+    }).join("");
+    if (data.extra) {
+      const { a, b, heroA, heroB } = data.extra;
+      const usd = (v) => v == null ? "—" : v >= 1000 ? `$${Math.round(v / 1000).toLocaleString("en-US")}k` : `$${Math.round(v)}`;
+      const c2 = (label, v, sub) => `<div><div class="eyebrow">${label}</div><div class="n">${v}</div><div class="cap2" style="font:400 7.6px/1.35 Inter;color:#5B5957;margin-top:.6mm">${sub}</div></div>`;
+      document.getElementById("res-missions").innerHTML =
+        c2("Hero stockout days", `${heroB?.stockout_days ?? "—"} → ${heroA?.stockout_days ?? "—"}`, `Ghent sucrose, seed ${data.run?.primary_seed ?? ""}`) +
+        c2("Transfers", `${fmt(b.transfers)} → ${fmt(a.transfers)}`, "sister-site moves") +
+        c2("Expedite spend", `${usd(b.expedite_spend_usd)} → ${usd(a.expedite_spend_usd)}`, "the cost of acting early") +
+        c2("Non-qualified orders", `${fmt(b.non_qualified_orders)} → ${fmt(a.non_qualified_orders)}`, "never bought from a candidate");
+      return;
+    }
+    const mi = data.missions || {};
+    const cell = (k, label) => `<div><div class="eyebrow">${label}</div><div class="n ${mi[k] == null ? "pending" : ""}">${mi[k] == null ? "—" : fmt(mi[k])}</div></div>`;
+    document.getElementById("res-missions").innerHTML = cell("total", "Missions") + cell("degraded", "Degraded") + cell("asked_human", "Asked a human") + cell("mean_attempts", "Mean attempts");
+  }
+
+  // ---------------------------------------------------------------- Mermaid
+  async function renderMermaid() {
+    const { default: mermaid } = await import("https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs");
+    mermaid.initialize({
+      startOnLoad: false, theme: "base", securityLevel: "loose",
+      fontFamily: "Inter, sans-serif",
+      themeVariables: {
+        fontFamily: "Inter, sans-serif", fontSize: "13px",
+        primaryColor: "#FFFFFF", primaryBorderColor: "#D4D2CF", primaryTextColor: "#141311",
+        secondaryColor: "#FAF9F8", tertiaryColor: "#FFFFFF", lineColor: "#141311", textColor: "#141311",
+        mainBkg: "#FFFFFF", nodeBorder: "#D4D2CF", clusterBkg: "#FAF9F8", clusterBorder: "#EAE8E5",
+        edgeLabelBackground: "#FDFDFC", titleColor: "#141311",
+        actorBkg: "#FFFFFF", actorBorder: "#D4D2CF", actorTextColor: "#141311", actorLineColor: "#D4D2CF",
+        signalColor: "#141311", signalTextColor: "#141311",
+        labelBoxBkgColor: "#FFFFFF", labelBoxBorderColor: "#D4D2CF", labelTextColor: "#3D3B39", loopTextColor: "#5B5957",
+        noteBkgColor: "#FAF9F8", noteBorderColor: "#EAE8E5", noteTextColor: "#3D3B39",
+        activationBkgColor: "#FAF9F8", activationBorderColor: "#D4D2CF", sequenceNumberColor: "#FFFFFF",
+        transitionColor: "#141311", transitionLabelColor: "#3D3B39", stateLabelColor: "#141311", stateBkg: "#FFFFFF",
+        compositeBackground: "#FAF9F8", altBackground: "#FAF9F8", innerEndBackground: "#141311", specialStateColor: "#141311",
+        classText: "#141311",
+      },
+      sequence: { mirrorActors: false, actorMargin: 14, width: 92, height: 30, boxMargin: 4, boxTextMargin: 3, noteMargin: 4,
+                  messageMargin: 15, messageFontSize: 13, noteFontSize: 12, actorFontSize: 13, diagramMarginX: 2, diagramMarginY: 2,
+                  wrap: false, useMaxWidth: false },
+      state: { useMaxWidth: false, padding: 6, nodeSpacing: 30, rankSpacing: 34 },
+      class: { useMaxWidth: false, padding: 6, nodeSpacing: 22, rankSpacing: 46 },
+    });
+    const jobs = [["seq-happy", "src-seq-happy", "xMidYMin"], ["seq-recovery", "src-seq-recovery", "xMidYMin"],
+                  ["st-qual", "src-st-qual", "xMidYMid"], ["st-rfq", "src-st-rfq", "xMidYMid"], ["st-mission", "src-st-mission", "xMidYMid"]];
+    for (const [target, src, align] of jobs) {
+      const host = document.getElementById(target);
+      const { svg: out } = await mermaid.render(`m-${target}`, document.getElementById(src).textContent.trim());
+      host.innerHTML = out;
+      const el = host.querySelector("svg");
+      const vb = el.viewBox.baseVal;
+      el.removeAttribute("width"); el.removeAttribute("height"); el.style.maxWidth = "none";
+      el.setAttribute("preserveAspectRatio", `${align} meet`);
+      const r = host.getBoundingClientRect();
+      window.__fit.push({ target, natural: [Math.round(vb.width), Math.round(vb.height)], box: [Math.round(r.width), Math.round(r.height)], scale: +Math.min(r.width / vb.width, r.height / vb.height).toFixed(3) });
+    }
+    // one accent per sheet
+    const accentRectNear = (root, match) => {
+      for (const t of root.querySelectorAll("text, span, p, div")) {
+        if (t.children.length && t.tagName !== "text") continue;
+        if (!match(t.textContent.trim())) continue;
+        let g = t.closest("g"); let hops = 0;
+        while (g && hops < 4) { const r = g.querySelector(":scope > rect, :scope > path, :scope > polygon"); if (r) { r.style.stroke = C.acc; r.style.strokeWidth = "1.5px"; return true; } g = g.parentElement?.closest("g"); hops++; }
+      }
+      return false;
+    };
+    const happy = document.querySelector("#seq-happy svg");
+    for (const r of happy.querySelectorAll("rect.actor")) { if ((r.getAttribute("name") || "") === "V") { r.style.stroke = C.acc; r.style.strokeWidth = "1.5px"; } }
+    for (const l of happy.querySelectorAll("line.actor-line, line[class*='actor-line']")) { if ((l.getAttribute("name") || "") === "V") l.style.stroke = C.acc; }
+    // recovery: the replan verdict message
+    const rec = document.querySelector("#seq-recovery svg");
+    for (const t of rec.querySelectorAll("text.messageText")) {
+      if (/^replan/.test(t.textContent.trim())) {
+        t.style.fill = C.acc;
+        let n = t.nextElementSibling; while (n && !(n.tagName === "line" || n.tagName === "path")) n = n.nextElementSibling;
+        if (n) { n.style.stroke = C.acc; }
+      }
+    }
+    // qualification: purchasable from quality_approved
+    for (const g of document.querySelectorAll("#st-qual svg g.node")) {
+      if (/quality_approved/.test(g.id)) for (const p of g.querySelectorAll("rect, path")) { p.style.stroke = C.acc; p.style.strokeWidth = "1.5px"; }
+    }
+  }
+
+  try {
+    await document.fonts.ready;
+    await Promise.all(["300 12px 'Inter Tight'", "400 12px 'Inter Tight'", "400 12px Inter", "500 12px Inter", "400 12px 'Geist Mono'"].map((f) => document.fonts.load(f)));
+    await renderResults();
+    await renderMermaid();
+  } catch (e) {
+    window.__errors.push(String(e && e.stack || e));
+    console.error(e);
+  }
+  window.__ready = true;
+</script>
+</body>
+</html>

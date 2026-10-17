@@ -1,0 +1,32 @@
+{
+  "status": "placeholder",
+  "note": "Placeholder values. Write docs/sim-results.json in this shape and re-run the export; sheet 9 prefers it over this file.",
+  "run": {
+    "label": "Corvane Biologics (fictional) · synthetic data",
+    "horizon_days": null,
+    "seed": null,
+    "date": null
+  },
+  "metrics": [
+    { "id": "stockout_events", "label": "Stockout events", "unit": "events", "better": "lower", "baseline": null, "agent": null },
+    { "id": "stockout_days", "label": "Stockout days", "unit": "pair-days", "better": "lower", "baseline": null, "agent": null },
+    { "id": "service_level", "label": "Service level", "unit": "%", "better": "higher", "baseline": null, "agent": null },
+    { "id": "human_minutes", "label": "Human minutes", "unit": "min over horizon", "better": "lower", "baseline": null, "agent": null }
+  ],
+  "missions": {
+    "total": null,
+    "completed": null,
+    "degraded": null,
+    "failed": null,
+    "auto_approved": null,
+    "asked_human": null,
+    "mean_attempts": null
+  },
+  "checks": [
+    { "id": "covers_need", "pass_rate": null },
+    { "id": "lands_in_time", "pass_rate": null },
+    { "id": "qualified_only", "pass_rate": null },
+    { "id": "comparable_quotes", "pass_rate": null },
+    { "id": "grounded", "pass_rate": null }
+  ]
+}

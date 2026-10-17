@@ -1,0 +1,13 @@
+node_modules
+.next
+.env*
+!.env.example
+.data
+.turbo
+.vercel
+dist
+.eve
+.context
+*.log
+.DS_Store
+coverage
