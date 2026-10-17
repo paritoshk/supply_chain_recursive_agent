@@ -1,0 +1,7 @@
+{"benchmark": "b1-tool-selection", "at": "2026-10-17T21:08:00Z", "cost_usd": 0.0633, "calls": 96, "resumed": false}
+{"benchmark": "b3-guardrails", "at": "2026-10-17T21:12:00Z", "cost_usd": 0.12, "calls": 90, "resumed": false, "note": "pilot run (tool_choice none), cost estimated"}
+{"benchmark": "b3-guardrails", "at": "2026-10-17T21:21:00Z", "cost_usd": 0.1664, "calls": 0, "resumed": false, "note": "second pilot run"}
+{"benchmark": "b3-guardrails", "at": "2026-10-17T21:33:00Z", "cost_usd": 0.1354, "calls": 0, "resumed": false}
+{"benchmark": "b3-guardrails", "at": "2026-10-17T21:37:00Z", "cost_usd": 0.0046, "calls": 6, "resumed": true}
+{"benchmark": "b5-discovery", "at": "2026-10-17T21:36:00Z", "cost_usd": 0.0317, "calls": 12, "resumed": false}
+{"benchmark": "probes", "at": "2026-10-17T21:02:00Z", "cost_usd": 0.003, "calls": 4, "resumed": false, "note": "model/tool probe"}

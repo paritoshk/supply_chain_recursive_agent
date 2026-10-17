@@ -1,0 +1,5 @@
+# Deployed mission session ids (eve workflow runs). One per line; lines starting with # are ignored.
+# Read by evals/src/b6-missions.ts via GET $SCOS_URL/eve/v1/session/<id>/stream (NDJSON).
+wrun_41M55RN7HZ0GH7JJ5RE0CF1Z95
+wrun_41M55SXBP50GGT37XRSWXBSMY4
+wrun_41M55T96SZ0GYH8G6AR6BJA831

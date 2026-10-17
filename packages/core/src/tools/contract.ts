@@ -19,6 +19,11 @@ export interface ToolDef<I extends z.ZodType = z.ZodType> {
   name: string;
   description: string;
   idempotent: boolean;
+  /**
+   * "board": the tool only appends evidence-board items (cache / report). Hosts should persist just those
+   * items (merged into fresh state), not the whole snapshot it read before any network I/O.
+   */
+  writes?: "board";
   inputSchema: I;
   run(ctx: ToolCtx, args: z.infer<I>): Promise<ToolResult>;
 }

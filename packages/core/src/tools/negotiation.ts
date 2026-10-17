@@ -22,6 +22,23 @@ export const messageSupplier = defineTool({
   async run(ctx, args) {
     try {
       const r = await negotiateTurn(ctx.store, args);
+      // Negotiation memory: on the opening turn, show how past negotiations with this supplier settled.
+      const history =
+        r.turn <= 1
+          ? ctx.store
+              .negotiationMemory({ supplier_id: args.supplier_id })
+              .filter((m) => m.rfq_id !== args.rfq_id)
+              .slice(-3)
+              .map(({ material_id, currency, list_unit_price, accepted_unit_price, savings_vs_list_pct, expedited, supplier_turns }) => ({
+                material_id,
+                currency,
+                opening_unit_price: list_unit_price,
+                settled_unit_price: accepted_unit_price,
+                savings_vs_opening_pct: savings_vs_list_pct,
+                expedited,
+                supplier_turns,
+              }))
+          : [];
       return {
         ingestion_status: "ok",
         source: "negotiations",
@@ -36,6 +53,7 @@ export const messageSupplier = defineTool({
         persona_mode: r.mode,
         model: r.model,
         latency_ms: r.latency_ms,
+        ...(history.length ? { negotiation_history: history, history_note: "Past settlements with this supplier. Use them to judge how far it usually moves from its opening price." } : {}),
         label: "simulated supplier response",
       };
     } catch (err) {

@@ -185,8 +185,24 @@ export const WorkOrder = z.object({
   qty: z.number(),
   status: z.enum(["planned", "released", "in_progress", "completed", "cancelled"]),
   due_date: isoDate,
+  // ---- batch-schedule extension (optional so host-platform payloads still parse) ----
+  /** ProductionLine.external_id the batch runs on. */
+  line_id: z.string().optional(),
+  batch_no: z.string().optional(),
+  start_date: isoDate.optional(),
+  /** Per-batch material consumption, derived from the product BOM and the site's daily rate. */
+  materials: z.array(BomLineItem).optional(),
 });
 export type WorkOrder = z.infer<typeof WorkOrder>;
+
+/** A scheduled batch: a WorkOrder with every batch-schedule field present. */
+export const BatchWorkOrder = WorkOrder.extend({
+  line_id: z.string(),
+  batch_no: z.string(),
+  start_date: isoDate,
+  materials: z.array(BomLineItem),
+});
+export type BatchWorkOrder = z.infer<typeof BatchWorkOrder>;
 
 // ---------------------------------------------------------------------------
 // New entities
@@ -212,6 +228,33 @@ export const Product = z.object({
   site_ids: z.array(z.string()),
 });
 export type Product = z.infer<typeof Product>;
+
+export const LineType = z.enum([
+  "upstream_bioreactor",
+  "downstream_purification",
+  "formulation",
+  "aseptic_fill",
+  "lyophilization",
+  "tableting",
+  "inhaler_fill",
+]);
+export type LineType = z.infer<typeof LineType>;
+
+/** EU GMP Annex 1 cleanroom grade the line operates in ("n/a" for non-sterile oral solids). */
+export const CleanroomGrade = z.enum(["A", "B", "C", "D", "n/a"]);
+export type CleanroomGrade = z.infer<typeof CleanroomGrade>;
+
+export const ProductionLine = z.object({
+  external_id: z.string(),
+  site_id: z.string(),
+  name: z.string(),
+  product_id: z.string(),
+  line_type: LineType,
+  batch_size: z.number(),
+  unit: Unit,
+  cleanroom_grade: CleanroomGrade,
+});
+export type ProductionLine = z.infer<typeof ProductionLine>;
 
 export const Material = z.object({
   external_id: z.string(),
@@ -395,6 +438,33 @@ export const Finding = z.object({
   created_at: isoTimestamp.optional(),
 });
 export type Finding = z.infer<typeof Finding>;
+
+/** Evidence board: objects (structure images, feasibility tables, QA packets, supplier evidence) kept for review. */
+export const BoardKind = z.enum([
+  "material_dossier",
+  "structure_image",
+  "feasibility_report",
+  "qa_packet",
+  "supplier_evidence",
+  "mission_summary",
+]);
+export type BoardKind = z.infer<typeof BoardKind>;
+
+export const BoardItem = z.object({
+  id: z.string(),
+  kind: BoardKind,
+  title: z.string(),
+  mission_id: z.string().nullable().optional(),
+  material_id: z.string().nullable().optional(),
+  site_id: z.string().nullable().optional(),
+  image_url: z.string().nullable().optional(),
+  data: z.unknown(),
+  source_urls: z.array(z.string()),
+  /** Upsert key: a new item with the same key replaces the old one (e.g. one dossier per material). */
+  key: z.string().nullable().optional(),
+  created_at: isoTimestamp,
+});
+export type BoardItem = z.infer<typeof BoardItem>;
 
 // ---------------------------------------------------------------------------
 // Tool contract

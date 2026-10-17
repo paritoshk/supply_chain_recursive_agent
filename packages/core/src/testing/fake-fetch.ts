@@ -1,4 +1,4 @@
-/** Test-only fetch router: canned You.com and openFDA responses so tool tests run offline. */
+/** Test-only fetch router: canned You.com, openFDA and PubChem responses so tool tests run offline. */
 export const YOU_FIXTURE = {
   results: {
     web: [
@@ -29,6 +29,48 @@ export const ENFORCEMENT_FIXTURE = {
   ],
 };
 
+/** PubChem fixtures (sucrose, CID 5988) shaped like the live PUG REST / PUG View responses. */
+export const PUBCHEM_PROPERTY_FIXTURE = {
+  PropertyTable: {
+    Properties: [
+      {
+        CID: 5988,
+        MolecularFormula: "C12H22O11",
+        MolecularWeight: "342.30",
+        ConnectivitySMILES: "C(C1C(C(C(C(O1)OC2(C(C(C(O2)CO)O)O)CO)O)O)O)O",
+        IUPACName: "(2R,3R,4S,5S,6R)-2-[(2S,3S,4S,5R)-3,4-dihydroxy-2,5-bis(hydroxymethyl)oxolan-2-yl]oxy-6-(hydroxymethyl)oxane-3,4,5-triol",
+        XLogP: -3.7,
+      },
+    ],
+  },
+};
+export const PUBCHEM_SYNONYMS_FIXTURE = { InformationList: { Information: [{ CID: 5988, Synonym: ["sucrose", "57-50-1", "saccharose", "Table sugar", "8030-20-7"] }] } };
+export const PUBCHEM_GHS_FIXTURE = {
+  Record: {
+    RecordType: "CID",
+    RecordNumber: 5988,
+    Section: [
+      {
+        TOCHeading: "Safety and Hazards",
+        Section: [
+          {
+            TOCHeading: "Hazards Identification",
+            Section: [
+              {
+                TOCHeading: "GHS Classification",
+                Information: [
+                  { Name: "GHS Hazard Statements", Value: { StringWithMarkup: [{ String: "Not Classified" }, { String: "Reported as not meeting GHS hazard criteria by 423 of 442 companies." }] } },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+};
+export const PUBCHEM_NOT_FOUND = { Fault: { Code: "PUGREST.NotFound", Message: "No CID found", Details: ["No CID found that matches the given name"] } };
+
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 
 export interface FakeFetchLog {
@@ -48,6 +90,12 @@ export function fakeFetch(log: FakeFetchLog = { calls: [] }, opts: { noMatches?:
       return opts.noMatches ? json({ error: { code: "NOT_FOUND", message: "No matches found!" } }, 404) : json(SHORTAGE_FIXTURE);
     if (url.startsWith("https://api.fda.gov/drug/enforcement.json"))
       return opts.noMatches ? json({ error: { code: "NOT_FOUND", message: "No matches found!" } }, 404) : json(ENFORCEMENT_FIXTURE);
+    if (url.startsWith("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/")) {
+      const name = decodeURIComponent(url.split("/compound/name/")[1]!.split("/")[0]!).toLowerCase();
+      return name === "sucrose" ? json(PUBCHEM_PROPERTY_FIXTURE) : json(PUBCHEM_NOT_FOUND, 404);
+    }
+    if (url.startsWith("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/5988/synonyms/JSON")) return json(PUBCHEM_SYNONYMS_FIXTURE);
+    if (url.startsWith("https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/5988/JSON")) return json(PUBCHEM_GHS_FIXTURE);
     return json({ error: `unexpected url ${url}` }, 500);
   }) as typeof fetch;
 }

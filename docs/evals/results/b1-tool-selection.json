@@ -1,0 +1,2347 @@
+{
+  "benchmark": "b1-tool-selection",
+  "generated_at": "2026-10-17T21:12:32.342Z",
+  "git_sha": "21fefbc",
+  "synthetic_data": true,
+  "method": {
+    "prompts": 24,
+    "tools_exposed": [
+      "low_stock_items",
+      "lookup_parts",
+      "inventory_value_summary",
+      "cover_projection",
+      "find_suppliers",
+      "match_spec",
+      "compare_quotes",
+      "price_inventory",
+      "propose_transfer",
+      "discover_suppliers",
+      "check_regulatory",
+      "draft_rfq",
+      "collect_quotes",
+      "open_mission",
+      "record_finding",
+      "notify_user",
+      "apply_approval",
+      "message_supplier",
+      "accept_offer",
+      "run_mission"
+    ],
+    "system_prompt": "apps/agent/agent/instructions.md + date line",
+    "temperature": 0,
+    "max_tokens": 4096,
+    "thinking": "model default (as deployed)",
+    "scoring": "first tool call name in the accepted set; args_valid = Zod parse of the real tool schema; args_correct = expected key values match",
+    "gate": "B1 >= 90% exact tool match"
+  },
+  "golden": [
+    {
+      "id": "inv-01",
+      "category": "inventory",
+      "prompt": "What's running low across our sites right now?",
+      "expect": [
+        "low_stock_items"
+      ]
+    },
+    {
+      "id": "inv-02",
+      "category": "inventory",
+      "prompt": "Which materials are at or below their reorder point? Worst first please.",
+      "expect": [
+        "low_stock_items"
+      ]
+    },
+    {
+      "id": "inv-03",
+      "category": "inventory",
+      "prompt": "How many days of cover do we have for MAT-SUC-INJ at SITE-GHE?",
+      "expect": [
+        "cover_projection"
+      ],
+      "args": {
+        "material_id": "MAT-SUC-INJ",
+        "site_id": "SITE-GHE"
+      }
+    },
+    {
+      "id": "inv-04",
+      "category": "inventory",
+      "prompt": "When does SITE-KOP run out of MAT-PS80-SR if consumption holds?",
+      "expect": [
+        "cover_projection"
+      ],
+      "args": {
+        "material_id": "MAT-PS80-SR",
+        "site_id": "SITE-KOP"
+      }
+    },
+    {
+      "id": "inv-05",
+      "category": "inventory",
+      "prompt": "What's our total released inventory value, split by region?",
+      "expect": [
+        "inventory_value_summary"
+      ],
+      "args": {
+        "group_by": "region"
+      }
+    },
+    {
+      "id": "inv-06",
+      "category": "inventory",
+      "prompt": "Break down inventory value by material class.",
+      "expect": [
+        "inventory_value_summary"
+      ],
+      "args": {
+        "group_by": "material_class"
+      }
+    },
+    {
+      "id": "prc-01",
+      "category": "pricing",
+      "prompt": "Price our expiring MAT-MAN-PAR at SITE-COR. Sell it or move it?",
+      "expect": [
+        "price_inventory"
+      ],
+      "args": {
+        "material_id": "MAT-MAN-PAR",
+        "site_id": "SITE-COR"
+      }
+    },
+    {
+      "id": "prc-02",
+      "category": "pricing",
+      "prompt": "What is the trehalose stock MAT-TRE-HP at SITE-TUA worth, and should we hold it?",
+      "expect": [
+        "price_inventory"
+      ],
+      "args": {
+        "material_id": "MAT-TRE-HP",
+        "site_id": "SITE-TUA"
+      }
+    },
+    {
+      "id": "trf-01",
+      "category": "transfer",
+      "prompt": "Can any sister site send MAT-PS80-SR to SITE-RAL? Propose a transfer.",
+      "expect": [
+        "propose_transfer"
+      ],
+      "args": {
+        "material_id": "MAT-PS80-SR",
+        "to_site_id": "SITE-RAL"
+      }
+    },
+    {
+      "id": "trf-02",
+      "category": "transfer",
+      "prompt": "Propose moving surplus MAT-MAN-PAR from SITE-COR to SITE-RAL.",
+      "expect": [
+        "propose_transfer"
+      ],
+      "args": {
+        "material_id": "MAT-MAN-PAR",
+        "from_site_id": "SITE-COR",
+        "to_site_id": "SITE-RAL"
+      }
+    },
+    {
+      "id": "sup-01",
+      "category": "supplier_lookup",
+      "prompt": "Who are our approved suppliers for MAT-HPMC?",
+      "expect": [
+        "find_suppliers"
+      ],
+      "args": {
+        "material_id": "MAT-HPMC"
+      }
+    },
+    {
+      "id": "sup-02",
+      "category": "supplier_lookup",
+      "prompt": "List approved suppliers for MAT-SUC-INJ that hold a CEP.",
+      "expect": [
+        "find_suppliers"
+      ],
+      "args": {
+        "material_id": "MAT-SUC-INJ",
+        "require_cep": true
+      }
+    },
+    {
+      "id": "sup-03",
+      "category": "supplier_lookup",
+      "prompt": "What's the material ID for our inhalation-grade lactose?",
+      "expect": [
+        "lookup_parts"
+      ],
+      "args": {
+        "query": "/lactose/i"
+      }
+    },
+    {
+      "id": "sup-04",
+      "category": "supplier_lookup",
+      "prompt": "Do we use L-histidine monohydrochloride anywhere? Look it up.",
+      "expect": [
+        "lookup_parts"
+      ],
+      "args": {
+        "query": "/histidine/i"
+      }
+    },
+    {
+      "id": "dsc-01",
+      "category": "discovery",
+      "prompt": "Search the web for new GMP manufacturers of MAT-TRE-HP we don't already use.",
+      "expect": [
+        "discover_suppliers"
+      ],
+      "args": {
+        "material_id": "MAT-TRE-HP"
+      }
+    },
+    {
+      "id": "dsc-02",
+      "category": "discovery",
+      "prompt": "Find additional public suppliers of inhalation magnesium stearate (MAT-MGST-INH) online, with sources.",
+      "expect": [
+        "discover_suppliers"
+      ],
+      "args": {
+        "material_id": "MAT-MGST-INH"
+      }
+    },
+    {
+      "id": "reg-01",
+      "category": "discovery",
+      "prompt": "Are there any FDA shortage or recall signals for mannitol?",
+      "expect": [
+        "check_regulatory"
+      ],
+      "args": {
+        "substance": "/mannitol/i"
+      }
+    },
+    {
+      "id": "spc-01",
+      "category": "spec",
+      "prompt": "Is MAT-HIS-HCL an acceptable substitute for MAT-HIS? Check the spec.",
+      "expect": [
+        "match_spec"
+      ],
+      "args": {
+        "material_id": "MAT-HIS",
+        "candidate_ids": [
+          "MAT-HIS-HCL"
+        ]
+      }
+    },
+    {
+      "id": "quo-01",
+      "category": "quotes",
+      "prompt": "Compare the quotes we have on RFQ-099 on a landed basis.",
+      "expect": [
+        "compare_quotes"
+      ],
+      "args": {
+        "rfq_id": "RFQ-099"
+      }
+    },
+    {
+      "id": "msn-01",
+      "category": "mission",
+      "prompt": "Ghent is down to about three weeks of injectable sucrose (MAT-SUC-INJ at SITE-GHE). Handle it.",
+      "expect": [
+        "run_mission"
+      ],
+      "args": {
+        "material_id": "MAT-SUC-INJ",
+        "site_id": "SITE-GHE"
+      }
+    },
+    {
+      "id": "msn-02",
+      "category": "mission",
+      "prompt": "Prevent a stockout of MAT-PS80-SR at SITE-KOP.",
+      "expect": [
+        "run_mission"
+      ],
+      "args": {
+        "material_id": "MAT-PS80-SR",
+        "site_id": "SITE-KOP"
+      }
+    },
+    {
+      "id": "apr-01",
+      "category": "approval",
+      "prompt": "APPROVE RFQ-099",
+      "expect": [
+        "apply_approval"
+      ],
+      "args": {
+        "rfq_id": "RFQ-099",
+        "decision": "/approve/i"
+      }
+    },
+    {
+      "id": "rfq-01",
+      "category": "quotes",
+      "prompt": "Draft an RFQ for 200 kg of MAT-TRE-HP delivered to SITE-KOP, needed by 2026-12-01.",
+      "expect": [
+        "draft_rfq"
+      ],
+      "args": {
+        "material_id": "MAT-TRE-HP",
+        "site_id": "SITE-KOP",
+        "qty": 200,
+        "need_by": "2026-12-01"
+      }
+    },
+    {
+      "id": "neg-01",
+      "category": "negotiation",
+      "prompt": "Message supplier SUP-019 on RFQ-099 and ask for a better unit price.",
+      "expect": [
+        "message_supplier"
+      ],
+      "args": {
+        "rfq_id": "RFQ-099",
+        "supplier_id": "SUP-019"
+      }
+    }
+  ],
+  "per_model": [
+    {
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "label": "Super-VL (doer)",
+      "available": true,
+      "n": 24,
+      "errors": 0,
+      "tool_accuracy": {
+        "p": 0.9583,
+        "lo": 0.7976,
+        "hi": 0.9926,
+        "k": 23,
+        "n": 24
+      },
+      "arg_validity": {
+        "p": 1,
+        "lo": 0.862,
+        "hi": 1,
+        "k": 24,
+        "n": 24
+      },
+      "arg_correctness": {
+        "p": 1,
+        "lo": 0.8569,
+        "hi": 1,
+        "k": 23,
+        "n": 23
+      },
+      "latency_ms": {
+        "p50": 672,
+        "p95": 983,
+        "mean": 705
+      },
+      "tokens": {
+        "in_mean": 4171,
+        "out_mean": 101
+      },
+      "gate_b1_90pct": true,
+      "misses": [
+        {
+          "id": "dsc-01",
+          "got": "lookup_parts",
+          "content": null
+        }
+      ]
+    },
+    {
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "label": "Super-120B (judge)",
+      "available": true,
+      "n": 24,
+      "errors": 0,
+      "tool_accuracy": {
+        "p": 0.9167,
+        "lo": 0.7415,
+        "hi": 0.9768,
+        "k": 22,
+        "n": 24
+      },
+      "arg_validity": {
+        "p": 1,
+        "lo": 0.862,
+        "hi": 1,
+        "k": 24,
+        "n": 24
+      },
+      "arg_correctness": {
+        "p": 1,
+        "lo": 0.8513,
+        "hi": 1,
+        "k": 22,
+        "n": 22
+      },
+      "latency_ms": {
+        "p50": 3106,
+        "p95": 5766,
+        "mean": 3285
+      },
+      "tokens": {
+        "in_mean": 4171,
+        "out_mean": 134
+      },
+      "gate_b1_90pct": true,
+      "misses": [
+        {
+          "id": "dsc-01",
+          "got": "lookup_parts",
+          "content": null
+        },
+        {
+          "id": "spc-01",
+          "got": "lookup_parts",
+          "content": null
+        }
+      ]
+    },
+    {
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "label": "Nano-30B (persona)",
+      "available": true,
+      "n": 24,
+      "errors": 0,
+      "tool_accuracy": {
+        "p": 1,
+        "lo": 0.862,
+        "hi": 1,
+        "k": 24,
+        "n": 24
+      },
+      "arg_validity": {
+        "p": 1,
+        "lo": 0.862,
+        "hi": 1,
+        "k": 24,
+        "n": 24
+      },
+      "arg_correctness": {
+        "p": 1,
+        "lo": 0.862,
+        "hi": 1,
+        "k": 24,
+        "n": 24
+      },
+      "latency_ms": {
+        "p50": 3325,
+        "p95": 17090,
+        "mean": 4903
+      },
+      "tokens": {
+        "in_mean": 4171,
+        "out_mean": 723
+      },
+      "gate_b1_90pct": true,
+      "misses": []
+    },
+    {
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "label": "Lightning-30B",
+      "available": true,
+      "n": 24,
+      "errors": 4,
+      "tool_accuracy": {
+        "p": 0.95,
+        "lo": 0.7639,
+        "hi": 0.9911,
+        "k": 19,
+        "n": 20
+      },
+      "arg_validity": {
+        "p": 1,
+        "lo": 0.8389,
+        "hi": 1,
+        "k": 20,
+        "n": 20
+      },
+      "arg_correctness": {
+        "p": 1,
+        "lo": 0.8318,
+        "hi": 1,
+        "k": 19,
+        "n": 19
+      },
+      "latency_ms": {
+        "p50": 3818,
+        "p95": 11063,
+        "mean": 5613
+      },
+      "tokens": {
+        "in_mean": 4307,
+        "out_mean": 442
+      },
+      "gate_b1_90pct": true,
+      "misses": [
+        {
+          "id": "spc-01",
+          "got": "lookup_parts",
+          "content": null
+        }
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "id": "inv-01",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "low_stock_items",
+      "args": {
+        "include_watch": true,
+        "limit": 25
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 953,
+      "tokens_in": 4163,
+      "tokens_out": 79,
+      "attempts": 1
+    },
+    {
+      "id": "inv-02",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "low_stock_items",
+      "args": {
+        "include_watch": true,
+        "limit": 25
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 1194,
+      "tokens_in": 4169,
+      "tokens_out": 70,
+      "attempts": 1
+    },
+    {
+      "id": "inv-03",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "cover_projection",
+      "args": {
+        "material_id": "MAT-SUC-INJ",
+        "site_id": "SITE-GHE",
+        "horizon_days": 90
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 983,
+      "tokens_in": 4173,
+      "tokens_out": 91,
+      "attempts": 1
+    },
+    {
+      "id": "inv-04",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "cover_projection",
+      "args": {
+        "material_id": "MAT-PS80-SR",
+        "site_id": "SITE-KOP",
+        "horizon_days": 90
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 628,
+      "tokens_in": 4173,
+      "tokens_out": 114,
+      "attempts": 1
+    },
+    {
+      "id": "inv-05",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "inventory_value_summary",
+      "args": {
+        "group_by": "region"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 562,
+      "tokens_in": 4165,
+      "tokens_out": 51,
+      "attempts": 1
+    },
+    {
+      "id": "inv-06",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "inventory_value_summary",
+      "args": {
+        "group_by": "material_class"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 532,
+      "tokens_in": 4161,
+      "tokens_out": 57,
+      "attempts": 1
+    },
+    {
+      "id": "prc-01",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "price_inventory",
+      "args": {
+        "material_id": "MAT-MAN-PAR",
+        "site_id": "SITE-COR"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 601,
+      "tokens_in": 4174,
+      "tokens_out": 107,
+      "attempts": 1
+    },
+    {
+      "id": "prc-02",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "price_inventory",
+      "args": {
+        "material_id": "MAT-TRE-HP",
+        "site_id": "SITE-TUA"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 677,
+      "tokens_in": 4178,
+      "tokens_out": 111,
+      "attempts": 1
+    },
+    {
+      "id": "trf-01",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "propose_transfer",
+      "args": {
+        "material_id": "MAT-PS80-SR",
+        "to_site_id": "SITE-RAL"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 684,
+      "tokens_in": 4176,
+      "tokens_out": 127,
+      "attempts": 1
+    },
+    {
+      "id": "trf-02",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "propose_transfer",
+      "args": {
+        "material_id": "MAT-MAN-PAR",
+        "from_site_id": "SITE-COR",
+        "to_site_id": "SITE-RAL"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 724,
+      "tokens_in": 4173,
+      "tokens_out": 123,
+      "attempts": 1
+    },
+    {
+      "id": "sup-01",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "find_suppliers",
+      "args": {
+        "material_id": "MAT-HPMC",
+        "include_candidates": false
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 524,
+      "tokens_in": 4164,
+      "tokens_out": 79,
+      "attempts": 1
+    },
+    {
+      "id": "sup-02",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "find_suppliers",
+      "args": {
+        "material_id": "MAT-SUC-INJ",
+        "require_cep": true
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 559,
+      "tokens_in": 4168,
+      "tokens_out": 84,
+      "attempts": 1
+    },
+    {
+      "id": "sup-03",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "lookup_parts",
+      "args": {
+        "query": "inhalation-grade lactose",
+        "limit": 10
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 516,
+      "tokens_in": 4165,
+      "tokens_out": 74,
+      "attempts": 1
+    },
+    {
+      "id": "sup-04",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "lookup_parts",
+      "args": {
+        "query": "L-histidine monohydrochloride",
+        "limit": 10
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 584,
+      "tokens_in": 4171,
+      "tokens_out": 77,
+      "attempts": 1
+    },
+    {
+      "id": "dsc-01",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "lookup_parts",
+      "args": {
+        "query": "MAT-TRE-HP"
+      },
+      "content": null,
+      "correct_tool": false,
+      "args_valid": true,
+      "args_correct": false,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 769,
+      "tokens_in": 4173,
+      "tokens_out": 91,
+      "attempts": 1
+    },
+    {
+      "id": "dsc-02",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "discover_suppliers",
+      "args": {
+        "material_id": "MAT-MGST-INH",
+        "query": "inhalation grade magnesium stearate supplier pharmaceutical",
+        "max_results": 8,
+        "read_pages": 2
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 890,
+      "tokens_in": 4177,
+      "tokens_out": 183,
+      "attempts": 1
+    },
+    {
+      "id": "reg-01",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "check_regulatory",
+      "args": {
+        "substance": "mannitol"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 556,
+      "tokens_in": 4166,
+      "tokens_out": 76,
+      "attempts": 1
+    },
+    {
+      "id": "spc-01",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "match_spec",
+      "args": {
+        "material_id": "MAT-HIS",
+        "candidate_ids": [
+          "MAT-HIS-HCL"
+        ]
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 743,
+      "tokens_in": 4171,
+      "tokens_out": 112,
+      "attempts": 1
+    },
+    {
+      "id": "quo-01",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "compare_quotes",
+      "args": {
+        "rfq_id": "RFQ-099"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 548,
+      "tokens_in": 4170,
+      "tokens_out": 72,
+      "attempts": 1
+    },
+    {
+      "id": "msn-01",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "run_mission",
+      "args": {
+        "material_id": "MAT-SUC-INJ",
+        "site_id": "SITE-GHE",
+        "trigger": "low cover at Ghent (~3 weeks)"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 710,
+      "tokens_in": 4182,
+      "tokens_out": 139,
+      "attempts": 1
+    },
+    {
+      "id": "msn-02",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "run_mission",
+      "args": {
+        "material_id": "MAT-PS80-SR",
+        "site_id": "SITE-KOP",
+        "trigger": "prevent stockout"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 672,
+      "tokens_in": 4172,
+      "tokens_out": 114,
+      "attempts": 1
+    },
+    {
+      "id": "apr-01",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "apply_approval",
+      "args": {
+        "rfq_id": "RFQ-099",
+        "decision": "APPROVE"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 564,
+      "tokens_in": 4162,
+      "tokens_out": 94,
+      "attempts": 1
+    },
+    {
+      "id": "rfq-01",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "draft_rfq",
+      "args": {
+        "material_id": "MAT-TRE-HP",
+        "site_id": "SITE-KOP",
+        "qty": 200,
+        "need_by": "2026-12-01"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 787,
+      "tokens_in": 4190,
+      "tokens_out": 134,
+      "attempts": 1
+    },
+    {
+      "id": "neg-01",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "tool": "message_supplier",
+      "args": {
+        "rfq_id": "RFQ-099",
+        "supplier_id": "SUP-019",
+        "message": "Please provide a better unit price on RFQ-099. We need a sharper landed unit cost to move forward."
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 970,
+      "tokens_in": 4176,
+      "tokens_out": 164,
+      "attempts": 1
+    },
+    {
+      "id": "inv-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "low_stock_items",
+      "args": {
+        "limit": 25
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 1270,
+      "tokens_in": 4163,
+      "tokens_out": 53,
+      "attempts": 1
+    },
+    {
+      "id": "inv-02",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "low_stock_items",
+      "args": {
+        "include_watch": true,
+        "limit": 25
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 3252,
+      "tokens_in": 4169,
+      "tokens_out": 111,
+      "attempts": 1
+    },
+    {
+      "id": "inv-03",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "cover_projection",
+      "args": {
+        "material_id": "MAT-SUC-INJ",
+        "site_id": "SITE-GHE"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 2182,
+      "tokens_in": 4173,
+      "tokens_out": 73,
+      "attempts": 1
+    },
+    {
+      "id": "inv-04",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "cover_projection",
+      "args": {
+        "material_id": "MAT-PS80-SR",
+        "site_id": "SITE-KOP",
+        "horizon_days": 90
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 4068,
+      "tokens_in": 4173,
+      "tokens_out": 172,
+      "attempts": 1
+    },
+    {
+      "id": "inv-05",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "inventory_value_summary",
+      "args": {
+        "group_by": "region"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 1496,
+      "tokens_in": 4165,
+      "tokens_out": 56,
+      "attempts": 1
+    },
+    {
+      "id": "inv-06",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "inventory_value_summary",
+      "args": {
+        "group_by": "material_class"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 1147,
+      "tokens_in": 4161,
+      "tokens_out": 57,
+      "attempts": 1
+    },
+    {
+      "id": "prc-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "price_inventory",
+      "args": {
+        "material_id": "MAT-MAN-PAR",
+        "site_id": "SITE-COR"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 6639,
+      "tokens_in": 4174,
+      "tokens_out": 346,
+      "attempts": 1
+    },
+    {
+      "id": "prc-02",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "price_inventory",
+      "args": {
+        "material_id": "MAT-TRE-HP",
+        "site_id": "SITE-TUA"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 2465,
+      "tokens_in": 4178,
+      "tokens_out": 136,
+      "attempts": 1
+    },
+    {
+      "id": "trf-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "propose_transfer",
+      "args": {
+        "material_id": "MAT-PS80-SR",
+        "to_site_id": "SITE-RAL"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 4301,
+      "tokens_in": 4176,
+      "tokens_out": 186,
+      "attempts": 1
+    },
+    {
+      "id": "trf-02",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "propose_transfer",
+      "args": {
+        "material_id": "MAT-MAN-PAR",
+        "from_site_id": "SITE-COR",
+        "to_site_id": "SITE-RAL"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 5090,
+      "tokens_in": 4173,
+      "tokens_out": 194,
+      "attempts": 1
+    },
+    {
+      "id": "sup-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "find_suppliers",
+      "args": {
+        "material_id": "MAT-HPMC"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 2223,
+      "tokens_in": 4164,
+      "tokens_out": 66,
+      "attempts": 1
+    },
+    {
+      "id": "sup-02",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "find_suppliers",
+      "args": {
+        "material_id": "MAT-SUC-INJ",
+        "require_cep": true
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 2255,
+      "tokens_in": 4168,
+      "tokens_out": 89,
+      "attempts": 1
+    },
+    {
+      "id": "sup-03",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "lookup_parts",
+      "args": {
+        "query": "inhalation-grade lactose",
+        "limit": 10
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 2149,
+      "tokens_in": 4165,
+      "tokens_out": 75,
+      "attempts": 1
+    },
+    {
+      "id": "sup-04",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "lookup_parts",
+      "args": {
+        "query": "L-histidine monohydrochloride",
+        "limit": 10
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 2044,
+      "tokens_in": 4171,
+      "tokens_out": 83,
+      "attempts": 1
+    },
+    {
+      "id": "dsc-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "lookup_parts",
+      "args": {
+        "query": "MAT-TRE-HP",
+        "limit": 10
+      },
+      "content": null,
+      "correct_tool": false,
+      "args_valid": true,
+      "args_correct": false,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 3106,
+      "tokens_in": 4173,
+      "tokens_out": 117,
+      "attempts": 1
+    },
+    {
+      "id": "dsc-02",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "discover_suppliers",
+      "args": {
+        "material_id": "MAT-MGST-INH",
+        "query": "inhalation magnesium stearate supplier",
+        "max_results": 8,
+        "read_pages": 2
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 4755,
+      "tokens_in": 4177,
+      "tokens_out": 188,
+      "attempts": 1
+    },
+    {
+      "id": "reg-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "check_regulatory",
+      "args": {
+        "substance": "mannitol"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 1142,
+      "tokens_in": 4166,
+      "tokens_out": 59,
+      "attempts": 1
+    },
+    {
+      "id": "spc-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "lookup_parts",
+      "args": {
+        "query": "MAT-HIS",
+        "limit": 5
+      },
+      "content": null,
+      "correct_tool": false,
+      "args_valid": true,
+      "args_correct": false,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 4142,
+      "tokens_in": 4171,
+      "tokens_out": 156,
+      "attempts": 1
+    },
+    {
+      "id": "quo-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "compare_quotes",
+      "args": {
+        "rfq_id": "RFQ-099"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 1714,
+      "tokens_in": 4170,
+      "tokens_out": 57,
+      "attempts": 1
+    },
+    {
+      "id": "msn-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "run_mission",
+      "args": {
+        "material_id": "MAT-SUC-INJ",
+        "site_id": "SITE-GHE",
+        "trigger": "sentinel"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 4925,
+      "tokens_in": 4182,
+      "tokens_out": 198,
+      "attempts": 1
+    },
+    {
+      "id": "msn-02",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "run_mission",
+      "args": {
+        "material_id": "MAT-PS80-SR",
+        "site_id": "SITE-KOP"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 5556,
+      "tokens_in": 4172,
+      "tokens_out": 183,
+      "attempts": 1
+    },
+    {
+      "id": "apr-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "apply_approval",
+      "args": {
+        "rfq_id": "RFQ-099",
+        "decision": "APPROVE"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 3915,
+      "tokens_in": 4162,
+      "tokens_out": 154,
+      "attempts": 1
+    },
+    {
+      "id": "rfq-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "draft_rfq",
+      "args": {
+        "material_id": "MAT-TRE-HP",
+        "site_id": "SITE-KOP",
+        "qty": 200,
+        "need_by": "2026-12-01"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 5766,
+      "tokens_in": 4190,
+      "tokens_out": 248,
+      "attempts": 1
+    },
+    {
+      "id": "neg-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "tool": "message_supplier",
+      "args": {
+        "rfq_id": "RFQ-099",
+        "supplier_id": "SUP-019",
+        "message": "Please provide a better unit price for this RFQ."
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 3241,
+      "tokens_in": 4176,
+      "tokens_out": 163,
+      "attempts": 1
+    },
+    {
+      "id": "inv-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "low_stock_items",
+      "args": {
+        "limit": 200,
+        "include_watch": true
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 2705,
+      "tokens_in": 4163,
+      "tokens_out": 546,
+      "attempts": 1
+    },
+    {
+      "id": "inv-02",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "low_stock_items",
+      "args": {
+        "limit": 25,
+        "include_watch": true
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 7422,
+      "tokens_in": 4169,
+      "tokens_out": 800,
+      "attempts": 1
+    },
+    {
+      "id": "inv-03",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "cover_projection",
+      "args": {
+        "material_id": "MAT-SUC-INJ",
+        "site_id": "SITE-GHE"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 1436,
+      "tokens_in": 4173,
+      "tokens_out": 257,
+      "attempts": 1
+    },
+    {
+      "id": "inv-04",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "cover_projection",
+      "args": {
+        "material_id": "MAT-PS80-SR",
+        "site_id": "SITE-KOP"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 4204,
+      "tokens_in": 4173,
+      "tokens_out": 427,
+      "attempts": 1
+    },
+    {
+      "id": "inv-05",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "inventory_value_summary",
+      "args": {
+        "group_by": "region"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 2457,
+      "tokens_in": 4165,
+      "tokens_out": 258,
+      "attempts": 1
+    },
+    {
+      "id": "inv-06",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "inventory_value_summary",
+      "args": {
+        "group_by": "material_class"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 3362,
+      "tokens_in": 4161,
+      "tokens_out": 399,
+      "attempts": 1
+    },
+    {
+      "id": "prc-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "price_inventory",
+      "args": {
+        "site_id": "SITE-COR",
+        "material_id": "MAT-MAN-PAR"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 20955,
+      "tokens_in": 4174,
+      "tokens_out": 3141,
+      "attempts": 1
+    },
+    {
+      "id": "prc-02",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "price_inventory",
+      "args": {
+        "site_id": "SITE-TUA",
+        "material_id": "MAT-TRE-HP"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 7959,
+      "tokens_in": 4178,
+      "tokens_out": 1031,
+      "attempts": 1
+    },
+    {
+      "id": "trf-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "propose_transfer",
+      "args": {
+        "material_id": "MAT-PS80-SR",
+        "to_site_id": "SITE-RAL"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 4888,
+      "tokens_in": 4176,
+      "tokens_out": 675,
+      "attempts": 1
+    },
+    {
+      "id": "trf-02",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "propose_transfer",
+      "args": {
+        "to_site_id": "SITE-RAL",
+        "material_id": "MAT-MAN-PAR",
+        "from_site_id": "SITE-COR"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 6057,
+      "tokens_in": 4173,
+      "tokens_out": 822,
+      "attempts": 1
+    },
+    {
+      "id": "sup-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "find_suppliers",
+      "args": {
+        "material_id": "MAT-HPMC"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 3572,
+      "tokens_in": 4164,
+      "tokens_out": 724,
+      "attempts": 1
+    },
+    {
+      "id": "sup-02",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "find_suppliers",
+      "args": {
+        "require_cep": true,
+        "material_id": "MAT-SUC-INJ"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 1751,
+      "tokens_in": 4168,
+      "tokens_out": 177,
+      "attempts": 1
+    },
+    {
+      "id": "sup-03",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "lookup_parts",
+      "args": {
+        "limit": 10,
+        "query": "inhalation-grade lactose"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 2047,
+      "tokens_in": 4165,
+      "tokens_out": 323,
+      "attempts": 1
+    },
+    {
+      "id": "sup-04",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "lookup_parts",
+      "args": {
+        "limit": 10,
+        "query": "L-histidine monohydrochloride"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 2593,
+      "tokens_in": 4171,
+      "tokens_out": 375,
+      "attempts": 1
+    },
+    {
+      "id": "dsc-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "discover_suppliers",
+      "args": {
+        "material_id": "MAT-TRE-HP",
+        "query": "MAT-TRE-HP GMP manufacturer"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 3325,
+      "tokens_in": 4173,
+      "tokens_out": 600,
+      "attempts": 1
+    },
+    {
+      "id": "dsc-02",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "discover_suppliers",
+      "args": {
+        "material_id": "MAT-MGST-INH",
+        "query": "inhalation magnesium stearate suppliers"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 3997,
+      "tokens_in": 4177,
+      "tokens_out": 826,
+      "attempts": 1
+    },
+    {
+      "id": "reg-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "check_regulatory",
+      "args": {
+        "substance": "mannitol"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 1282,
+      "tokens_in": 4166,
+      "tokens_out": 245,
+      "attempts": 1
+    },
+    {
+      "id": "spc-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "match_spec",
+      "args": {
+        "material_id": "MAT-HIS",
+        "candidate_ids": [
+          "MAT-HIS-HCL"
+        ]
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 17090,
+      "tokens_in": 4171,
+      "tokens_out": 2801,
+      "attempts": 1
+    },
+    {
+      "id": "quo-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "compare_quotes",
+      "args": {
+        "rfq_id": "RFQ-099"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 1740,
+      "tokens_in": 4170,
+      "tokens_out": 353,
+      "attempts": 1
+    },
+    {
+      "id": "msn-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "run_mission",
+      "args": {
+        "material_id": "MAT-SUC-INJ",
+        "site_id": "SITE-GHE",
+        "trigger": "sentinel"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 3514,
+      "tokens_in": 4182,
+      "tokens_out": 610,
+      "attempts": 1
+    },
+    {
+      "id": "msn-02",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "run_mission",
+      "args": {
+        "material_id": "MAT-PS80-SR",
+        "site_id": "SITE-KOP",
+        "trigger": "sentinel"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 1892,
+      "tokens_in": 4172,
+      "tokens_out": 338,
+      "attempts": 1
+    },
+    {
+      "id": "apr-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "apply_approval",
+      "args": {
+        "rfq_id": "RFQ-099",
+        "decision": "APPROVE"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 7865,
+      "tokens_in": 4162,
+      "tokens_out": 858,
+      "attempts": 1
+    },
+    {
+      "id": "rfq-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "draft_rfq",
+      "args": {
+        "material_id": "MAT-TRE-HP",
+        "site_id": "SITE-KOP",
+        "qty": 200,
+        "need_by": "2026-12-01"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 2308,
+      "tokens_in": 4190,
+      "tokens_out": 423,
+      "attempts": 1
+    },
+    {
+      "id": "neg-01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "tool": "message_supplier",
+      "args": {
+        "rfq_id": "RFQ-099",
+        "supplier_id": "SUP-019",
+        "message": "We are reviewing the quote for this material and would like to see if you can improve the unit price. Please let us know if a better rate is possible."
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 3243,
+      "tokens_in": 4176,
+      "tokens_out": 341,
+      "attempts": 1
+    },
+    {
+      "id": "inv-01",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "tool": "low_stock_items",
+      "args": {
+        "include_watch": true,
+        "limit": 50
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 3916,
+      "tokens_in": 4299,
+      "tokens_out": 495,
+      "attempts": 2
+    },
+    {
+      "id": "inv-02",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "error": "Crusoe 429: {\"error\":{\"type\":\"rate_limit_error\",\"param\":null,\"message\":\"Too many requests. Reason: max_requests_limit (orchestrator)\",\"code\":null}}",
+      "tool": null,
+      "correct_tool": false,
+      "args_valid": false,
+      "args_correct": false,
+      "latency_ms": null,
+      "tokens_in": 0,
+      "tokens_out": 0
+    },
+    {
+      "id": "inv-03",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "tool": "cover_projection",
+      "args": {
+        "material_id": "MAT-SUC-INJ",
+        "site_id": "SITE-GHE"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 4242,
+      "tokens_in": 4309,
+      "tokens_out": 409,
+      "attempts": 3
+    },
+    {
+      "id": "inv-04",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "error": "Crusoe 429: {\"error\":{\"message\":\"Too many requests. Reason: max_requests_limit (orchestrator)\",\"type\":\"rate_limit_error\",\"param\":null,\"code\":null}}",
+      "tool": null,
+      "correct_tool": false,
+      "args_valid": false,
+      "args_correct": false,
+      "latency_ms": null,
+      "tokens_in": 0,
+      "tokens_out": 0
+    },
+    {
+      "id": "inv-05",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "tool": "inventory_value_summary",
+      "args": {
+        "group_by": "region"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 24011,
+      "tokens_in": 4301,
+      "tokens_out": 410,
+      "attempts": 7
+    },
+    {
+      "id": "inv-06",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "tool": "inventory_value_summary",
+      "args": {
+        "group_by": "material_class"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 4638,
+      "tokens_in": 4297,
+      "tokens_out": 343,
+      "attempts": 4
+    },
+    {
+      "id": "prc-01",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "tool": "price_inventory",
+      "args": {
+        "material_id": "MAT-MAN-PAR",
+        "site_id": "SITE-COR"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 3527,
+      "tokens_in": 4310,
+      "tokens_out": 151,
+      "attempts": 4
+    },
+    {
+      "id": "prc-02",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "tool": "price_inventory",
+      "args": {
+        "material_id": "MAT-TRE-HP",
+        "site_id": "SITE-TUA"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 3307,
+      "tokens_in": 4314,
+      "tokens_out": 400,
+      "attempts": 2
+    },
+    {
+      "id": "trf-01",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "tool": "propose_transfer",
+      "args": {
+        "material_id": "MAT-PS80-SR",
+        "to_site_id": "SITE-RAL"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 1389,
+      "tokens_in": 4312,
+      "tokens_out": 180,
+      "attempts": 1
+    },
+    {
+      "id": "trf-02",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "tool": "propose_transfer",
+      "args": {
+        "material_id": "MAT-MAN-PAR",
+        "from_site_id": "SITE-COR",
+        "to_site_id": "SITE-RAL"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 4369,
+      "tokens_in": 4309,
+      "tokens_out": 516,
+      "attempts": 3
+    },
+    {
+      "id": "sup-01",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "tool": "find_suppliers",
+      "args": {
+        "material_id": "MAT-HPMC"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 3322,
+      "tokens_in": 4300,
+      "tokens_out": 320,
+      "attempts": 3
+    },
+    {
+      "id": "sup-02",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "tool": "find_suppliers",
+      "args": {
+        "material_id": "MAT-SUC-INJ",
+        "require_cep": true
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 3818,
+      "tokens_in": 4304,
+      "tokens_out": 508,
+      "attempts": 2
+    },
+    {
+      "id": "sup-03",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "tool": "lookup_parts",
+      "args": {
+        "query": "inhalation-grade lactose",
+        "limit": 10
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 3714,
+      "tokens_in": 4301,
+      "tokens_out": 268,
+      "attempts": 3
+    },
+    {
+      "id": "sup-04",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "tool": "lookup_parts",
+      "args": {
+        "query": "L-histidine monohydrochloride"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 3834,
+      "tokens_in": 4307,
+      "tokens_out": 331,
+      "attempts": 3
+    },
+    {
+      "id": "dsc-01",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "tool": "discover_suppliers",
+      "args": {
+        "material_id": "MAT-TRE-HP",
+        "query": "GMP manufacturers MAT-TRE-HP",
+        "max_results": 8,
+        "read_pages": 2
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 5590,
+      "tokens_in": 4309,
+      "tokens_out": 852,
+      "attempts": 1
+    },
+    {
+      "id": "dsc-02",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "tool": "discover_suppliers",
+      "args": {
+        "material_id": "MAT-MGST-INH",
+        "query": "inhalation magnesium stearate",
+        "max_results": 10,
+        "read_pages": 2
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 11063,
+      "tokens_in": 4313,
+      "tokens_out": 680,
+      "attempts": 5
+    },
+    {
+      "id": "reg-01",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "tool": "check_regulatory",
+      "args": {
+        "substance": "mannitol"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 3209,
+      "tokens_in": 4302,
+      "tokens_out": 424,
+      "attempts": 2
+    },
+    {
+      "id": "spc-01",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "tool": "lookup_parts",
+      "args": {
+        "query": "MAT-HIS",
+        "limit": 5
+      },
+      "content": null,
+      "correct_tool": false,
+      "args_valid": true,
+      "args_correct": false,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 8823,
+      "tokens_in": 4307,
+      "tokens_out": 427,
+      "attempts": 5
+    },
+    {
+      "id": "quo-01",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "tool": "compare_quotes",
+      "args": {
+        "rfq_id": "RFQ-099"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 3653,
+      "tokens_in": 4306,
+      "tokens_out": 561,
+      "attempts": 1
+    },
+    {
+      "id": "msn-01",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "error": "Crusoe 429: {\"error\":{\"message\":\"Too many requests. Reason: max_requests_limit (orchestrator)\",\"code\":null,\"param\":null,\"type\":\"rate_limit_error\"}}",
+      "tool": null,
+      "correct_tool": false,
+      "args_valid": false,
+      "args_correct": false,
+      "latency_ms": null,
+      "tokens_in": 0,
+      "tokens_out": 0
+    },
+    {
+      "id": "msn-02",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "error": "Crusoe 429: {\"error\":{\"message\":\"Too many requests. Reason: max_requests_limit (orchestrator)\",\"code\":null,\"param\":null,\"type\":\"rate_limit_error\"}}",
+      "tool": null,
+      "correct_tool": false,
+      "args_valid": false,
+      "args_correct": false,
+      "latency_ms": null,
+      "tokens_in": 0,
+      "tokens_out": 0
+    },
+    {
+      "id": "apr-01",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "tool": "apply_approval",
+      "args": {
+        "rfq_id": "RFQ-099",
+        "decision": "APPROVE"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 3786,
+      "tokens_in": 4298,
+      "tokens_out": 575,
+      "attempts": 1
+    },
+    {
+      "id": "rfq-01",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "tool": "draft_rfq",
+      "args": {
+        "material_id": "MAT-TRE-HP",
+        "site_id": "SITE-KOP",
+        "qty": 200,
+        "need_by": "2026-12-01"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 3441,
+      "tokens_in": 4326,
+      "tokens_out": 492,
+      "attempts": 1
+    },
+    {
+      "id": "neg-01",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "tool": "message_supplier",
+      "args": {
+        "rfq_id": "RFQ-099",
+        "supplier_id": "SUP-019",
+        "message": "Could you please review and improve your unit price offer for this RFQ? We are looking for the most competitive landed cost suitable for our supply chain."
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 8608,
+      "tokens_in": 4312,
+      "tokens_out": 497,
+      "attempts": 5
+    }
+  ],
+  "wall_s": 224.53,
+  "usage": {
+    "by_model": {
+      "nvidia/NVIDIA-Nemotron-3.5-Super-VL": {
+        "calls": 24,
+        "errors": 0,
+        "tokens_in": 100112,
+        "tokens_out": 2423,
+        "cost_usd": 0.011,
+        "attempts": 24
+      },
+      "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B": {
+        "calls": 24,
+        "errors": 0,
+        "tokens_in": 100112,
+        "tokens_out": 3220,
+        "cost_usd": 0.0378,
+        "attempts": 24
+      },
+      "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B": {
+        "calls": 24,
+        "errors": 0,
+        "tokens_in": 100112,
+        "tokens_out": 17350,
+        "cost_usd": 0.0085,
+        "attempts": 24
+      },
+      "nvidia/Nemotron-3.5-Lightning-30B-A3B": {
+        "calls": 24,
+        "errors": 4,
+        "tokens_in": 86136,
+        "tokens_out": 8839,
+        "cost_usd": 0.0061,
+        "attempts": 58
+      }
+    },
+    "total_cost_usd": 0.0633,
+    "total_calls": 96
+  }
+}

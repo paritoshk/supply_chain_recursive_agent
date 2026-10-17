@@ -6,3 +6,4 @@ export * from "./tools/index.ts";
 export * from "./faults.ts";
 export * from "./negotiation.ts";
 export * from "./sim/index.ts";
+export * from "./pubchem.ts";

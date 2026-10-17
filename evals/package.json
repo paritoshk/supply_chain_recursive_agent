@@ -1,0 +1,28 @@
+{
+  "name": "@supply-agent/evals",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Benchmark harness (B1, B3, B4, B5, B5b, B6/B8) for the Supplier Chief of Staff agent. Writes docs/evals/results/*.json and docs/evals/png/*.png.",
+  "scripts": {
+    "b1": "tsx src/b1-tools.ts",
+    "b3": "tsx src/b3-guardrails.ts",
+    "b4": "tsx src/b4-spec.ts",
+    "b5": "tsx src/b5-discovery.ts",
+    "b5b": "tsx src/b5b-negotiation.ts",
+    "b6": "tsx src/b6-missions.ts",
+    "plot": "python3 -I plot/plot.py",
+    "summary": "tsx src/summary.ts",
+    "all": "tsx src/all.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@supply-agent/core": "workspace:*",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

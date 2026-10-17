@@ -13,7 +13,8 @@
     "./crusoe": "./src/crusoe.ts",
     "./faults": "./src/faults.ts",
     "./negotiation": "./src/negotiation.ts",
-    "./sim": "./src/sim/index.ts"
+    "./sim": "./src/sim/index.ts",
+    "./pubchem": "./src/pubchem.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
@@ -23,7 +24,9 @@
     "smoke:crusoe": "tsx src/scripts/crusoe-smoke.ts",
     "smoke:live": "tsx src/scripts/live-smoke.ts",
     "bench:persona": "tsx src/scripts/persona-bench.ts",
-    "sim": "tsx src/scripts/sim.ts"
+    "sim": "tsx src/scripts/sim.ts",
+    "sim:learning": "tsx src/scripts/sim-learning.ts",
+    "smoke:pubchem": "tsx src/scripts/pubchem-smoke.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.96",

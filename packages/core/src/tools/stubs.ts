@@ -149,10 +149,12 @@ async function youSearch(query: string, count: number, apiKey: string): Promise<
 export const discoverSuppliers = defineTool({
   name: "discover_suppliers",
   description:
-    "Live web discovery of public suppliers for a material via You.com search, with citations. Every result is a discovery_candidate, never approved.",
+    "Live web discovery of public suppliers for a material via You.com search, with citations. Every result is a discovery_candidate, never approved. Results are kept on the evidence board.",
   idempotent: true,
+  writes: "board",
   inputSchema: z.object({
     material_id: z.string(),
+    mission_id: z.string().nullable().optional(),
     query: z.string().optional(),
     max_results: z.number().int().positive().max(20).default(8),
     /** Read the top N supplier pages with You.com contents to extract compliance claims (0 = snippets only). */
@@ -184,6 +186,28 @@ export const discoverSuppliers = defineTool({
         errors.push((err as Error).message);
       }
     }
+    const evidence = ctx.store.addBoardItem({
+      kind: "supplier_evidence",
+      title: `Supplier evidence: ${m.name}`,
+      mission_id: args.mission_id ?? null,
+      material_id: m.external_id,
+      image_url: null,
+      key: `evidence:${args.mission_id ?? "adhoc"}:${m.external_id}`,
+      source_urls: candidates.map((c) => c.href),
+      data: {
+        queries,
+        label: "discovery_candidate (not approved)",
+        candidates: candidates.map((c) => ({
+          name: c.name,
+          href: c.href,
+          kind: c.kind,
+          evidence: c.evidence.slice(0, 240),
+          page_read: Boolean(c.page?.read),
+          signals: c.page?.signals ?? [],
+        })),
+        errors,
+      },
+    });
     return ok(
       "you.com",
       candidates.map((c) => ({
@@ -198,6 +222,7 @@ export const discoverSuppliers = defineTool({
         candidates,
         candidate_count: candidates.length,
         errors,
+        board_item_id: evidence.id,
         note:
           "Live web results. Every hit is a discovery_candidate: not technically assessed, not quality approved, not released for use. " +
           "Page signals are the supplier's own claims (read via You.com contents), not verified DMF/CEP status. " +

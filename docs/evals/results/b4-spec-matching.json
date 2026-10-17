@@ -1,0 +1,3900 @@
+{
+  "benchmark": "b4-spec-matching",
+  "generated_at": "2026-10-17T21:33:43.417Z",
+  "git_sha": "21fefbc",
+  "synthetic_data": true,
+  "method": {
+    "pairs": 41,
+    "gold_equivalent": 16,
+    "gold_not_equivalent": 25,
+    "hard_pairs": [
+      "P14",
+      "P15",
+      "P16",
+      "P41"
+    ],
+    "positive_class": "equivalent",
+    "deterministic": "specPrefilter (match_spec): exact => equivalent, anything else => not_equivalent",
+    "llm": "model sees both records' spec fields (name, substance, class, grade, compendia, salt_form, endotoxin_class, sourcing_mode), one call per pair, temperature 0, JSON label",
+    "hybrid": "prefilter decides; the model may only veto an 'exact' (never upgrade a mismatch)",
+    "gate": "B4 accuracy >= 90% and false-equivalence = 0"
+  },
+  "pairs": [
+    {
+      "id": "P01",
+      "kind": "same spec, renamed",
+      "hard": false,
+      "gold": "equivalent",
+      "why": "identical spec fields",
+      "required": {
+        "external_id": "MAT-SUC-INJ",
+        "name": "Sucrose, injectable grade (low endotoxin)",
+        "substance": "sucrose",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral low-endotoxin",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP",
+          "ChP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-001",
+        "name": "Sucrose multicompendial, injectable, low endotoxin",
+        "substance": "sucrose",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral low-endotoxin",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP",
+          "ChP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P02",
+      "kind": "same spec, renamed",
+      "hard": false,
+      "gold": "equivalent",
+      "why": "identical spec fields",
+      "required": {
+        "external_id": "MAT-MAN-PAR",
+        "name": "Mannitol, parenteral grade (low endotoxin)",
+        "substance": "mannitol",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral low-endotoxin",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-002",
+        "name": "D-Mannitol parenteral, low bioburden/endotoxin",
+        "substance": "mannitol",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral low-endotoxin",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P03",
+      "kind": "same spec, renamed",
+      "hard": false,
+      "gold": "equivalent",
+      "why": "same hydrate, grade, compendia",
+      "required": {
+        "external_id": "MAT-TRE-HP",
+        "name": "Trehalose dihydrate, high-purity low-endotoxin",
+        "substance": "trehalose",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral low-endotoxin",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP",
+          "ChP"
+        ],
+        "salt_form": "dihydrate",
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-003",
+        "name": "Trehalose dihydrate HPLE (high purity, low endotoxin)",
+        "substance": "trehalose",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral low-endotoxin",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP",
+          "ChP"
+        ],
+        "salt_form": "dihydrate",
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P04",
+      "kind": "compendia superset",
+      "hard": false,
+      "gold": "equivalent",
+      "why": "candidate meets every required compendium plus ChP",
+      "required": {
+        "external_id": "MAT-NACL",
+        "name": "Sodium chloride, parenteral grade",
+        "substance": "sodium chloride",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral low-endotoxin",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-004",
+        "name": "Sodium chloride, parenteral grade",
+        "substance": "sodium chloride",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral low-endotoxin",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP",
+          "ChP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P05",
+      "kind": "same spec, renamed",
+      "hard": false,
+      "gold": "equivalent",
+      "why": "same free base, grade, compendia",
+      "required": {
+        "external_id": "MAT-HIS",
+        "name": "L-Histidine, parenteral grade",
+        "substance": "histidine",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral low-endotoxin",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP"
+        ],
+        "salt_form": "free base",
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-005",
+        "name": "L-Histidine base, multicompendial, low endotoxin",
+        "substance": "histidine",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral low-endotoxin",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP"
+        ],
+        "salt_form": "free base",
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P06",
+      "kind": "same spec, renamed",
+      "hard": false,
+      "gold": "equivalent",
+      "why": "same super-refined parenteral spec",
+      "required": {
+        "external_id": "MAT-PS80-SR",
+        "name": "Polysorbate 80, super-refined (low peroxide)",
+        "substance": "polysorbate 80",
+        "material_class": "lipid_surfactant",
+        "grade": "parenteral super-refined",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "ChP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-006",
+        "name": "Polysorbate 80 HP (high purity, low peroxide)",
+        "substance": "polysorbate 80",
+        "material_class": "lipid_surfactant",
+        "grade": "parenteral super-refined",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "ChP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P07",
+      "kind": "same spec, renamed",
+      "hard": false,
+      "gold": "equivalent",
+      "why": "same particle grade and compendia",
+      "required": {
+        "external_id": "MAT-MCC-102",
+        "name": "Microcrystalline cellulose, 100 um direct-compression type",
+        "substance": "microcrystalline cellulose",
+        "material_class": "specialty_excipient",
+        "grade": "direct compression 100 um",
+        "compendia": [
+          "Ph. Eur.",
+          "USP-NF",
+          "JP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-007",
+        "name": "MCC PH-102 type, 100 um",
+        "substance": "microcrystalline cellulose",
+        "material_class": "specialty_excipient",
+        "grade": "direct compression 100 um",
+        "compendia": [
+          "Ph. Eur.",
+          "USP-NF",
+          "JP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P08",
+      "kind": "grade text case/spacing",
+      "hard": false,
+      "gold": "equivalent",
+      "why": "same grade, different capitalisation",
+      "required": {
+        "external_id": "MAT-HPMC",
+        "name": "Hypromellose 2910, 5 mPa.s",
+        "substance": "hypromellose",
+        "material_class": "specialty_excipient",
+        "grade": "2910 / 5 mPa.s film former",
+        "compendia": [
+          "Ph. Eur.",
+          "USP-NF",
+          "JP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-008",
+        "name": "Hypromellose 2910, 5 mPa.s",
+        "substance": "hypromellose",
+        "material_class": "specialty_excipient",
+        "grade": "2910 / 5 MPA.S FILM FORMER",
+        "compendia": [
+          "Ph. Eur.",
+          "USP-NF",
+          "JP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P09",
+      "kind": "exceeds spec (extra endotoxin control)",
+      "hard": false,
+      "gold": "equivalent",
+      "why": "required has no endotoxin class; candidate is tighter",
+      "required": {
+        "external_id": "MAT-GLY",
+        "name": "Glycine, parenteral grade",
+        "substance": "glycine",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-009",
+        "name": "Glycine, parenteral grade",
+        "substance": "glycine",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P10",
+      "kind": "compendia reordered",
+      "hard": false,
+      "gold": "equivalent",
+      "why": "same compendia set",
+      "required": {
+        "external_id": "MAT-KCL",
+        "name": "Potassium chloride, parenteral grade",
+        "substance": "potassium chloride",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-010",
+        "name": "Potassium chloride, parenteral grade",
+        "substance": "potassium chloride",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral",
+        "compendia": [
+          "JP",
+          "USP-NF",
+          "Ph. Eur."
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P11",
+      "kind": "same spec, renamed",
+      "hard": false,
+      "gold": "equivalent",
+      "why": "same monohydrate and grade",
+      "required": {
+        "external_id": "MAT-CIT",
+        "name": "Citric acid monohydrate",
+        "substance": "citric acid",
+        "material_class": "compendial_excipient",
+        "grade": "oral",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur."
+        ],
+        "salt_form": "monohydrate",
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-011",
+        "name": "Citric acid 1-hydrate, oral grade",
+        "substance": "citric acid",
+        "material_class": "compendial_excipient",
+        "grade": "oral",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur."
+        ],
+        "salt_form": "monohydrate",
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P12",
+      "kind": "same spec, renamed",
+      "hard": false,
+      "gold": "equivalent",
+      "why": "same carrier grade and hydrate",
+      "required": {
+        "external_id": "MAT-LAC-INH",
+        "name": "Lactose monohydrate, inhalation grade (coarse carrier)",
+        "substance": "lactose",
+        "material_class": "specialty_excipient",
+        "grade": "inhalation carrier",
+        "compendia": [
+          "Ph. Eur.",
+          "USP-NF"
+        ],
+        "salt_form": "monohydrate",
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-012",
+        "name": "Inhalation lactose, sieved carrier grade",
+        "substance": "lactose",
+        "material_class": "specialty_excipient",
+        "grade": "inhalation carrier",
+        "compendia": [
+          "Ph. Eur.",
+          "USP-NF"
+        ],
+        "salt_form": "monohydrate",
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P13",
+      "kind": "same spec, renamed",
+      "hard": false,
+      "gold": "equivalent",
+      "why": "same grade and compendia",
+      "required": {
+        "external_id": "MAT-MGST",
+        "name": "Magnesium stearate, vegetable-source tablet grade",
+        "substance": "magnesium stearate",
+        "material_class": "compendial_excipient",
+        "grade": "tablet lubricant",
+        "compendia": [
+          "Ph. Eur.",
+          "USP-NF"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-013",
+        "name": "Magnesium stearate, vegetable, tablet lubricant grade",
+        "substance": "magnesium stearate",
+        "material_class": "compendial_excipient",
+        "grade": "tablet lubricant",
+        "compendia": [
+          "Ph. Eur.",
+          "USP-NF"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P14",
+      "kind": "synonym substance",
+      "hard": true,
+      "gold": "equivalent",
+      "why": "Tris is tromethamine",
+      "required": {
+        "external_id": "MAT-TRIS",
+        "name": "Tromethamine (Tris), parenteral grade",
+        "substance": "tromethamine",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur."
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-014",
+        "name": "Tris(hydroxymethyl)aminomethane, parenteral",
+        "substance": "Tris",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur."
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P15",
+      "kind": "synonym substance",
+      "hard": true,
+      "gold": "equivalent",
+      "why": "glycerin is glycerol",
+      "required": {
+        "external_id": "MAT-GLYC",
+        "name": "Glycerol, parenteral grade",
+        "substance": "glycerol",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-015",
+        "name": "Glycerin, parenteral grade",
+        "substance": "glycerin",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P16",
+      "kind": "synonym substance",
+      "hard": true,
+      "gold": "equivalent",
+      "why": "HPMC is hypromellose",
+      "required": {
+        "external_id": "MAT-HPMC",
+        "name": "Hypromellose 2910, 5 mPa.s",
+        "substance": "hypromellose",
+        "material_class": "specialty_excipient",
+        "grade": "2910 / 5 mPa.s film former",
+        "compendia": [
+          "Ph. Eur.",
+          "USP-NF",
+          "JP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-016",
+        "name": "HPMC 2910, 5 mPa.s",
+        "substance": "HPMC",
+        "material_class": "specialty_excipient",
+        "grade": "2910 / 5 mPa.s film former",
+        "compendia": [
+          "Ph. Eur.",
+          "USP-NF",
+          "JP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P17",
+      "kind": "grade + endotoxin + compendia",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "oral NF grade for an injectable low-endotoxin requirement",
+      "required": {
+        "external_id": "MAT-SUC-INJ",
+        "name": "Sucrose, injectable grade (low endotoxin)",
+        "substance": "sucrose",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral low-endotoxin",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP",
+          "ChP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "MAT-SUC-NF",
+        "name": "Sucrose, NF oral grade",
+        "substance": "sucrose",
+        "material_class": "compendial_excipient",
+        "grade": "oral",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur."
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P18",
+      "kind": "grade (parenteral vs DC)",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "direct-compression grade, no endotoxin class",
+      "required": {
+        "external_id": "MAT-MAN-PAR",
+        "name": "Mannitol, parenteral grade (low endotoxin)",
+        "substance": "mannitol",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral low-endotoxin",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "MAT-MAN-DC",
+        "name": "Mannitol, direct-compression grade",
+        "substance": "mannitol",
+        "material_class": "compendial_excipient",
+        "grade": "direct compression",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur."
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P19",
+      "kind": "salt form",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "free base vs monohydrochloride monohydrate",
+      "required": {
+        "external_id": "MAT-HIS",
+        "name": "L-Histidine, parenteral grade",
+        "substance": "histidine",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral low-endotoxin",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP"
+        ],
+        "salt_form": "free base",
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "MAT-HIS-HCL",
+        "name": "L-Histidine monohydrochloride monohydrate",
+        "substance": "histidine",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral low-endotoxin",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP"
+        ],
+        "salt_form": "monohydrochloride monohydrate",
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P20",
+      "kind": "purity grade",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "standard oral/topical grade for super-refined parenteral",
+      "required": {
+        "external_id": "MAT-PS80-SR",
+        "name": "Polysorbate 80, super-refined (low peroxide)",
+        "substance": "polysorbate 80",
+        "material_class": "lipid_surfactant",
+        "grade": "parenteral super-refined",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "ChP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "MAT-PS80-STD",
+        "name": "Polysorbate 80, standard grade",
+        "substance": "polysorbate 80",
+        "material_class": "lipid_surfactant",
+        "grade": "oral/topical",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur."
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P21",
+      "kind": "particle grade",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "coarse carrier vs micronised fines",
+      "required": {
+        "external_id": "MAT-LAC-INH",
+        "name": "Lactose monohydrate, inhalation grade (coarse carrier)",
+        "substance": "lactose",
+        "material_class": "specialty_excipient",
+        "grade": "inhalation carrier",
+        "compendia": [
+          "Ph. Eur.",
+          "USP-NF"
+        ],
+        "salt_form": "monohydrate",
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "MAT-LAC-FINE",
+        "name": "Lactose monohydrate, inhalation grade (micronised fines)",
+        "substance": "lactose",
+        "material_class": "specialty_excipient",
+        "grade": "inhalation fines",
+        "compendia": [
+          "Ph. Eur.",
+          "USP-NF"
+        ],
+        "salt_form": "monohydrate",
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P22",
+      "kind": "grade (inhalation vs tablet)",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "tablet lubricant for inhalation",
+      "required": {
+        "external_id": "MAT-MGST-INH",
+        "name": "Magnesium stearate, inhalation grade",
+        "substance": "magnesium stearate",
+        "material_class": "specialty_excipient",
+        "grade": "inhalation",
+        "compendia": [
+          "Ph. Eur.",
+          "USP-NF"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "MAT-MGST",
+        "name": "Magnesium stearate, vegetable-source tablet grade",
+        "substance": "magnesium stearate",
+        "material_class": "compendial_excipient",
+        "grade": "tablet lubricant",
+        "compendia": [
+          "Ph. Eur.",
+          "USP-NF"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P23",
+      "kind": "particle grade",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "50 um wet granulation vs 100 um DC",
+      "required": {
+        "external_id": "MAT-MCC-102",
+        "name": "Microcrystalline cellulose, 100 um direct-compression type",
+        "substance": "microcrystalline cellulose",
+        "material_class": "specialty_excipient",
+        "grade": "direct compression 100 um",
+        "compendia": [
+          "Ph. Eur.",
+          "USP-NF",
+          "JP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "MAT-MCC-101",
+        "name": "Microcrystalline cellulose, 50 um wet-granulation type",
+        "substance": "microcrystalline cellulose",
+        "material_class": "specialty_excipient",
+        "grade": "wet granulation 50 um",
+        "compendia": [
+          "Ph. Eur.",
+          "USP-NF",
+          "JP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P24",
+      "kind": "salt + sterility",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "trihydrate vs sterile sodium salt",
+      "required": {
+        "external_id": "MAT-AMOX",
+        "name": "Amoxicillin trihydrate, compacted",
+        "substance": "amoxicillin",
+        "material_class": "small_molecule_api",
+        "grade": "compacted oral",
+        "compendia": [
+          "USP",
+          "Ph. Eur."
+        ],
+        "salt_form": "trihydrate",
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "MAT-AMOX-NA",
+        "name": "Amoxicillin sodium, sterile",
+        "substance": "amoxicillin",
+        "material_class": "small_molecule_api",
+        "grade": "sterile",
+        "compendia": [
+          "USP",
+          "Ph. Eur."
+        ],
+        "salt_form": "sodium",
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P25",
+      "kind": "analogue vs licensed",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "development analogue of a licensed adjuvant",
+      "required": {
+        "external_id": "MAT-SAP-QS",
+        "name": "Saponin adjuvant QS-class (licensed)",
+        "substance": "saponin adjuvant QS-class",
+        "material_class": "adjuvant_biologic",
+        "grade": "licensed GMP",
+        "compendia": [],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "access_led"
+      },
+      "candidate": {
+        "external_id": "MAT-SAP-AN",
+        "name": "Saponin adjuvant analogue (synthetic QS-class)",
+        "substance": "saponin adjuvant QS-class",
+        "material_class": "adjuvant_biologic",
+        "grade": "development",
+        "compendia": [],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "access_led"
+      }
+    },
+    {
+      "id": "P26",
+      "kind": "different item (process-locked)",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "different vial format on a validated line",
+      "required": {
+        "external_id": "MAT-VIAL-2R",
+        "name": "Type I borosilicate vial, 2R, ready-to-use",
+        "substance": "type I glass vial 2R",
+        "material_class": "primary_packaging",
+        "grade": "Type I RTU",
+        "compendia": [
+          "USP <660>",
+          "Ph. Eur. 3.2.1"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "process_locked"
+      },
+      "candidate": {
+        "external_id": "MAT-VIAL-6R",
+        "name": "Type I borosilicate vial, 6R, ready-to-use",
+        "substance": "type I glass vial 6R",
+        "material_class": "primary_packaging",
+        "grade": "Type I RTU",
+        "compendia": [
+          "USP <660>",
+          "Ph. Eur. 3.2.1"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "process_locked"
+      }
+    },
+    {
+      "id": "P27",
+      "kind": "different item (process-locked)",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "different stopper size",
+      "required": {
+        "external_id": "MAT-STOP-13",
+        "name": "Bromobutyl stopper, 13 mm, fluoropolymer-coated, ready-to-sterilise",
+        "substance": "bromobutyl stopper 13 mm",
+        "material_class": "primary_packaging",
+        "grade": "coated RTS",
+        "compendia": [
+          "USP <381>",
+          "Ph. Eur. 3.2.9"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "process_locked"
+      },
+      "candidate": {
+        "external_id": "MAT-STOP-20",
+        "name": "Bromobutyl stopper, 20 mm, fluoropolymer-coated, ready-to-sterilise",
+        "substance": "bromobutyl stopper 20 mm",
+        "material_class": "primary_packaging",
+        "grade": "coated RTS",
+        "compendia": [
+          "USP <381>",
+          "Ph. Eur. 3.2.9"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "process_locked"
+      }
+    },
+    {
+      "id": "P28",
+      "kind": "different substance",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "polysorbate 20 is a different molecule",
+      "required": {
+        "external_id": "MAT-PS80-SR",
+        "name": "Polysorbate 80, super-refined (low peroxide)",
+        "substance": "polysorbate 80",
+        "material_class": "lipid_surfactant",
+        "grade": "parenteral super-refined",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "ChP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "MAT-PS20",
+        "name": "Polysorbate 20, super-refined",
+        "substance": "polysorbate 20",
+        "material_class": "lipid_surfactant",
+        "grade": "parenteral super-refined",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur."
+        ],
+        "salt_form": null,
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P29",
+      "kind": "different substance",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "different phospholipid",
+      "required": {
+        "external_id": "MAT-DOPC",
+        "name": "DOPC, synthetic GMP (liposome lipid)",
+        "substance": "DOPC",
+        "material_class": "lipid_surfactant",
+        "grade": "GMP synthetic",
+        "compendia": [],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "access_led"
+      },
+      "candidate": {
+        "external_id": "MAT-DSPC",
+        "name": "DSPC, synthetic GMP (pilot LNP platform)",
+        "substance": "DSPC",
+        "material_class": "lipid_surfactant",
+        "grade": "GMP synthetic",
+        "compendia": [],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "access_led"
+      }
+    },
+    {
+      "id": "P30",
+      "kind": "hydrate form",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "anhydrous vs dihydrate",
+      "required": {
+        "external_id": "MAT-TRE-HP",
+        "name": "Trehalose dihydrate, high-purity low-endotoxin",
+        "substance": "trehalose",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral low-endotoxin",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP",
+          "ChP"
+        ],
+        "salt_form": "dihydrate",
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-017",
+        "name": "Trehalose anhydrous, low endotoxin",
+        "substance": "trehalose",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral low-endotoxin",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP",
+          "ChP"
+        ],
+        "salt_form": "anhydrous",
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P31",
+      "kind": "endotoxin class",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "no low-endotoxin control",
+      "required": {
+        "external_id": "MAT-SUC-INJ",
+        "name": "Sucrose, injectable grade (low endotoxin)",
+        "substance": "sucrose",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral low-endotoxin",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP",
+          "ChP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-018",
+        "name": "Sucrose, multicompendial, standard endotoxin",
+        "substance": "sucrose",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral low-endotoxin",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP",
+          "ChP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": "standard",
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P32",
+      "kind": "missing compendium",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "JP missing",
+      "required": {
+        "external_id": "MAT-NACL",
+        "name": "Sodium chloride, parenteral grade",
+        "substance": "sodium chloride",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral low-endotoxin",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-019",
+        "name": "Sodium chloride, parenteral grade",
+        "substance": "sodium chloride",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral low-endotoxin",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur."
+        ],
+        "salt_form": null,
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P33",
+      "kind": "grade",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "oral grade",
+      "required": {
+        "external_id": "MAT-MAN-PAR",
+        "name": "Mannitol, parenteral grade (low endotoxin)",
+        "substance": "mannitol",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral low-endotoxin",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-020",
+        "name": "Mannitol, oral grade (low endotoxin tested)",
+        "substance": "mannitol",
+        "material_class": "compendial_excipient",
+        "grade": "oral",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P34",
+      "kind": "viscosity grade",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "15 vs 5 mPa.s",
+      "required": {
+        "external_id": "MAT-HPMC",
+        "name": "Hypromellose 2910, 5 mPa.s",
+        "substance": "hypromellose",
+        "material_class": "specialty_excipient",
+        "grade": "2910 / 5 mPa.s film former",
+        "compendia": [
+          "Ph. Eur.",
+          "USP-NF",
+          "JP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-021",
+        "name": "Hypromellose 2910, 15 mPa.s",
+        "substance": "hypromellose",
+        "material_class": "specialty_excipient",
+        "grade": "2910 / 15 mPa.s film former",
+        "compendia": [
+          "Ph. Eur.",
+          "USP-NF",
+          "JP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P35",
+      "kind": "salt form",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "free base vs hydrochloride",
+      "required": {
+        "external_id": "MAT-ARG",
+        "name": "L-Arginine hydrochloride",
+        "substance": "arginine",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP"
+        ],
+        "salt_form": "hydrochloride",
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-022",
+        "name": "L-Arginine base",
+        "substance": "arginine",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP"
+        ],
+        "salt_form": "free base",
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P36",
+      "kind": "blend basis",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "neat vs 1:1 MCC blend",
+      "required": {
+        "external_id": "MAT-CLAV",
+        "name": "Clavulanate potassium, diluted 1:1 with MCC",
+        "substance": "clavulanate",
+        "material_class": "small_molecule_api",
+        "grade": "diluted 1:1 microcrystalline cellulose",
+        "compendia": [
+          "USP",
+          "Ph. Eur."
+        ],
+        "salt_form": "potassium",
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-023",
+        "name": "Clavulanate potassium, neat",
+        "substance": "clavulanate",
+        "material_class": "small_molecule_api",
+        "grade": "neat (undiluted)",
+        "compendia": [
+          "USP",
+          "Ph. Eur."
+        ],
+        "salt_form": "potassium",
+        "endotoxin_class": null,
+        "sourcing_mode": "spec_led"
+      }
+    },
+    {
+      "id": "P37",
+      "kind": "different substance (API)",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "furoate and propionate are different APIs",
+      "required": {
+        "external_id": "MAT-FF",
+        "name": "Fluticasone furoate, micronised (inhalation)",
+        "substance": "fluticasone furoate",
+        "material_class": "small_molecule_api",
+        "grade": "inhalation micronised",
+        "compendia": [
+          "Ph. Eur."
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "access_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-024",
+        "name": "Fluticasone propionate, micronised (inhalation)",
+        "substance": "fluticasone propionate",
+        "material_class": "small_molecule_api",
+        "grade": "inhalation micronised",
+        "compendia": [
+          "Ph. Eur."
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "access_led"
+      }
+    },
+    {
+      "id": "P38",
+      "kind": "access-led alternate source",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "animal-origin source change for a licensed adjuvant component",
+      "required": {
+        "external_id": "MAT-SQU",
+        "name": "Squalene, non-animal origin (vaccine grade)",
+        "substance": "squalene",
+        "material_class": "lipid_surfactant",
+        "grade": "vaccine adjuvant grade",
+        "compendia": [
+          "Ph. Eur."
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "access_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-025",
+        "name": "Squalene, shark-liver derived (vaccine grade)",
+        "substance": "squalene",
+        "material_class": "lipid_surfactant",
+        "grade": "vaccine adjuvant grade",
+        "compendia": [
+          "Ph. Eur."
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "access_led"
+      }
+    },
+    {
+      "id": "P39",
+      "kind": "process-locked alternate vendor",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "different validated assembly",
+      "required": {
+        "external_id": "MAT-SUB-2000",
+        "name": "Single-use bioreactor bag, 2000 L",
+        "substance": "single-use bioreactor bag 2000 L",
+        "material_class": "process_consumable",
+        "grade": "validated assembly",
+        "compendia": [
+          "USP <665>"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "process_locked"
+      },
+      "candidate": {
+        "external_id": "OFFER-026",
+        "name": "Single-use bioreactor bag, 2000 L (alternate film platform)",
+        "substance": "single-use bioreactor bag 2000 L",
+        "material_class": "process_consumable",
+        "grade": "validated assembly",
+        "compendia": [
+          "USP <665>"
+        ],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "process_locked"
+      }
+    },
+    {
+      "id": "P40",
+      "kind": "process-locked alternate resin",
+      "hard": false,
+      "gold": "not_equivalent",
+      "why": "different resin needs process requalification",
+      "required": {
+        "external_id": "MAT-PROA",
+        "name": "Protein A affinity resin, alkali-stable",
+        "substance": "protein A resin",
+        "material_class": "process_consumable",
+        "grade": "bioprocess",
+        "compendia": [],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "process_locked"
+      },
+      "candidate": {
+        "external_id": "OFFER-027",
+        "name": "Protein A resin, alkali-stable (alternate ligand)",
+        "substance": "protein A resin",
+        "material_class": "process_consumable",
+        "grade": "bioprocess",
+        "compendia": [],
+        "salt_form": null,
+        "endotoxin_class": null,
+        "sourcing_mode": "process_locked"
+      }
+    },
+    {
+      "id": "P41",
+      "kind": "botanical origin (name only)",
+      "hard": true,
+      "gold": "not_equivalent",
+      "why": "origin change needs assessment; not captured in structured fields",
+      "required": {
+        "external_id": "MAT-SUC-INJ",
+        "name": "Sucrose, injectable grade (low endotoxin)",
+        "substance": "sucrose",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral low-endotoxin",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP",
+          "ChP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      },
+      "candidate": {
+        "external_id": "OFFER-028",
+        "name": "Sucrose, injectable low endotoxin, beet-derived (current source: cane)",
+        "substance": "sucrose",
+        "material_class": "compendial_excipient",
+        "grade": "parenteral low-endotoxin",
+        "compendia": [
+          "USP-NF",
+          "Ph. Eur.",
+          "JP",
+          "ChP"
+        ],
+        "salt_form": null,
+        "endotoxin_class": "low",
+        "sourcing_mode": "spec_led"
+      }
+    }
+  ],
+  "deterministic": {
+    "precision": 0.9286,
+    "recall": 0.8125,
+    "f1": 0.8667,
+    "accuracy": 0.9024,
+    "false_equivalence_rate": 0.04,
+    "confusion": {
+      "tp": 13,
+      "fp": 1,
+      "fn": 3,
+      "tn": 24
+    },
+    "n": 41,
+    "misses": [
+      {
+        "id": "P14",
+        "kind": "synonym substance",
+        "gold": "equivalent",
+        "match": "not_equivalent"
+      },
+      {
+        "id": "P15",
+        "kind": "synonym substance",
+        "gold": "equivalent",
+        "match": "not_equivalent"
+      },
+      {
+        "id": "P16",
+        "kind": "synonym substance",
+        "gold": "equivalent",
+        "match": "not_equivalent"
+      },
+      {
+        "id": "P41",
+        "kind": "botanical origin (name only)",
+        "gold": "not_equivalent",
+        "match": "exact"
+      }
+    ]
+  },
+  "deterministic_rows": [
+    {
+      "id": "P01",
+      "kind": "same spec, renamed",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "match": "exact",
+      "reasons": [
+        "substance, form, grade, compendia and endotoxin class match"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P02",
+      "kind": "same spec, renamed",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "match": "exact",
+      "reasons": [
+        "substance, form, grade, compendia and endotoxin class match"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P03",
+      "kind": "same spec, renamed",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "match": "exact",
+      "reasons": [
+        "substance, form, grade, compendia and endotoxin class match"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P04",
+      "kind": "compendia superset",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "match": "exact",
+      "reasons": [
+        "substance, form, grade, compendia and endotoxin class match"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P05",
+      "kind": "same spec, renamed",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "match": "exact",
+      "reasons": [
+        "substance, form, grade, compendia and endotoxin class match"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P06",
+      "kind": "same spec, renamed",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "match": "exact",
+      "reasons": [
+        "substance, form, grade, compendia and endotoxin class match"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P07",
+      "kind": "same spec, renamed",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "match": "exact",
+      "reasons": [
+        "substance, form, grade, compendia and endotoxin class match"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P08",
+      "kind": "grade text case/spacing",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "match": "exact",
+      "reasons": [
+        "substance, form, grade, compendia and endotoxin class match"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P09",
+      "kind": "exceeds spec (extra endotoxin control)",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "match": "exact",
+      "reasons": [
+        "substance, form, grade, compendia and endotoxin class match"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P10",
+      "kind": "compendia reordered",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "match": "exact",
+      "reasons": [
+        "substance, form, grade, compendia and endotoxin class match"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P11",
+      "kind": "same spec, renamed",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "match": "exact",
+      "reasons": [
+        "substance, form, grade, compendia and endotoxin class match"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P12",
+      "kind": "same spec, renamed",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "match": "exact",
+      "reasons": [
+        "substance, form, grade, compendia and endotoxin class match"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P13",
+      "kind": "same spec, renamed",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "match": "exact",
+      "reasons": [
+        "substance, form, grade, compendia and endotoxin class match"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P14",
+      "kind": "synonym substance",
+      "gold": "equivalent",
+      "pred": "not_equivalent",
+      "match": "not_equivalent",
+      "reasons": [
+        "different substance (tromethamine vs Tris)"
+      ],
+      "correct": false
+    },
+    {
+      "id": "P15",
+      "kind": "synonym substance",
+      "gold": "equivalent",
+      "pred": "not_equivalent",
+      "match": "not_equivalent",
+      "reasons": [
+        "different substance (glycerol vs glycerin)"
+      ],
+      "correct": false
+    },
+    {
+      "id": "P16",
+      "kind": "synonym substance",
+      "gold": "equivalent",
+      "pred": "not_equivalent",
+      "match": "not_equivalent",
+      "reasons": [
+        "different substance (hypromellose vs HPMC)"
+      ],
+      "correct": false
+    },
+    {
+      "id": "P17",
+      "kind": "grade + endotoxin + compendia",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "grade_mismatch",
+      "reasons": [
+        "grade differs (parenteral low-endotoxin vs oral)",
+        "missing compendia: JP, ChP",
+        "endotoxin class differs (low vs unspecified)"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P18",
+      "kind": "grade (parenteral vs DC)",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "grade_mismatch",
+      "reasons": [
+        "grade differs (parenteral low-endotoxin vs direct compression)",
+        "missing compendia: JP",
+        "endotoxin class differs (low vs unspecified)"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P19",
+      "kind": "salt form",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "form_mismatch",
+      "reasons": [
+        "salt/hydrate form differs (free base vs monohydrochloride monohydrate)"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P20",
+      "kind": "purity grade",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "grade_mismatch",
+      "reasons": [
+        "grade differs (parenteral super-refined vs oral/topical)",
+        "missing compendia: ChP",
+        "endotoxin class differs (low vs unspecified)"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P21",
+      "kind": "particle grade",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "grade_mismatch",
+      "reasons": [
+        "grade differs (inhalation carrier vs inhalation fines)"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P22",
+      "kind": "grade (inhalation vs tablet)",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "grade_mismatch",
+      "reasons": [
+        "grade differs (inhalation vs tablet lubricant)"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P23",
+      "kind": "particle grade",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "grade_mismatch",
+      "reasons": [
+        "grade differs (direct compression 100 um vs wet granulation 50 um)"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P24",
+      "kind": "salt + sterility",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "form_mismatch",
+      "reasons": [
+        "salt/hydrate form differs (trihydrate vs sodium)",
+        "grade differs (compacted oral vs sterile)"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P25",
+      "kind": "analogue vs licensed",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "not_equivalent",
+      "reasons": [
+        "access-led material: an analogue or alternate source is not the licensed material; substitution needs a qualification and regulatory change",
+        "grade differs (licensed GMP vs development)"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P26",
+      "kind": "different item (process-locked)",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "not_equivalent",
+      "reasons": [
+        "different substance (type I glass vial 2R vs type I glass vial 6R)"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P27",
+      "kind": "different item (process-locked)",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "not_equivalent",
+      "reasons": [
+        "different substance (bromobutyl stopper 13 mm vs bromobutyl stopper 20 mm)"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P28",
+      "kind": "different substance",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "not_equivalent",
+      "reasons": [
+        "different substance (polysorbate 80 vs polysorbate 20)"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P29",
+      "kind": "different substance",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "not_equivalent",
+      "reasons": [
+        "different substance (DOPC vs DSPC)"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P30",
+      "kind": "hydrate form",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "form_mismatch",
+      "reasons": [
+        "salt/hydrate form differs (dihydrate vs anhydrous)"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P31",
+      "kind": "endotoxin class",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "grade_mismatch",
+      "reasons": [
+        "endotoxin class differs (low vs standard)"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P32",
+      "kind": "missing compendium",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "grade_mismatch",
+      "reasons": [
+        "missing compendia: JP"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P33",
+      "kind": "grade",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "grade_mismatch",
+      "reasons": [
+        "grade differs (parenteral low-endotoxin vs oral)"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P34",
+      "kind": "viscosity grade",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "grade_mismatch",
+      "reasons": [
+        "grade differs (2910 / 5 mPa.s film former vs 2910 / 15 mPa.s film former)"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P35",
+      "kind": "salt form",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "form_mismatch",
+      "reasons": [
+        "salt/hydrate form differs (hydrochloride vs free base)"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P36",
+      "kind": "blend basis",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "grade_mismatch",
+      "reasons": [
+        "grade differs (diluted 1:1 microcrystalline cellulose vs neat (undiluted))"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P37",
+      "kind": "different substance (API)",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "not_equivalent",
+      "reasons": [
+        "different substance (fluticasone furoate vs fluticasone propionate)"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P38",
+      "kind": "access-led alternate source",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "not_equivalent",
+      "reasons": [
+        "access-led material: an analogue or alternate source is not the licensed material; substitution needs a qualification and regulatory change"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P39",
+      "kind": "process-locked alternate vendor",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "not_equivalent",
+      "reasons": [
+        "process-locked item: a different item requires process requalification"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P40",
+      "kind": "process-locked alternate resin",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "match": "not_equivalent",
+      "reasons": [
+        "process-locked item: a different item requires process requalification"
+      ],
+      "correct": true
+    },
+    {
+      "id": "P41",
+      "kind": "botanical origin (name only)",
+      "gold": "not_equivalent",
+      "pred": "equivalent",
+      "match": "exact",
+      "reasons": [
+        "substance, form, grade, compendia and endotoxin class match"
+      ],
+      "correct": false
+    }
+  ],
+  "per_model": [
+    {
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "label": "Super-VL (doer)",
+      "n": 41,
+      "errors": 0,
+      "precision": 0.9412,
+      "recall": 1,
+      "f1": 0.9697,
+      "accuracy": 0.9756,
+      "false_equivalence_rate": 0.04,
+      "confusion": {
+        "tp": 16,
+        "fp": 1,
+        "fn": 0,
+        "tn": 24
+      },
+      "latency_ms": {
+        "p50": 7617,
+        "p95": 18954
+      },
+      "gate_b4": false,
+      "misses": [
+        {
+          "id": "P41",
+          "kind": "botanical origin (name only)",
+          "gold": "not_equivalent",
+          "pred": "equivalent"
+        }
+      ]
+    },
+    {
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "label": "Super-120B (judge)",
+      "n": 41,
+      "errors": 0,
+      "precision": 0.9375,
+      "recall": 0.9375,
+      "f1": 0.9375,
+      "accuracy": 0.9512,
+      "false_equivalence_rate": 0.04,
+      "confusion": {
+        "tp": 15,
+        "fp": 1,
+        "fn": 1,
+        "tn": 24
+      },
+      "latency_ms": {
+        "p50": 5580,
+        "p95": 9014
+      },
+      "gate_b4": false,
+      "misses": [
+        {
+          "id": "P12",
+          "kind": "same spec, renamed",
+          "gold": "equivalent",
+          "pred": "not_equivalent"
+        },
+        {
+          "id": "P41",
+          "kind": "botanical origin (name only)",
+          "gold": "not_equivalent",
+          "pred": "equivalent"
+        }
+      ]
+    },
+    {
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "label": "Nano-30B (persona)",
+      "n": 41,
+      "errors": 0,
+      "precision": 0.8235,
+      "recall": 0.875,
+      "f1": 0.8485,
+      "accuracy": 0.878,
+      "false_equivalence_rate": 0.12,
+      "confusion": {
+        "tp": 14,
+        "fp": 3,
+        "fn": 2,
+        "tn": 22
+      },
+      "latency_ms": {
+        "p50": 1511,
+        "p95": 3679
+      },
+      "gate_b4": false,
+      "misses": [
+        {
+          "id": "P08",
+          "kind": "grade text case/spacing",
+          "gold": "equivalent",
+          "pred": "not_equivalent"
+        },
+        {
+          "id": "P12",
+          "kind": "same spec, renamed",
+          "gold": "equivalent",
+          "pred": "not_equivalent"
+        },
+        {
+          "id": "P32",
+          "kind": "missing compendium",
+          "gold": "not_equivalent",
+          "pred": "equivalent"
+        },
+        {
+          "id": "P39",
+          "kind": "process-locked alternate vendor",
+          "gold": "not_equivalent",
+          "pred": "equivalent"
+        },
+        {
+          "id": "P41",
+          "kind": "botanical origin (name only)",
+          "gold": "not_equivalent",
+          "pred": "equivalent"
+        }
+      ]
+    },
+    {
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "label": "Lightning-30B",
+      "n": 41,
+      "errors": 0,
+      "precision": 0.8824,
+      "recall": 0.9375,
+      "f1": 0.9091,
+      "accuracy": 0.9268,
+      "false_equivalence_rate": 0.08,
+      "confusion": {
+        "tp": 15,
+        "fp": 2,
+        "fn": 1,
+        "tn": 23
+      },
+      "latency_ms": {
+        "p50": 5713,
+        "p95": 13762
+      },
+      "gate_b4": false,
+      "misses": [
+        {
+          "id": "P09",
+          "kind": "exceeds spec (extra endotoxin control)",
+          "gold": "equivalent",
+          "pred": "not_equivalent"
+        },
+        {
+          "id": "P32",
+          "kind": "missing compendium",
+          "gold": "not_equivalent",
+          "pred": "equivalent"
+        },
+        {
+          "id": "P41",
+          "kind": "botanical origin (name only)",
+          "gold": "not_equivalent",
+          "pred": "equivalent"
+        }
+      ]
+    }
+  ],
+  "hybrid": [
+    {
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "label": "Super-VL (doer)",
+      "precision": 0.9286,
+      "recall": 0.8125,
+      "f1": 0.8667,
+      "accuracy": 0.9024,
+      "false_equivalence_rate": 0.04,
+      "confusion": {
+        "tp": 13,
+        "fp": 1,
+        "fn": 3,
+        "tn": 24
+      }
+    },
+    {
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "label": "Super-120B (judge)",
+      "precision": 0.9231,
+      "recall": 0.75,
+      "f1": 0.8276,
+      "accuracy": 0.878,
+      "false_equivalence_rate": 0.04,
+      "confusion": {
+        "tp": 12,
+        "fp": 1,
+        "fn": 4,
+        "tn": 24
+      }
+    },
+    {
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "label": "Nano-30B (persona)",
+      "precision": 0.9167,
+      "recall": 0.6875,
+      "f1": 0.7857,
+      "accuracy": 0.8537,
+      "false_equivalence_rate": 0.04,
+      "confusion": {
+        "tp": 11,
+        "fp": 1,
+        "fn": 5,
+        "tn": 24
+      }
+    },
+    {
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "label": "Lightning-30B",
+      "precision": 0.9231,
+      "recall": 0.75,
+      "f1": 0.8276,
+      "accuracy": 0.878,
+      "false_equivalence_rate": 0.04,
+      "confusion": {
+        "tp": 12,
+        "fp": 1,
+        "fn": 4,
+        "tn": 24
+      }
+    }
+  ],
+  "rows": [
+    {
+      "id": "P01",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "All critical attributes match (sucrose, parenteral low-endotoxin grade, identical compendia, no salt form, low endotoxin, spec-led sourcing); only the name differs.",
+      "latency_ms": 4386,
+      "tokens_in": 294,
+      "tokens_out": 440
+    },
+    {
+      "id": "P02",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both are mannitol (D-mannitol is the same compendial substance) with identical parenteral low-endotoxin grade, compendia, salt form, endotoxin class, and spec-led sourcing, with no different salt, hydrate, or analogue.",
+      "latency_ms": 10339,
+      "tokens_in": 288,
+      "tokens_out": 817
+    },
+    {
+      "id": "P03",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "The candidate matches the required material on substance, salt form (dihydrate), grade, compendia, endotoxin class, material class, and sourcing mode, with no difference in grade, salt, hydrate, or analogue.",
+      "latency_ms": 5259,
+      "tokens_in": 303,
+      "tokens_out": 404
+    },
+    {
+      "id": "P04",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "The candidate matches the required substance, parenteral low-endotoxin grade, null salt form, low endotoxin class, and spec-led sourcing, and includes all required compendia with ChP only as an additional standard.",
+      "latency_ms": 4784,
+      "tokens_in": 280,
+      "tokens_out": 391
+    },
+    {
+      "id": "P05",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "The candidate matches the required material on substance, free-base salt form, parenteral low-endotoxin grade, compendia, endotoxin class, and sourcing mode, with no different grade, salt, hydrate, or analogue.",
+      "latency_ms": 15508,
+      "tokens_in": 283,
+      "tokens_out": 490
+    },
+    {
+      "id": "P06",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both are polysorbate 80 with identical parenteral super-refined grade, compendia, low endotoxin class, and spec-led sourcing, with no different salt, hydrate, or analogue.",
+      "latency_ms": 3212,
+      "tokens_in": 304,
+      "tokens_out": 401
+    },
+    {
+      "id": "P07",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both are microcrystalline cellulose with identical direct compression 100 um grade, same compendia, and no differing salt, hydrate, or analogue.",
+      "latency_ms": 7617,
+      "tokens_in": 291,
+      "tokens_out": 840
+    },
+    {
+      "id": "P08",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "The candidate matches the required material on substance, grade (2910 / 5 mPa.s film former, differing only in case), compendia, salt form, and sourcing mode, with no different salt, hydrate, or analogue.",
+      "latency_ms": 3725,
+      "tokens_in": 311,
+      "tokens_out": 456
+    },
+    {
+      "id": "P09",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "The candidate matches the required material on substance, parenteral grade, compendia, salt form, material class, and sourcing mode; the endotoxin class difference is not a different grade, salt, hydrate, or analogue.",
+      "latency_ms": 33936,
+      "tokens_in": 268,
+      "tokens_out": 3851
+    },
+    {
+      "id": "P10",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "All critical attributes match exactly, including substance, parenteral grade, compendia, salt form, endotoxin class, and sourcing mode, with no different grade, salt, hydrate, or analogue.",
+      "latency_ms": 11198,
+      "tokens_in": 270,
+      "tokens_out": 291
+    },
+    {
+      "id": "P11",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Citric acid 1-hydrate is the same hydrate form as citric acid monohydrate, and the oral grade, compendia, material class, and sourcing mode all match.",
+      "latency_ms": 3281,
+      "tokens_in": 270,
+      "tokens_out": 312
+    },
+    {
+      "id": "P12",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "All critical attributes match (lactose, inhalation carrier grade, Ph. Eur./USP-NF, monohydrate, specialty excipient, spec-led sourcing), and the name difference does not indicate a different grade, salt, hydrate, or analogue.",
+      "latency_ms": 6501,
+      "tokens_in": 283,
+      "tokens_out": 664
+    },
+    {
+      "id": "P13",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are magnesium stearate with identical grade (tablet lubricant), compendia (Ph. Eur./USP-NF), salt form (none), and sourcing mode, with no different grade, salt, hydrate, or analogue involved.",
+      "latency_ms": 9854,
+      "tokens_in": 279,
+      "tokens_out": 410
+    },
+    {
+      "id": "P14",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Tromethamine and Tris(hydroxymethyl)aminomethane are the same substance, with matching parenteral grade, compendia, and no differing salt, hydrate, or endotoxin class.",
+      "latency_ms": 16831,
+      "tokens_in": 276,
+      "tokens_out": 400
+    },
+    {
+      "id": "P15",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Glycerin is a synonym for glycerol and both are parenteral grade with identical compendial listings, salt form, endotoxin class, and sourcing mode, so no qualification or regulatory change is needed.",
+      "latency_ms": 24019,
+      "tokens_in": 271,
+      "tokens_out": 423
+    },
+    {
+      "id": "P16",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "HPMC is the standard abbreviation for hypromellose, and the grade, compendial listings, salt form, and sourcing mode are identical, so no qualification or regulatory change is required.",
+      "latency_ms": 6420,
+      "tokens_in": 301,
+      "tokens_out": 435
+    },
+    {
+      "id": "P17",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is oral-grade sucrose with no low-endotoxin or parenteral specification, a different grade from the required injectable low-endotoxin material.",
+      "latency_ms": 4182,
+      "tokens_in": 277,
+      "tokens_out": 258
+    },
+    {
+      "id": "P18",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is a different grade (direct compression rather than parenteral low-endotoxin), has no low-endotoxin classification, and lacks JP compendial coverage, so it cannot replace the licensed parenteral material without qualification or regulatory change.",
+      "latency_ms": 4737,
+      "tokens_in": 275,
+      "tokens_out": 341
+    },
+    {
+      "id": "P19",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is a different salt and hydrate form (L-histidine monohydrochloride monohydrate) than the required free-base L-histidine, and a different salt/hydrate is not an acceptable substitute under the hard rule.",
+      "latency_ms": 3498,
+      "tokens_in": 289,
+      "tokens_out": 301
+    },
+    {
+      "id": "P20",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is a different oral/topical grade lacking the required parenteral super-refined, low-peroxide and low-endotoxin specifications, so it cannot substitute without qualification or regulatory change.",
+      "latency_ms": 2895,
+      "tokens_in": 293,
+      "tokens_out": 300
+    },
+    {
+      "id": "P21",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is micronised fines rather than the required coarse carrier grade, which is a different inhalation grade/particle-size specification and cannot be substituted without qualification.",
+      "latency_ms": 4523,
+      "tokens_in": 289,
+      "tokens_out": 341
+    },
+    {
+      "id": "P22",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is a different grade (tablet lubricant vs inhalation) and material class, so it cannot substitute for the licensed inhalation-grade material without qualification or regulatory change.",
+      "latency_ms": 2398,
+      "tokens_in": 275,
+      "tokens_out": 289
+    },
+    {
+      "id": "P23",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is a different grade (wet granulation 50 µm vs direct compression 100 µm), which is not permitted as a substitute for a licensed material.",
+      "latency_ms": 4598,
+      "tokens_in": 290,
+      "tokens_out": 270
+    },
+    {
+      "id": "P24",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate differs in salt form (sodium vs trihydrate) and grade (sterile vs compacted oral), which is not permitted under the hard rule against substituting different salts, hydrates, or grades.",
+      "latency_ms": 9933,
+      "tokens_in": 260,
+      "tokens_out": 272
+    },
+    {
+      "id": "P25",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is a development-grade synthetic analogue rather than the licensed GMP saponin adjuvant, and per the hard rule an analogue or different grade cannot substitute for a licensed material without qualification.",
+      "latency_ms": 4738,
+      "tokens_in": 260,
+      "tokens_out": 300
+    },
+    {
+      "id": "P26",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is a 6R vial while the required material is a 2R vial, so they are different sizes and not interchangeable without qualification.",
+      "latency_ms": 16336,
+      "tokens_in": 305,
+      "tokens_out": 161
+    },
+    {
+      "id": "P27",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is a 20 mm stopper whereas the required material is 13 mm, a different primary packaging size that is not interchangeable without requalification.",
+      "latency_ms": 17020,
+      "tokens_in": 318,
+      "tokens_out": 248
+    },
+    {
+      "id": "P28",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "Polysorbate 20 is a different substance than polysorbate 80 and cannot be substituted without qualification or regulatory change.",
+      "latency_ms": 16657,
+      "tokens_in": 297,
+      "tokens_out": 292
+    },
+    {
+      "id": "P29",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is DSPC while the required material is DOPC, a different lipid substance/analogue, so it cannot substitute without qualification or regulatory change.",
+      "latency_ms": 18954,
+      "tokens_in": 255,
+      "tokens_out": 307
+    },
+    {
+      "id": "P30",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is trehalose anhydrous while the required material is trehalose dihydrate, a different hydrate form that cannot be substituted without qualification or regulatory change.",
+      "latency_ms": 17475,
+      "tokens_in": 294,
+      "tokens_out": 251
+    },
+    {
+      "id": "P31",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is standard endotoxin while the required material is low endotoxin for injectable use, which is a different grade/specification and not interchangeable without qualification.",
+      "latency_ms": 13731,
+      "tokens_in": 292,
+      "tokens_out": 286
+    },
+    {
+      "id": "P32",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate lacks the JP compendial listing required by the required material, so it does not fully meet the licensed specification for use without regulatory change.",
+      "latency_ms": 9425,
+      "tokens_in": 275,
+      "tokens_out": 1059
+    },
+    {
+      "id": "P33",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is oral grade while the required material is parenteral low-endotoxin grade, and a different grade cannot be substituted for a licensed parenteral material without qualification or regulatory change.",
+      "latency_ms": 1972,
+      "tokens_in": 280,
+      "tokens_out": 214
+    },
+    {
+      "id": "P34",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is a different viscosity grade (15 mPa.s vs 5 mPa.s) of hypromellose, and a different grade cannot be substituted for a licensed material without qualification or regulatory change.",
+      "latency_ms": 3753,
+      "tokens_in": 309,
+      "tokens_out": 343
+    },
+    {
+      "id": "P35",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is L-arginine free base while the required material is L-arginine hydrochloride, and a different salt form cannot be substituted for a licensed material.",
+      "latency_ms": 2929,
+      "tokens_in": 265,
+      "tokens_out": 188
+    },
+    {
+      "id": "P36",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is neat/undiluted clavulanate potassium, a different grade than the required 1:1 MCC-diluted material, so it cannot substitute without qualification or regulatory change.",
+      "latency_ms": 8030,
+      "tokens_in": 276,
+      "tokens_out": 302
+    },
+    {
+      "id": "P37",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "Fluticasone propionate is a different active substance/analogue from fluticasone furoate and cannot substitute for the licensed material without qualification or regulatory change.",
+      "latency_ms": 2415,
+      "tokens_in": 276,
+      "tokens_out": 253
+    },
+    {
+      "id": "P38",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is shark-liver derived (animal origin) while the required material is non-animal origin, a distinct sourcing specification with different regulatory and qualification implications.",
+      "latency_ms": 12514,
+      "tokens_in": 272,
+      "tokens_out": 296
+    },
+    {
+      "id": "P39",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The alternate film platform is a different material composition for a process-locked consumable, so it cannot be substituted without revalidation or regulatory change.",
+      "latency_ms": 12695,
+      "tokens_in": 297,
+      "tokens_out": 317
+    },
+    {
+      "id": "P40",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate specifies an alternate ligand rather than Protein A, making it a different affinity ligand/analogue, and the process_locked sourcing mode prohibits substitution without qualification or regulatory change.",
+      "latency_ms": 12551,
+      "tokens_in": 249,
+      "tokens_out": 354
+    },
+    {
+      "id": "P41",
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "gold": "not_equivalent",
+      "pred": "equivalent",
+      "reason": "Both are sucrose parenteral low-endotoxin excipients meeting the same compendia with identical salt form, endotoxin class and spec-led sourcing; cane versus beet origin is not a different grade, salt, hydrate or analogue and is not restricted by the required spec.",
+      "latency_ms": 12094,
+      "tokens_in": 298,
+      "tokens_out": 926
+    },
+    {
+      "id": "P01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are sucrose, injectable grade, low endotoxin, with identical compendial references and no differences in grade, salt form, hydrate status, or sourcing mode.",
+      "latency_ms": 3979,
+      "tokens_in": 294,
+      "tokens_out": 123
+    },
+    {
+      "id": "P02",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are mannitol with identical parenteral low-endotoxin grade, compendial status, and endotoxin class, differing only in naming which does not affect specification.",
+      "latency_ms": 5580,
+      "tokens_in": 288,
+      "tokens_out": 195
+    },
+    {
+      "id": "P03",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are trehalose dihydrate with identical grade, compendial status, endotoxin class, and hydrate form, differing only in naming.",
+      "latency_ms": 5848,
+      "tokens_in": 303,
+      "tokens_out": 214
+    },
+    {
+      "id": "P04",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are identical in substance, grade, endotoxin class, and sourcing mode; the candidate merely lists an additional compendium, which does not constitute a different grade, salt, hydrate, or analogue.",
+      "latency_ms": 4325,
+      "tokens_in": 280,
+      "tokens_out": 172
+    },
+    {
+      "id": "P05",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are L‑histidine free base with parenteral low‑endotoxin grade, identical compendial listings, endotoxin class, and sourcing mode; only the descriptive name differs.",
+      "latency_ms": 6805,
+      "tokens_in": 283,
+      "tokens_out": 269
+    },
+    {
+      "id": "P06",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials share identical substance, grade, compendia, endotoxin class and sourcing mode; the candidate's high purity specification meets or exceeds the required super‑refined low peroxide grade.",
+      "latency_ms": 9014,
+      "tokens_in": 304,
+      "tokens_out": 350
+    },
+    {
+      "id": "P07",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are microcrystalline cellulose with identical direct‑compression 100 µm grade, compendial status, and no differing salt or hydrate forms, so they are interchangeable without requalification.",
+      "latency_ms": 5362,
+      "tokens_in": 291,
+      "tokens_out": 197
+    },
+    {
+      "id": "P08",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are hypromellose with identical grade (2910 / 5 mPa.s film former), same compendial status, and no differences in salt form, hydrate, or analogue.",
+      "latency_ms": 6310,
+      "tokens_in": 311,
+      "tokens_out": 227
+    },
+    {
+      "id": "P09",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Candidate matches required substance, grade, compendia and salt form, and its specified low endotoxin class is a more restrictive attribute that does not constitute a different grade, salt, hydrate or analogue.",
+      "latency_ms": 9493,
+      "tokens_in": 268,
+      "tokens_out": 402
+    },
+    {
+      "id": "P10",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are potassium chloride, parenteral grade, with identical substance, grade, compendial standards, and no differing salt form or endotoxin class.",
+      "latency_ms": 2995,
+      "tokens_in": 270,
+      "tokens_out": 124
+    },
+    {
+      "id": "P11",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are citric acid monohydrate (1‑hydrate) with oral grade and identical compendial specifications, so they are interchangeable without further qualification.",
+      "latency_ms": 3382,
+      "tokens_in": 270,
+      "tokens_out": 147
+    },
+    {
+      "id": "P12",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate material is specified as a sieved carrier grade, whereas the required material is a coarse carrier grade, indicating a different particle-size specification that constitutes a different grade/specification.",
+      "latency_ms": 7437,
+      "tokens_in": 283,
+      "tokens_out": 361
+    },
+    {
+      "id": "P13",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are magnesium stearate of vegetable source, listed in the same compendia, and have the same tablet lubricant grade with no difference in salt, hydrate, or analogue.",
+      "latency_ms": 4565,
+      "tokens_in": 279,
+      "tokens_out": 223
+    },
+    {
+      "id": "P14",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials refer to the same chemical (tromethamine/Tris) with identical parenteral grade and compendial specifications, differing only in naming.",
+      "latency_ms": 3692,
+      "tokens_in": 276,
+      "tokens_out": 150
+    },
+    {
+      "id": "P15",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Glycerol and glycerin are synonymous names for the same chemical substance, and both candidates match the required parenteral grade, compendial standards, and lack of salt or hydrate differences.",
+      "latency_ms": 2988,
+      "tokens_in": 271,
+      "tokens_out": 137
+    },
+    {
+      "id": "P16",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials refer to the same substance (hypromellose/HPMC) with identical grade, compendial status, and no differing salt or hydrate forms.",
+      "latency_ms": 6018,
+      "tokens_in": 301,
+      "tokens_out": 186
+    },
+    {
+      "id": "P17",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is an oral grade sucrose lacking the required parenteral low‑endotoxin specification, which is a different grade and cannot be substituted without qualification.",
+      "latency_ms": 6330,
+      "tokens_in": 277,
+      "tokens_out": 207
+    },
+    {
+      "id": "P18",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is a direct‑compression grade mannitol without a specified low‑endotoxin claim, whereas the required material is a parenteral low‑endotoxin grade, representing a different grade and endotoxin specification.",
+      "latency_ms": 4101,
+      "tokens_in": 275,
+      "tokens_out": 147
+    },
+    {
+      "id": "P19",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is a hydrochloride salt hydrate, differing in salt form and hydration state from the required free-base L-histidine, which is not permitted as a direct substitute.",
+      "latency_ms": 4555,
+      "tokens_in": 289,
+      "tokens_out": 161
+    },
+    {
+      "id": "P20",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "Candidate is oral/topical standard grade lacking the parenteral super‑refined, low‑peroxide/low‑endotoxin specification of the required material.",
+      "latency_ms": 7925,
+      "tokens_in": 293,
+      "tokens_out": 244
+    },
+    {
+      "id": "P21",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate material has a different grade (inhalation fines) compared to the required material (inhalation carrier), which violates the rule against substituting a different grade.",
+      "latency_ms": 7400,
+      "tokens_in": 289,
+      "tokens_out": 206
+    },
+    {
+      "id": "P22",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is a tablet‑grade magnesium stearate, whereas the required material is an inhalation grade with different specifications and intended use, so they are not interchangeable without qualification.",
+      "latency_ms": 5789,
+      "tokens_in": 275,
+      "tokens_out": 171
+    },
+    {
+      "id": "P23",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate has a different grade (wet granulation 50 µm) and particle size than the required direct‑compression 100 µm material, which is not permitted as a direct substitute.",
+      "latency_ms": 5585,
+      "tokens_in": 290,
+      "tokens_out": 177
+    },
+    {
+      "id": "P24",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate differs in salt form (sodium vs trihydrate) and grade (sterile vs compacted oral), which violates the rule against substituting different salts or grades.",
+      "latency_ms": 4456,
+      "tokens_in": 260,
+      "tokens_out": 165
+    },
+    {
+      "id": "P25",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is a synthetic analogue with a development grade, which cannot substitute the licensed GMP material without qualification.",
+      "latency_ms": 4461,
+      "tokens_in": 260,
+      "tokens_out": 158
+    },
+    {
+      "id": "P26",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate vial is a different size (6R vs 2R), which changes the fill volume and is not interchangeable without requalification.",
+      "latency_ms": 7409,
+      "tokens_in": 305,
+      "tokens_out": 251
+    },
+    {
+      "id": "P27",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate stopper is 20 mm while the required stopper is 13 mm, a different size that would affect fit and function.",
+      "latency_ms": 5600,
+      "tokens_in": 318,
+      "tokens_out": 190
+    },
+    {
+      "id": "P28",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "Candidate is polysorbate 20, a different polysorbate species from the required polysorbate 80, so it is not the same substance.",
+      "latency_ms": 5263,
+      "tokens_in": 297,
+      "tokens_out": 203
+    },
+    {
+      "id": "P29",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate material is DSPC, a different lipid species from the required DOPC, and a different substance cannot be considered equivalent.",
+      "latency_ms": 3086,
+      "tokens_in": 255,
+      "tokens_out": 124
+    },
+    {
+      "id": "P30",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is anhydrous while the required material is a dihydrate, and a different hydrate form cannot be substituted without qualification.",
+      "latency_ms": 3629,
+      "tokens_in": 294,
+      "tokens_out": 139
+    },
+    {
+      "id": "P31",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate material has a standard endotoxin level whereas the required material specifies low endotoxin, which is a different grade specification.",
+      "latency_ms": 5077,
+      "tokens_in": 292,
+      "tokens_out": 178
+    },
+    {
+      "id": "P32",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "Candidate material lacks JP compendial listing, so it may not satisfy the required specification without additional qualification.",
+      "latency_ms": 8923,
+      "tokens_in": 275,
+      "tokens_out": 339
+    },
+    {
+      "id": "P33",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is oral grade while the required material is parenteral low‑endotoxin grade, and a different grade cannot be substituted without qualification.",
+      "latency_ms": 3800,
+      "tokens_in": 280,
+      "tokens_out": 137
+    },
+    {
+      "id": "P34",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate has a different viscosity grade (15 mPa.s vs 5 mPa.s), which constitutes a different grade and cannot be substituted without qualification.",
+      "latency_ms": 5534,
+      "tokens_in": 309,
+      "tokens_out": 211
+    },
+    {
+      "id": "P35",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is the free base form while the required material is the hydrochloride salt, which is a different salt form and thus not interchangeable without requalification.",
+      "latency_ms": 4243,
+      "tokens_in": 265,
+      "tokens_out": 163
+    },
+    {
+      "id": "P36",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is neat (undiluted) clavulanate potassium, whereas the required material is diluted 1:1 with microcrystalline cellulose, representing a different grade that cannot be substituted without qualification.",
+      "latency_ms": 5099,
+      "tokens_in": 276,
+      "tokens_out": 156
+    },
+    {
+      "id": "P37",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "Fluticasone propionate is a different active substance from fluticasone furoate, so it cannot be used as a direct substitute.",
+      "latency_ms": 5710,
+      "tokens_in": 276,
+      "tokens_out": 189
+    },
+    {
+      "id": "P38",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is shark‑liver derived (animal origin) whereas the required material is specified as non‑animal origin, representing a different source material.",
+      "latency_ms": 7482,
+      "tokens_in": 272,
+      "tokens_out": 277
+    },
+    {
+      "id": "P39",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate uses an alternate film platform, which constitutes a material change that may affect performance and requires qualification.",
+      "latency_ms": 10636,
+      "tokens_in": 297,
+      "tokens_out": 360
+    },
+    {
+      "id": "P40",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate resin uses an alternate ligand, making it a different chemical entity from the required protein A affinity resin.",
+      "latency_ms": 7953,
+      "tokens_in": 249,
+      "tokens_out": 247
+    },
+    {
+      "id": "P41",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "gold": "not_equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are sucrose, injectable low‑endotoxin grade meeting the same compendial specifications; the difference in botanical source does not constitute a different grade, salt, hydrate or analogue.",
+      "latency_ms": 6433,
+      "tokens_in": 298,
+      "tokens_out": 222
+    },
+    {
+      "id": "P01",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are sucrose, injectable grade low endotoxin compendial excipients with identical specifications and compendial listings, requiring no qualification or regulatory change.",
+      "latency_ms": 1398,
+      "tokens_in": 294,
+      "tokens_out": 129
+    },
+    {
+      "id": "P02",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are mannitol, parenteral low-endotoxin grade, compendial, with identical specifications and sourcing mode, differing only in naming.",
+      "latency_ms": 1252,
+      "tokens_in": 288,
+      "tokens_out": 178
+    },
+    {
+      "id": "P03",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both entries describe the same trehalose dihydrate with identical specifications, grade, compendial status, and sourcing mode, differing only in naming.",
+      "latency_ms": 1441,
+      "tokens_in": 303,
+      "tokens_out": 197
+    },
+    {
+      "id": "P04",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are sodium chloride parenteral grade with identical specifications, endotoxin class, and compendial listings, differing only by an additional compendium reference, which does not affect regulatory suitability.",
+      "latency_ms": 1358,
+      "tokens_in": 280,
+      "tokens_out": 153
+    },
+    {
+      "id": "P05",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are L-Histidine base, parenteral low-endotoxin, compendial, free base, low endotoxin, sourced to specification, with identical specifications and no grade or form differences.",
+      "latency_ms": 943,
+      "tokens_in": 283,
+      "tokens_out": 147
+    },
+    {
+      "id": "P06",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are Polysorbate 80, parenteral super-refined, low peroxide, listed in the same compendia with identical specifications and sourcing mode, differing only in naming.",
+      "latency_ms": 1560,
+      "tokens_in": 304,
+      "tokens_out": 188
+    },
+    {
+      "id": "P07",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are microcrystalline cellulose, direct-compression 100 µm, listed in the same compendia and sourced under the same specifications, with no grade, salt, hydrate, or analogue differences.",
+      "latency_ms": 1565,
+      "tokens_in": 291,
+      "tokens_out": 188
+    },
+    {
+      "id": "P08",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate lists a different unit (MPA.S vs mPa.s) indicating a distinct grade, which violates the rule against substituting different grades.",
+      "latency_ms": 2088,
+      "tokens_in": 311,
+      "tokens_out": 243
+    },
+    {
+      "id": "P09",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are glycine parenteral grade compendial excipients with identical specifications except the candidate includes a low endotoxin classification, which does not constitute a different grade or salt.",
+      "latency_ms": 3753,
+      "tokens_in": 268,
+      "tokens_out": 491
+    },
+    {
+      "id": "P10",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are potassium chloride, parenteral grade, compendial, with identical specifications and no grade or salt differences.",
+      "latency_ms": 2486,
+      "tokens_in": 270,
+      "tokens_out": 272
+    },
+    {
+      "id": "P11",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "The candidate is citric acid monohydrate of oral grade, matching the required material's substance, grade, hydrate, and compendial specifications.",
+      "latency_ms": 2093,
+      "tokens_in": 270,
+      "tokens_out": 227
+    },
+    {
+      "id": "P12",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is a sieved carrier grade whereas the required material is a coarse carrier grade, which constitutes a different grade and thus cannot be used interchangeably without qualification.",
+      "latency_ms": 1034,
+      "tokens_in": 283,
+      "tokens_out": 136
+    },
+    {
+      "id": "P13",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are magnesium stearate, vegetable-source tablet lubricant grade compendial excipients with identical grade, compendia, and sourcing mode, so they can be used interchangeably without qualification or regulatory change.",
+      "latency_ms": 1459,
+      "tokens_in": 279,
+      "tokens_out": 190
+    },
+    {
+      "id": "P14",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are tromethamine, parenteral grade, compendial, and sourced to the same specifications, matching all key attributes.",
+      "latency_ms": 1807,
+      "tokens_in": 276,
+      "tokens_out": 113
+    },
+    {
+      "id": "P15",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are parenteral-grade glycerol/glycerin compendial excipients meeting the same USP-NF, Ph. Eur., and JP standards with no differences in grade, salt form, endotoxin class, or sourcing mode.",
+      "latency_ms": 1279,
+      "tokens_in": 271,
+      "tokens_out": 150
+    },
+    {
+      "id": "P16",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "The candidate HPMC 2910 matches the required Hypromellose 2910 grade, specifications, and compendial status without any difference in substance or regulatory classification.",
+      "latency_ms": 3679,
+      "tokens_in": 301,
+      "tokens_out": 380
+    },
+    {
+      "id": "P17",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is an oral-grade sucrose lacking the required low-endotoxin specification and parenteral suitability, so it does not meet the required material's specifications without qualification or regulatory change.",
+      "latency_ms": 1597,
+      "tokens_in": 277,
+      "tokens_out": 137
+    },
+    {
+      "id": "P18",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is a direct-compression grade without parenteral low-endotoxin specification, which differs from the required parenteral low-endotoxin grade.",
+      "latency_ms": 1529,
+      "tokens_in": 275,
+      "tokens_out": 135
+    },
+    {
+      "id": "P19",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is a different salt (monohydrochloride monohydrate) and hydrate form than the required free‑base L‑histidine, violating the rule against substituting different grades, salts, or hydrates.",
+      "latency_ms": 1696,
+      "tokens_in": 289,
+      "tokens_out": 162
+    },
+    {
+      "id": "P20",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is only an oral/topical grade while the required material is a parenteral super‑refined grade, making them not interchangeable without qualification.",
+      "latency_ms": 1441,
+      "tokens_in": 293,
+      "tokens_out": 145
+    },
+    {
+      "id": "P21",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is a micronised fines grade whereas the required material is a coarse carrier grade, which constitutes a different grade and thus cannot be used interchangeably without qualification.",
+      "latency_ms": 1422,
+      "tokens_in": 289,
+      "tokens_out": 133
+    },
+    {
+      "id": "P22",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is a tablet lubricant grade whereas the required material is an inhalation‑grade specialty excipient, making them unsuitable for direct substitution without qualification.",
+      "latency_ms": 1234,
+      "tokens_in": 275,
+      "tokens_out": 151
+    },
+    {
+      "id": "P23",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate differs in grade and particle size (wet granulation 50 µm vs. direct‑compression 100 µm), which constitutes a different material under the hard rule.",
+      "latency_ms": 1399,
+      "tokens_in": 290,
+      "tokens_out": 144
+    },
+    {
+      "id": "P24",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "Different salt form and grade (trihydrate vs sodium, compacted oral vs sterile) constitute a distinct material.",
+      "latency_ms": 1892,
+      "tokens_in": 260,
+      "tokens_out": 156
+    },
+    {
+      "id": "P25",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is a synthetic analogue in development grade, whereas the required material is a licensed GMP adjuvant, making them not interchangeable without regulatory qualification.",
+      "latency_ms": 860,
+      "tokens_in": 260,
+      "tokens_out": 90
+    },
+    {
+      "id": "P26",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate uses a 6R vial while the required material specifies a 2R vial, making it a different grade and not a permissible substitute.",
+      "latency_ms": 1746,
+      "tokens_in": 305,
+      "tokens_out": 212
+    },
+    {
+      "id": "P27",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate stopper is a different size (20 mm vs required 13 mm), making it not interchangeable without qualification.",
+      "latency_ms": 1001,
+      "tokens_in": 318,
+      "tokens_out": 122
+    },
+    {
+      "id": "P28",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "Polysorbate 20 is a different surfactant substance than Polysorbate 80, so it cannot be used interchangeably without qualification or regulatory change.",
+      "latency_ms": 1730,
+      "tokens_in": 297,
+      "tokens_out": 134
+    },
+    {
+      "id": "P29",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "DSPC is a different lipid species than DOPC, so it is not a direct substitute.",
+      "latency_ms": 1536,
+      "tokens_in": 255,
+      "tokens_out": 121
+    },
+    {
+      "id": "P30",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is anhydrous while the required material is a dihydrate, making it a different grade and not a permissible substitute.",
+      "latency_ms": 1511,
+      "tokens_in": 294,
+      "tokens_out": 154
+    },
+    {
+      "id": "P31",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate has a standard endotoxin level, whereas the required material specifies low endotoxin, making it non‑equivalent without qualification.",
+      "latency_ms": 1218,
+      "tokens_in": 292,
+      "tokens_out": 133
+    },
+    {
+      "id": "P32",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are sodium chloride parenteral grade with identical specifications, endotoxin class, sourcing mode, and share USP‑NF and Ph. Eur. compendial status; the only omission of JP monograph does not affect equivalence.",
+      "latency_ms": 5251,
+      "tokens_in": 275,
+      "tokens_out": 446
+    },
+    {
+      "id": "P33",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is an oral grade material while the required material is a parenteral grade, which constitutes a different grade and thus cannot be used interchangeably without qualification.",
+      "latency_ms": 1311,
+      "tokens_in": 280,
+      "tokens_out": 119
+    },
+    {
+      "id": "P34",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate has a different viscosity (15 mPa.s vs 5 mPa.s), constituting a different grade and thus cannot be used without qualification or regulatory change.",
+      "latency_ms": 2303,
+      "tokens_in": 309,
+      "tokens_out": 182
+    },
+    {
+      "id": "P35",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is the free base form while the required material is the hydrochloride salt, which constitutes a different chemical form and thus cannot be used interchangeably without qualification.",
+      "latency_ms": 1490,
+      "tokens_in": 265,
+      "tokens_out": 137
+    },
+    {
+      "id": "P36",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is the neat (undiluted) form, whereas the required material is specifically diluted 1:1 with MCC, making them different grades and not interchangeable without qualification.",
+      "latency_ms": 1253,
+      "tokens_in": 276,
+      "tokens_out": 131
+    },
+    {
+      "id": "P37",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "Different active ingredient (fluticasone propionate vs fluticasone furoate) constitutes a distinct API, not a permissible substitute.",
+      "latency_ms": 1663,
+      "tokens_in": 276,
+      "tokens_out": 148
+    },
+    {
+      "id": "P38",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is derived from shark‑liver (animal origin) whereas the required material is specified as non‑animal origin, making them not interchangeable without qualification.",
+      "latency_ms": 1241,
+      "tokens_in": 272,
+      "tokens_out": 183
+    },
+    {
+      "id": "P39",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials share the same substance, grade, compendia, and sourcing mode, with only an alternate film platform noted but no change in grade or regulatory classification.",
+      "latency_ms": 3214,
+      "tokens_in": 297,
+      "tokens_out": 310
+    },
+    {
+      "id": "P40",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate uses an alternate ligand, making it a different material rather than a direct substitute.",
+      "latency_ms": 1447,
+      "tokens_in": 249,
+      "tokens_out": 190
+    },
+    {
+      "id": "P41",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are sucrose, injectable low-endotoxin grade, listed in the same compendia, with identical endotoxin class and sourcing mode, and no grade, salt, hydrate, or analogue differences are present.",
+      "latency_ms": 1636,
+      "tokens_in": 298,
+      "tokens_out": 316
+    },
+    {
+      "id": "P01",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are sucrose, parenteral low-endotoxin grade, listed across identical major compendia (USP-NF, Ph. Eur., JP, ChP), with no salt, hydrate, or grade differences.",
+      "latency_ms": 4416,
+      "tokens_in": 294,
+      "tokens_out": 703
+    },
+    {
+      "id": "P02",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials share identical grade, endotoxin class, compendial monographs, salt form, and sourcing mode, with no grade, salt, hydrate, or analogue differences.",
+      "latency_ms": 5761,
+      "tokens_in": 288,
+      "tokens_out": 825
+    },
+    {
+      "id": "P03",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "The candidate matches the required material on all critical attributes—substance, grade, salt form, compendial coverage, endotoxin class, and sourcing mode—with only minor naming differences.",
+      "latency_ms": 5929,
+      "tokens_in": 303,
+      "tokens_out": 866
+    },
+    {
+      "id": "P04",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "The candidate matches the required material on all critical attributes (substance, grade, endotoxin class, salt form, sourcing mode), and the addition of ChP to the compendia list is supplementary, not a change in grade, salt, or analogue.",
+      "latency_ms": 5713,
+      "tokens_in": 280,
+      "tokens_out": 937
+    },
+    {
+      "id": "P05",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials share identical substance, grade, salt form, compendial references, endotoxin class, and sourcing mode, with no differing grade, salt, hydrate, or analogue.",
+      "latency_ms": 4602,
+      "tokens_in": 283,
+      "tokens_out": 729
+    },
+    {
+      "id": "P06",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials share identical substance, grade, compendial listings, salt form, endotoxin class, and sourcing mode, with no grade, salt, hydrate, or analogue differences.",
+      "latency_ms": 6690,
+      "tokens_in": 304,
+      "tokens_out": 912
+    },
+    {
+      "id": "P07",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "The candidate matches the required material on substance, grade, material class, all major pharmacopeial compendia, salt form, endotoxin class, and sourcing mode, with no indication of a different grade, salt, hydrate, or analogue.",
+      "latency_ms": 6913,
+      "tokens_in": 291,
+      "tokens_out": 1140
+    },
+    {
+      "id": "P08",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "The candidate matches the required material on substance, grade (5 mPa.s / 5 MPA.S is unit notation), compendia coverage, salt form, endotoxin class, and sourcing mode, with no regulatory or grade change.",
+      "latency_ms": 6389,
+      "tokens_in": 311,
+      "tokens_out": 873
+    },
+    {
+      "id": "P09",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate specifies an endotoxin class of 'low' while the required material has no endotoxin class specified, representing a difference in quality/grade specification.",
+      "latency_ms": 20407,
+      "tokens_in": 268,
+      "tokens_out": 2911
+    },
+    {
+      "id": "P10",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both are parenteral-grade potassium chloride compendial excipients with identical USP-NF, Ph. Eur., and JP references, and no differences in salt form, hydrate, or analogue status.",
+      "latency_ms": 5349,
+      "tokens_in": 270,
+      "tokens_out": 807
+    },
+    {
+      "id": "P11",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials share identical substance, grade, salt form (monohydrate), compendial monographs, and sourcing mode; the name variation '1-hydrate' versus 'monohydrate' denotes the same chemical hydrate form.",
+      "latency_ms": 6872,
+      "tokens_in": 270,
+      "tokens_out": 982
+    },
+    {
+      "id": "P12",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials are lactose monohydrate inhalation carrier grade with identical compendial listings (Ph. Eur., USP-NF), salt form (monohydrate), endotoxin profile, and sourcing mode, making them directly substitutable without qualification or regulatory change.",
+      "latency_ms": 7120,
+      "tokens_in": 283,
+      "tokens_out": 1030
+    },
+    {
+      "id": "P13",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials share identical substance, grade, compendial monographs (Ph. Eur. and USP-NF), salt form, endotoxin class, and sourcing mode, with no differences in critical attributes.",
+      "latency_ms": 5533,
+      "tokens_in": 279,
+      "tokens_out": 755
+    },
+    {
+      "id": "P14",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Both materials identify the same compendial parenteral-grade tromethamine (Tris) with identical USP-NF and Ph. Eur. listings, no salt or hydrate differences, and matching spec-led sourcing.",
+      "latency_ms": 8414,
+      "tokens_in": 276,
+      "tokens_out": 1161
+    },
+    {
+      "id": "P15",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Glycerol and glycerin are synonymous names for the same chemical substance, and both materials share identical parenteral grade, compendial monographs, and regulatory specifications.",
+      "latency_ms": 9257,
+      "tokens_in": 271,
+      "tokens_out": 1281
+    },
+    {
+      "id": "P16",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "equivalent",
+      "pred": "equivalent",
+      "reason": "Same viscosity grade (2910/5 mPa.s), identical compendial listings (Ph. Eur., USP-NF, JP), and 'hypromellose' is the standard pharmaceutical name for HPMC; no grade, salt, hydrate, or analogue differences are present.",
+      "latency_ms": 7597,
+      "tokens_in": 301,
+      "tokens_out": 1153
+    },
+    {
+      "id": "P17",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is oral grade while the required material is parenteral low-endotoxin grade, representing distinct regulatory and quality specifications for different routes of administration.",
+      "latency_ms": 5494,
+      "tokens_in": 277,
+      "tokens_out": 676
+    },
+    {
+      "id": "P18",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is direct-compression grade, not parenteral low-endotoxin grade, and per policy, different grades of the same substance cannot substitute for licensed parenteral materials without qualification.",
+      "latency_ms": 6730,
+      "tokens_in": 275,
+      "tokens_out": 860
+    },
+    {
+      "id": "P19",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate’s monohydrochloride monohydrate salt form differs from the required free base form, making them non-equivalent without regulatory qualification.",
+      "latency_ms": 5797,
+      "tokens_in": 289,
+      "tokens_out": 798
+    },
+    {
+      "id": "P20",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is oral/topical grade while the required material is parenteral super-refined grade, and regulatory guidelines prohibit substituting different grades for licensed materials.",
+      "latency_ms": 5455,
+      "tokens_in": 293,
+      "tokens_out": 793
+    },
+    {
+      "id": "P21",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is specified as micronised fines while the required material is a coarse carrier, constituting a different grade per the strict substitution rule.",
+      "latency_ms": 4868,
+      "tokens_in": 289,
+      "tokens_out": 751
+    },
+    {
+      "id": "P22",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is tablet lubricant grade while the required material is inhalation grade, and the rule prohibits substituting different grades for licensed materials.",
+      "latency_ms": 4901,
+      "tokens_in": 275,
+      "tokens_out": 740
+    },
+    {
+      "id": "P23",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is a wet-granulation grade with 50 μm particle size, whereas the required material is a direct-compression grade with 100 μm particle size, making them functionally non-interchangeable per regulatory grade specifications.",
+      "latency_ms": 4428,
+      "tokens_in": 290,
+      "tokens_out": 654
+    },
+    {
+      "id": "P24",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate has a different salt form (sodium vs trihydrate), which violates the hard rule against substituting different salt forms for licensed materials.",
+      "latency_ms": 4840,
+      "tokens_in": 260,
+      "tokens_out": 690
+    },
+    {
+      "id": "P25",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is a development-grade analogue, not a licensed GMP material, violating the hard rule against treating analogues as substitutes for licensed materials.",
+      "latency_ms": 4074,
+      "tokens_in": 260,
+      "tokens_out": 618
+    },
+    {
+      "id": "P26",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate vial has a different size designation (6R vs 2R), which is a critical dimensional specification affecting compatibility, fill volume, and closure fit, necessitating qualification and regulatory review for substitution.",
+      "latency_ms": 7568,
+      "tokens_in": 305,
+      "tokens_out": 1121
+    },
+    {
+      "id": "P27",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate differs in stopper diameter (20 mm vs 13 mm), a critical dimensional specification that affects fit and function, and cannot be used interchangeably without qualification or regulatory change.",
+      "latency_ms": 6128,
+      "tokens_in": 318,
+      "tokens_out": 879
+    },
+    {
+      "id": "P28",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "Polysorbate 20 and polysorbate 80 are chemically distinct substances with different fatty acid esters, specifications, and regulatory identities, so the candidate cannot substitute for the required material.",
+      "latency_ms": 5485,
+      "tokens_in": 297,
+      "tokens_out": 796
+    },
+    {
+      "id": "P29",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "DOPC and DSPC are different chemical substances (phospholipid analogues), and the rule prohibits treating analogues as substitutes for licensed materials.",
+      "latency_ms": 4548,
+      "tokens_in": 255,
+      "tokens_out": 640
+    },
+    {
+      "id": "P30",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is anhydrous while the required material is specified as dihydrate, representing a hydrate form difference that violates the hard rule against substituting different hydrates for licensed materials.",
+      "latency_ms": 4712,
+      "tokens_in": 294,
+      "tokens_out": 701
+    },
+    {
+      "id": "P31",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is classified as standard endotoxin while the required material specifies low endotoxin, which is a critical quality attribute for parenteral injectable excipients and does not meet the required specification.",
+      "latency_ms": 5412,
+      "tokens_in": 292,
+      "tokens_out": 753
+    },
+    {
+      "id": "P32",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "equivalent",
+      "reason": "The candidate material matches the required material on all specified properties (substance, grade, salt form, endotoxin class, and sourcing mode), and the compendia list difference does not constitute a grade, salt, hydrate, or analogue variation under the hard rule.",
+      "latency_ms": 11668,
+      "tokens_in": 275,
+      "tokens_out": 1877
+    },
+    {
+      "id": "P33",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "Oral grade mannitol does not meet parenteral grade specifications and cannot be substituted for licensed parenteral material regardless of endotoxin class.",
+      "latency_ms": 4213,
+      "tokens_in": 280,
+      "tokens_out": 638
+    },
+    {
+      "id": "P34",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate's viscosity of 15 mPa.s differs from the required 5 mPa.s, which is a defining grade parameter for HPMC and cannot be treated as a substitute per the hard rule.",
+      "latency_ms": 5888,
+      "tokens_in": 309,
+      "tokens_out": 834
+    },
+    {
+      "id": "P35",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is the free base form while the required material is the hydrochloride salt, which constitutes a different salt form and violates the hard rule against substituting different salts for licensed materials.",
+      "latency_ms": 4732,
+      "tokens_in": 265,
+      "tokens_out": 635
+    },
+    {
+      "id": "P36",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is neat (undiluted) while the required material is specifically diluted 1:1 with MCC, representing different formulations that cannot be substituted without qualification or regulatory change.",
+      "latency_ms": 5352,
+      "tokens_in": 276,
+      "tokens_out": 859
+    },
+    {
+      "id": "P37",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate contains fluticasone propionate, a different active substance than the required fluticasone furoate.",
+      "latency_ms": 4272,
+      "tokens_in": 276,
+      "tokens_out": 635
+    },
+    {
+      "id": "P38",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate is shark-liver derived (animal origin) while the required material is non-animal origin, constituting a fundamental sourcing difference that precludes direct substitution without regulatory qualification.",
+      "latency_ms": 9607,
+      "tokens_in": 272,
+      "tokens_out": 1377
+    },
+    {
+      "id": "P39",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate specifies an alternate film platform, representing a material specification difference that requires qualification and cannot substitute the required validated assembly without regulatory change.",
+      "latency_ms": 13762,
+      "tokens_in": 297,
+      "tokens_out": 2018
+    },
+    {
+      "id": "P40",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "not_equivalent",
+      "reason": "The candidate specifies an alternate ligand, making it a different chemical analogue rather than the licensed material.",
+      "latency_ms": 5552,
+      "tokens_in": 249,
+      "tokens_out": 824
+    },
+    {
+      "id": "P41",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "gold": "not_equivalent",
+      "pred": "equivalent",
+      "reason": "All specified attributes—substance, grade, compendial monographs, endotoxin class, salt form, and sourcing mode—identically match; the beet/cane source distinction does not constitute a grade, salt, hydrate, or analogue difference.",
+      "latency_ms": 14025,
+      "tokens_in": 298,
+      "tokens_out": 1584
+    }
+  ],
+  "wall_s": 406.59,
+  "usage": {
+    "by_model": {
+      "nvidia/NVIDIA-Nemotron-3.5-Super-VL": {
+        "calls": 41,
+        "errors": 0,
+        "tokens_in": 11638,
+        "tokens_out": 19494,
+        "cost_usd": 0.009,
+        "attempts": 41
+      },
+      "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B": {
+        "calls": 41,
+        "errors": 0,
+        "tokens_in": 11638,
+        "tokens_out": 8499,
+        "cost_usd": 0.0239,
+        "attempts": 41
+      },
+      "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B": {
+        "calls": 41,
+        "errors": 0,
+        "tokens_in": 11638,
+        "tokens_out": 7673,
+        "cost_usd": 0.0021,
+        "attempts": 41
+      },
+      "nvidia/Nemotron-3.5-Lightning-30B-A3B": {
+        "calls": 41,
+        "errors": 0,
+        "tokens_in": 11638,
+        "tokens_out": 39816,
+        "cost_usd": 0.0085,
+        "attempts": 49
+      }
+    },
+    "total_cost_usd": 0.0435,
+    "total_calls": 164
+  }
+}

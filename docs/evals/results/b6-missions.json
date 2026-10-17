@@ -1,0 +1,121 @@
+{
+  "benchmark": "b6-missions",
+  "generated_at": "2026-10-17T21:31:13.515Z",
+  "git_sha": "21fefbc",
+  "synthetic_data": true,
+  "method": {
+    "missions_file": "docs/evals/missions.txt",
+    "endpoint": "https://supplier-chief-of-staff.vercel.app/eve/v1/session/<id>/stream",
+    "events_used": [
+      "agent.started (sub-agent count)",
+      "action.partial stage planned / branches_done / verified (timeline, attempts, checks)",
+      "step.completed usage (tokens)"
+    ],
+    "local_source": "<repo>/.data/state.json",
+    "gate_b6": ">= 9 of 10 hero runs complete (not measurable from available data)",
+    "gate_b8": "p95 time to the text alert < 90 s"
+  },
+  "streams": [
+    {
+      "id": "wrun_41M55RN7HZ0GH7JJ5RE0CF1Z95",
+      "available": false,
+      "http_status": 410,
+      "reason": "session_expired"
+    },
+    {
+      "id": "wrun_41M55SXBP50GGT37XRSWXBSMY4",
+      "available": false,
+      "http_status": 410,
+      "reason": "session_expired"
+    },
+    {
+      "id": "wrun_41M55T96SZ0GYH8G6AR6BJA831",
+      "available": false,
+      "http_status": 200,
+      "reason": "stream open but no events within 25 s"
+    }
+  ],
+  "local_missions": [
+    {
+      "id": "MSN-0001",
+      "source": "local store (agent_runs)",
+      "material_id": "MAT-SAP-QS",
+      "site_id": "SITE-GHE",
+      "status": "running",
+      "trigger": "sentinel alert: saponin adjuvant QS-class at Ghent has 30 days of cover against a long lead time",
+      "wall_s": 535.32,
+      "attempts": 3,
+      "sub_agent_runs": 0,
+      "roles": [
+        "verifier"
+      ],
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "tokens_note": "not recorded by this build (verifier runs record tokens as 0)",
+      "checks_passed": "1/5",
+      "checks": [
+        {
+          "id": "covers_need",
+          "pass": false,
+          "reason": "transfer 0 + purchase 0 = 0 vs need 2700 g"
+        },
+        {
+          "id": "lands_in_time",
+          "pass": false,
+          "reason": "-30 days available after transfer (cover 30.0 d − safety 60 d); chosen lead time none d"
+        },
+        {
+          "id": "qualified_only",
+          "pass": true,
+          "reason": "no purchase"
+        },
+        {
+          "id": "comparable_quotes",
+          "pass": false,
+          "reason": "0 usable quotes of 1 received on RFQ-102"
+        },
+        {
+          "id": "grounded",
+          "pass": false,
+          "reason": "Only one approved supplier exists for MAT-SAP-QS: SUP-008 (Velasco Adjuvant Sciences), qualification state released_for_use.; A negotiator was engaged with SUP-008 and returned quote Q-0184.; Supplier: SUP-008 (Velasco Adjuvant Sciences); testing cost $1,254.16; Lead time: 221 days; Promised delivery: approximately 2027-05-26 (today 2026-10-17 + 221 days); recommend the fastest (and only) available offer: SUP-008 at ~2027-05-26 delivery, 221-day lead time; This is the best available option from the sole approved supplier"
+        }
+      ],
+      "stages": [
+        {
+          "stage": "planned",
+          "attempt": null,
+          "t_s": 0
+        },
+        {
+          "stage": "verified",
+          "attempt": 1,
+          "t_s": 70.9,
+          "pass": 2,
+          "of": 5
+        },
+        {
+          "stage": "verified",
+          "attempt": 2,
+          "t_s": 258.56,
+          "pass": 1,
+          "of": 5
+        },
+        {
+          "stage": "verified",
+          "attempt": 3,
+          "t_s": 535.32,
+          "pass": 1,
+          "of": 5
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "streams_requested": 3,
+    "streams_available": 0,
+    "missions_measured": 1,
+    "wall_s_p50": 535.32,
+    "wall_s_p95": 535.32,
+    "gate_b8_p95_under_90s": false
+  }
+}

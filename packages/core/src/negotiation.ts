@@ -528,6 +528,21 @@ export function acceptOffer(store: Store, args: { rfq_id: string; supplier_id: s
     rfq_reason: offer.unit_price == null ? p.rfq_reason : null,
   });
   const updated = store.updateNegotiation(thread.id, { status: "accepted", quote_id: quote.external_id });
+  // Negotiation memory: what the buyer saw (opening offer) vs where it settled. Never the hidden floor.
+  const supplierOffers = thread.turns.filter((t) => t.from === "supplier" && t.offer).map((t) => t.offer as NegotiationOffer);
+  const opening = supplierOffers.find((o) => !o.expedited)?.unit_price ?? supplierOffers[0]?.unit_price ?? null;
+  store.addNegotiationMemory({
+    supplier_id: args.supplier_id,
+    material_id: p.material_id,
+    rfq_id: args.rfq_id,
+    currency: offer.currency,
+    list_unit_price: opening,
+    accepted_unit_price: offer.unit_price,
+    savings_vs_list_pct: opening != null && offer.unit_price != null && opening > 0 ? round((1 - offer.unit_price / opening) * 100, 2) : null,
+    expedited: offer.expedited ?? false,
+    lead_time_days: offer.lead_time_days,
+    supplier_turns: supplierOffers.length,
+  });
   const rfq = store.rfq(args.rfq_id);
   if (rfq && (rfq.status === "draft" || rfq.status === "sent")) store.updateRFQ(args.rfq_id, { status: "quoted" });
   return { quote, thread: updated, approved_supplier: isApproved(p.qualification_state) };

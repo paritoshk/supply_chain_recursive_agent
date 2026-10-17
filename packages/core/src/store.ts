@@ -7,9 +7,13 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { addDays } from "./logic/dates.ts";
+import { outcomesToObservations, type Lesson, type NegotiationMemory, type Observation, type SupplierOutcome } from "./logic/learning.ts";
 import { generateSeed, type SeedData } from "./seed/generate.ts";
+import { generateProduction } from "./seed/production.ts";
 import type {
   AgentRun,
+  BatchWorkOrder,
+  BoardItem,
   Consumption,
   Finding,
   Lot,
@@ -17,6 +21,7 @@ import type {
   Message,
   Mission,
   NegotiationThread,
+  ProductionLine,
   PurchaseOrder,
   Quote,
   RFQ,
@@ -28,7 +33,21 @@ export interface StoreState extends SeedData {
   version: number;
   /** Supplier-persona negotiation threads, one per (rfq, supplier). Backfilled to [] for older snapshots. */
   negotiations: NegotiationThread[];
+  /** Production lines and the scheduled batches that consume materials. Backfilled from the seed generator. */
+  production_lines: ProductionLine[];
+  work_orders: BatchWorkOrder[];
+  /** Evidence board (dossiers, structure images, feasibility reports, QA packets, supplier evidence). Backfilled to []. */
+  board: BoardItem[];
+  /** Learning memory (logic/learning.ts): goods-receipt outcomes, judge lessons, negotiation results. Backfilled to []. */
+  supplier_outcomes: SupplierOutcome[];
+  lessons: Lesson[];
+  negotiation_memory: NegotiationMemory[];
 }
+
+/** Oldest board items are dropped beyond this many. */
+export const BOARD_MAX_ITEMS = 300;
+/** Oldest lessons are dropped beyond this many. */
+export const LESSONS_MAX = 200;
 
 type Patch<T> = Partial<Omit<T, "external_id" | "id">>;
 type WithOptionalId<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
@@ -145,6 +164,57 @@ export class Store {
   negotiation(rfqId: string, supplierId: string) {
     return this.s.negotiations.find((n) => n.rfq_id === rfqId && n.supplier_id === supplierId);
   }
+  productionLines(f: Partial<Pick<ProductionLine, "site_id" | "product_id" | "line_type">> = {}) {
+    return this.s.production_lines.filter(
+      (l) =>
+        (!f.site_id || l.site_id === f.site_id) &&
+        (!f.product_id || l.product_id === f.product_id) &&
+        (!f.line_type || l.line_type === f.line_type),
+    );
+  }
+  productionLine(id: string) { return this.s.production_lines.find((l) => l.external_id === id); }
+  /** Scheduled batches, by start date. `material_id` keeps batches whose per-batch consumption includes it. */
+  workOrders(f: { site_id?: string; line_id?: string; product_id?: string; material_id?: string; from?: string; to?: string } = {}) {
+    return this.s.work_orders
+      .filter(
+        (w) =>
+          (!f.site_id || w.site_id === f.site_id) &&
+          (!f.line_id || w.line_id === f.line_id) &&
+          (!f.product_id || w.product_id === f.product_id) &&
+          (!f.material_id || w.materials.some((m) => m.material_external_id === f.material_id)) &&
+          (!f.from || w.start_date >= f.from) &&
+          (!f.to || w.start_date < f.to),
+      )
+      .sort((a, b) => a.start_date.localeCompare(b.start_date) || a.line_id.localeCompare(b.line_id));
+  }
+  workOrder(id: string) { return this.s.work_orders.find((w) => w.external_id === id); }
+  /** Board items, newest first. */
+  boardItems(f: Partial<Pick<BoardItem, "kind" | "mission_id" | "material_id" | "key">> & { limit?: number } = {}) {
+    const items = this.s.board
+      .filter(
+        (b) =>
+          (!f.kind || b.kind === f.kind) &&
+          (!f.mission_id || b.mission_id === f.mission_id) &&
+          (!f.material_id || b.material_id === f.material_id) &&
+          (!f.key || b.key === f.key),
+      )
+      .sort((a, b) => b.created_at.localeCompare(a.created_at) || b.id.localeCompare(a.id));
+    return f.limit ? items.slice(0, f.limit) : items;
+  }
+  boardItem(id: string) { return this.s.board.find((b) => b.id === id); }
+  supplierOutcomes(f: Partial<Pick<SupplierOutcome, "supplier_id" | "material_id">> = {}) {
+    return this.s.supplier_outcomes.filter((o) => (!f.supplier_id || o.supplier_id === f.supplier_id) && (!f.material_id || o.material_id === f.material_id));
+  }
+  /** Every recorded outcome as a learning observation (pooled per supplier by the belief). */
+  observations(): Observation[] { return outcomesToObservations(this.s.supplier_outcomes); }
+  lessons(f: Partial<Pick<Lesson, "material_id" | "supplier_id" | "mission_id">> = {}) {
+    return this.s.lessons.filter(
+      (l) => (!f.material_id || l.material_id === f.material_id) && (!f.supplier_id || l.supplier_id === f.supplier_id) && (!f.mission_id || l.mission_id === f.mission_id),
+    );
+  }
+  negotiationMemory(f: Partial<Pick<NegotiationMemory, "supplier_id" | "material_id">> = {}) {
+    return this.s.negotiation_memory.filter((m) => (!f.supplier_id || m.supplier_id === f.supplier_id) && (!f.material_id || m.material_id === f.material_id));
+  }
 
   // ---- ids ----
   nextRfqId(): string {
@@ -236,6 +306,50 @@ export class Store {
     return Object.assign(must(this.s.negotiations.find((n) => n.id === id), id), patch);
   }
 
+  /**
+   * Adds a board item. An item with the same `key` (or the same `id`) replaces the existing one, so
+   * repeated tool calls keep one dossier per material and one feasibility report per mission.
+   * Ids are random-suffixed (not sequential) so items written by concurrent processes can be merged.
+   */
+  addBoardItem(input: WithOptionalId<BoardItem, "id" | "created_at">): BoardItem {
+    const item: BoardItem = {
+      ...input,
+      id: input.id ?? `BRD-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
+      created_at: input.created_at ?? nowIso(),
+    };
+    this.s.board = this.s.board.filter((b) => b.id !== item.id && !(item.key && b.key === item.key));
+    this.s.board.push(item);
+    if (this.s.board.length > BOARD_MAX_ITEMS) {
+      this.s.board.sort((a, b) => a.created_at.localeCompare(b.created_at));
+      this.s.board.splice(0, this.s.board.length - BOARD_MAX_ITEMS);
+    }
+    return item;
+  }
+
+  // ---- learning memory ----
+  addSupplierOutcome(input: Omit<SupplierOutcome, "id" | "recorded_at"> & Partial<Pick<SupplierOutcome, "id" | "recorded_at">>): SupplierOutcome {
+    const id = input.id ?? `OUT-${pad(maxSeq(this.s.supplier_outcomes.map((o) => o.id), "OUT-") + 1, 5)}`;
+    const o: SupplierOutcome = { ...input, id, recorded_at: input.recorded_at ?? nowIso() };
+    this.s.supplier_outcomes.push(o);
+    return o;
+  }
+  /** Adds a lesson unless the same text is already recorded for the material and check. */
+  addLesson(input: Omit<Lesson, "id" | "created_at">): Lesson {
+    const dup = this.s.lessons.find((l) => l.material_id === input.material_id && l.check_id === input.check_id && l.text === input.text);
+    if (dup) return dup;
+    const l: Lesson = { ...input, id: `LSN-${pad(maxSeq(this.s.lessons.map((x) => x.id), "LSN-") + 1, 5)}`, created_at: nowIso() };
+    this.s.lessons.push(l);
+    if (this.s.lessons.length > LESSONS_MAX) this.s.lessons.splice(0, this.s.lessons.length - LESSONS_MAX);
+    return l;
+  }
+  addNegotiationMemory(input: Omit<NegotiationMemory, "id" | "created_at">): NegotiationMemory {
+    const existing = this.s.negotiation_memory.findIndex((m) => m.rfq_id === input.rfq_id && m.supplier_id === input.supplier_id);
+    const m: NegotiationMemory = { ...input, id: `NGM-${input.rfq_id}-${input.supplier_id}`, created_at: nowIso() };
+    if (existing >= 0) this.s.negotiation_memory[existing] = m;
+    else this.s.negotiation_memory.push(m);
+    return m;
+  }
+
   // ---- persistence ----
   snapshot(): StoreState {
     return structuredClone(this.s);
@@ -244,6 +358,7 @@ export class Store {
     const state = typeof json === "string" ? (JSON.parse(json) as StoreState) : structuredClone(json);
     if (state.version !== STATE_VERSION) throw new Error(`unsupported state version ${state.version}`);
     state.negotiations ??= [];
+    backfill(state);
     this.s = state;
   }
 }
@@ -251,7 +366,22 @@ export class Store {
 /** Creates a store from seed data (defaults to the deterministic Corvane seed) or a saved snapshot. */
 export function createStore(seed: SeedData | StoreState = generateSeed()): Store {
   const state = structuredClone(seed) as Partial<StoreState> & SeedData;
-  return new Store({ ...state, negotiations: state.negotiations ?? [], version: STATE_VERSION });
+  const full = { ...state, negotiations: state.negotiations ?? [], version: STATE_VERSION } as StoreState;
+  backfill(full);
+  return new Store(full);
+}
+
+/** Fills collections added after the first snapshot format (production schedule, board). */
+function backfill(state: StoreState): void {
+  if (!state.production_lines || !state.work_orders) {
+    const prod = generateProduction(state);
+    state.production_lines ??= prod.production_lines;
+    state.work_orders ??= prod.work_orders;
+  }
+  state.board ??= [];
+  state.supplier_outcomes ??= [];
+  state.lessons ??= [];
+  state.negotiation_memory ??= [];
 }
 
 // ---------------------------------------------------------------------------

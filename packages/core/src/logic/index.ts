@@ -6,3 +6,7 @@ export * from "./quotes.ts";
 export * from "./pricing.ts";
 export * from "./spec.ts";
 export * from "./geo.ts";
+export * from "./qa.ts";
+export * from "./production.ts";
+export * from "./learning.ts";
+export * from "./risk.ts";

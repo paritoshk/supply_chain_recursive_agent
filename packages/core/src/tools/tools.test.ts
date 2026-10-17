@@ -20,9 +20,13 @@ const knownIds = () =>
     ...store.missions().map((x) => x.id),
     ...store.findings().map((x) => x.id ?? ""),
     ...store.negotiations().map((x) => x.id),
+    ...store.productionLines().map((x) => x.external_id),
+    ...store.workOrders().map((x) => x.external_id),
+    ...store.supplierOutcomes().map((x) => x.id),
+    ...store.lessons().map((x) => x.id),
   ]);
 /** Live web sources cite URLs instead of external_ids. */
-const URL_SOURCES = new Set(["you.com", "you.com/contents", "openfda.drug_shortages", "openfda.drug_enforcement"]);
+const URL_SOURCES = new Set(["you.com", "you.com/contents", "openfda.drug_shortages", "openfda.drug_enforcement", "pubchem"]);
 const run = (name: string, args: unknown, c: ToolCtx = ctx) => runTool(toolsByName[name]!, c, args);
 
 beforeAll(() => {
@@ -58,6 +62,10 @@ const SAMPLE_ARGS: Record<string, unknown> = {
   apply_approval: { rfq_id: "RFQ-102", decision: "APPROVE" },
   message_supplier: { rfq_id: openRfq.external_id, supplier_id: openRfqSupplier, message: "Please quote your best price and lead time." },
   accept_offer: { rfq_id: openRfq.external_id, supplier_id: openRfqSupplier },
+  line_feasibility: { material_id: "MAT-SUC-INJ", site_id: "SITE-GHE", purchase: { qty: 210, lead_time_days: 36, supplier_id: "SUP-005" } },
+  material_dossier: { material_id: "MAT-SUC-INJ" },
+  record_delivery: { supplier_id: "SUP-005", material_id: "MAT-SUC-INJ", site_id: "SITE-GHE", promised_date: "2026-10-01", received_date: "2026-10-20", qc_passed: true },
+  supplier_reliability: { material_id: "MAT-SUC-INJ", site_id: "SITE-GHE" },
 };
 
 describe("tool contract", () => {
@@ -67,7 +75,7 @@ describe("tool contract", () => {
     for (const n of ["draft_rfq", "collect_quotes", "open_mission", "record_finding", "notify_user", "apply_approval", "message_supplier", "accept_offer"]) {
       expect(toolsByName[n]?.idempotent).toBe(false);
     }
-    for (const n of ["low_stock_items", "cover_projection", "find_suppliers", "compare_quotes", "price_inventory", "propose_transfer"]) {
+    for (const n of ["low_stock_items", "cover_projection", "find_suppliers", "compare_quotes", "price_inventory", "propose_transfer", "line_feasibility", "material_dossier"]) {
       expect(toolsByName[n]?.idempotent).toBe(true);
     }
   });

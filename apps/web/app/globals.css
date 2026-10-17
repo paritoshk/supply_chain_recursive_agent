@@ -1,0 +1,53 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-inter-tight), var(--font-inter), sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --color-page: #fdfdfc;
+  --color-surface: #ffffff;
+  --color-muted-surface: #faf9f8;
+  --color-hair: #eae8e5;
+  --color-hair-strong: #d4d2cf;
+  --color-muted: #908e87;
+  --color-fg3: #5b5957;
+  --color-fg2: #3d3b39;
+  --color-ink: #141311;
+  --color-accent: #f25c05;
+  --color-ok: #16a34a;
+  --color-warn: #d97706;
+  --color-crit: #dc2626;
+  --color-info: #2563eb;
+}
+
+html, body {
+  background: #fdfdfc;
+  color: #141311;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.label-mono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #908e87;
+}
+
+@keyframes typing-dot {
+  0%, 80%, 100% { opacity: 0.25; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-2px); }
+}
+.typing-dot { animation: typing-dot 1.2s infinite ease-in-out; }
+.typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+.tg-wall {
+  background-color: #d9e4cf;
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.35) 0 2px, transparent 3px),
+    radial-gradient(circle at 70% 60%, rgba(255,255,255,0.25) 0 2px, transparent 3px);
+  background-size: 38px 38px, 52px 52px;
+}

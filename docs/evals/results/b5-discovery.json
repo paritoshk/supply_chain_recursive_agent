@@ -1,0 +1,2383 @@
+{
+  "benchmark": "b5-discovery",
+  "generated_at": "2026-10-17T21:31:35.291Z",
+  "git_sha": "21fefbc",
+  "synthetic_data": true,
+  "method": {
+    "tool": "discover_suppliers (packages/core/src/tools/stubs.ts), max_results 8, read_pages 2, run live against You.com",
+    "ground_truth": ".context/research/supplier-landscape.md (named real suppliers per material)",
+    "matching": "candidate host or name contains a supplier alias (e.g. Merck = merckgroup / sigmaaldrich / milliporesigma)",
+    "precision": "judged by nvidia/NVIDIA-Nemotron-3-Super-120B-A12B: manufacturer or distributor of this material = relevant; precision@k = relevant / k",
+    "gmp_evidence": "complianceSignals() on snippet + page excerpt, or page signals, includes GMP / US DMF / CEP",
+    "scout_rule": "scout instructions: keep only candidates whose evidence mentions the substance AND a GMP/DMF/CEP signal",
+    "raw_replay": "same queries sent straight to You.com search (count 12) with no host filter / dedup / truncation"
+  },
+  "what_the_scout_searches_for": {
+    "query_template": [
+      "`${substance} ${grade with / replaced by space} GMP manufacturer DMF CEP`",
+      "`${substance} ${first two compendia} pharmaceutical grade supplier` (replaced by the caller's free-text query when one is passed; max 2 queries)"
+    ],
+    "you_search": "https://ydc-index.io/v1/search?query=...&count=min(20, max_results + 4)",
+    "filters": {
+      "skip_hosts": [
+        "wikipedia.org",
+        "ncbi.nlm.nih.gov",
+        "sciencedirect.com",
+        "researchgate.net",
+        "youtube.com",
+        "fda.gov",
+        "ema.europa.eu",
+        "edqm.eu",
+        "reddit.com",
+        "linkedin.com",
+        "facebook.com",
+        "springer.com",
+        "mdpi.com",
+        "nature.com",
+        "pubchem.ncbi.nlm.nih.gov",
+        "drugbank.com",
+        "accessdata.fda.gov"
+      ],
+      "directory_hosts_labelled_not_dropped": [
+        "pharmacompass.com",
+        "pharmaoffer.com",
+        "pharmacompass",
+        "chemicalbook.com",
+        "made-in-china.com",
+        "alibaba.com",
+        "indiamart.com",
+        "echemi.com",
+        "lookchem.com",
+        "tradeindia.com",
+        "pipelinepharma.com",
+        "dcatvci.org",
+        "cphi-online.com",
+        "pharmasources.com",
+        "molbase.com",
+        "guidechem.com",
+        "pharmaceutical-technology.com",
+        "pharmaexcipients.com",
+        "pharmtech.com",
+        "europeanpharmaceuticalreview.com",
+        "chemeurope.com",
+        "thomasnet.com",
+        "kompass.com",
+        "pharmasalmanac.com"
+      ],
+      "other": [
+        "drop *.translate.goog proxies",
+        "one candidate per host (dedup)",
+        "truncate to max_results",
+        "read top read_pages supplier_site pages via You.com contents and regex compliance claims"
+      ]
+    }
+  },
+  "summary": {
+    "materials": 12,
+    "truth_suppliers": 20,
+    "recall_at_5_micro": 0.55,
+    "recall_at_8_micro": 0.7,
+    "recall_at_5_macro": 0.5625,
+    "recall_at_8_macro": 0.7292,
+    "precision_at_5_judged": 0.45,
+    "precision_at_8_judged": 0.4583,
+    "gmp_dmf_cep_share": 0.4375,
+    "directory_share_tool": 0.1979,
+    "directory_share_judged": 0.2188,
+    "scout_rule_survivors_mean": 3.3333,
+    "raw_recall_any_rank_micro": 0.7,
+    "latency_ms_mean": 7703
+  },
+  "per_material": [
+    {
+      "material_id": "MAT-SUC-INJ",
+      "label": "Sucrose (injectable)",
+      "truth": [
+        "Pfanstiehl",
+        "Merck / SAFC (MilliporeSigma)"
+      ],
+      "queries": [
+        "sucrose parenteral low-endotoxin GMP manufacturer DMF CEP",
+        "sucrose USP-NF Ph. Eur. pharmaceutical grade supplier"
+      ],
+      "latency_ms": 1498,
+      "errors": [],
+      "candidate_count": 8,
+      "at5": {
+        "recall": 0.5,
+        "found": [
+          "Pfanstiehl"
+        ],
+        "precision_judged": 0.4
+      },
+      "at8": {
+        "recall": 1,
+        "found": [
+          "Pfanstiehl",
+          "Merck / SAFC (MilliporeSigma)"
+        ],
+        "precision_judged": 0.625
+      },
+      "gmp_dmf_cep_share": 0.5,
+      "directory_share_tool": 0.375,
+      "directory_share_judged": 0.375,
+      "scout_rule_survivors": 4,
+      "scout_rule_truth_kept": [
+        "Pfanstiehl"
+      ],
+      "raw": {
+        "results": 24,
+        "unique_hosts": 15,
+        "truth_found_anywhere": [
+          "Pfanstiehl",
+          "Merck / SAFC (MilliporeSigma)"
+        ]
+      },
+      "hits": [
+        {
+          "rank": 1,
+          "name": "Pfanstiehl",
+          "host": "pfanstiehl.com",
+          "href": "https://pfanstiehl.com/en/high-purity-ingredients/sucrose/",
+          "kind": "supplier_site",
+          "query": "sucrose parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": true,
+          "signals": [
+            "GMP",
+            "US DMF",
+            "low endotoxin",
+            "parenteral grade",
+            "USP-NF",
+            "Ph. Eur.",
+            "JP",
+            "ChP"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [
+            "Pfanstiehl"
+          ],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 2,
+          "name": "Pharmacompass (directory listing)",
+          "host": "pharmacompass.com",
+          "href": "https://www.pharmacompass.com/manufacturers-suppliers-exporters/sucrose-excipient",
+          "kind": "directory",
+          "query": "sucrose parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "US DMF",
+            "CEP"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "directory",
+          "judged_relevant": false,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 3,
+          "name": "Fishersci",
+          "host": "fishersci.com",
+          "href": "https://www.fishersci.com/shop/products/carbohydrate-excipientand-5-kg/501656665",
+          "kind": "supplier_site",
+          "query": "sucrose parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": true,
+          "signals": [
+            "GMP",
+            "USP-NF",
+            "Ph. Eur.",
+            "JP",
+            "ChP",
+            "low endotoxin",
+            "parenteral grade"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": true,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 4,
+          "name": "Pharmaceutical Technology (directory listing)",
+          "host": "pharmaceutical-technology.com",
+          "href": "https://www.pharmaceutical-technology.com/products/sucrose/",
+          "kind": "directory",
+          "query": "sucrose parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "low endotoxin"
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "directory",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 5,
+          "name": "Pharma Excipients (directory listing)",
+          "host": "pharmaexcipients.com",
+          "href": "https://www.pharmaexcipients.com/stabilizer/sucrose/",
+          "kind": "directory",
+          "query": "sucrose parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "low endotoxin"
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "directory",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 6,
+          "name": "Actylis",
+          "host": "actylis.com",
+          "href": "https://actylis.com/product/grpp104574-low-endotoxin-sucrose",
+          "kind": "supplier_site",
+          "query": "sucrose parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "GMP",
+            "low endotoxin"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 7,
+          "name": "Sigmaaldrich",
+          "host": "sigmaaldrich.com",
+          "href": "https://www.sigmaaldrich.com/US/en/product/mm/100892",
+          "kind": "supplier_site",
+          "query": "sucrose parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "USP-NF",
+            "Ph. Eur.",
+            "JP",
+            "ChP"
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [
+            "Merck / SAFC (MilliporeSigma)"
+          ],
+          "judged_category": "distributor",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 8,
+          "name": "MB Sugars",
+          "host": "mbsugars.com",
+          "href": "https://mbsugars.com/pharma/low-endotoxin-sucrose/",
+          "kind": "supplier_site",
+          "query": "sucrose parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "low endotoxin"
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        }
+      ]
+    },
+    {
+      "material_id": "MAT-PS80-SR",
+      "label": "Polysorbate 80 (super-refined)",
+      "truth": [
+        "Croda",
+        "Merck / SAFC (MilliporeSigma)"
+      ],
+      "queries": [
+        "polysorbate 80 parenteral super-refined GMP manufacturer DMF CEP",
+        "polysorbate 80 USP-NF Ph. Eur. pharmaceutical grade supplier"
+      ],
+      "latency_ms": 13267,
+      "errors": [],
+      "candidate_count": 8,
+      "at5": {
+        "recall": 0.5,
+        "found": [
+          "Croda"
+        ],
+        "precision_judged": 0.2
+      },
+      "at8": {
+        "recall": 1,
+        "found": [
+          "Croda",
+          "Merck / SAFC (MilliporeSigma)"
+        ],
+        "precision_judged": 0.25
+      },
+      "gmp_dmf_cep_share": 0.5,
+      "directory_share_tool": 0.375,
+      "directory_share_judged": 0.375,
+      "scout_rule_survivors": 4,
+      "scout_rule_truth_kept": [
+        "Croda"
+      ],
+      "raw": {
+        "results": 24,
+        "unique_hosts": 15,
+        "truth_found_anywhere": [
+          "Croda",
+          "Merck / SAFC (MilliporeSigma)"
+        ]
+      },
+      "hits": [
+        {
+          "rank": 1,
+          "name": "Pharmacompass (directory listing)",
+          "host": "pharmacompass.com",
+          "href": "https://www.pharmacompass.com/manufacturers-suppliers-exporters/polysorbate-80",
+          "kind": "directory",
+          "query": "polysorbate 80 parenteral super-refined GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "US DMF",
+            "CEP"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "directory",
+          "judged_relevant": false,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 2,
+          "name": "Croda Pharma",
+          "host": "crodapharma.com",
+          "href": "https://www.crodapharma.com/en-gb/product-finder/product/681-super_1_refined_1_polysorbate_1_80",
+          "kind": "supplier_site",
+          "query": "polysorbate 80 parenteral super-refined GMP manufacturer DMF CEP",
+          "page_read": true,
+          "signals": [
+            "US DMF",
+            "parenteral grade"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [
+            "Croda"
+          ],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 3,
+          "name": "Pharma Excipients (directory listing)",
+          "host": "pharmaexcipients.com",
+          "href": "https://www.pharmaexcipients.com/product/super-refined-polysorbate-80/",
+          "kind": "directory",
+          "query": "polysorbate 80 parenteral super-refined GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "parenteral grade"
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "directory",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 4,
+          "name": "Pharmaoffer (directory listing)",
+          "host": "pharmaoffer.com",
+          "href": "https://pharmaoffer.com/api-excipient-supplier/polysorbate-80/coa-dmf-fda-gmp",
+          "kind": "directory",
+          "query": "polysorbate 80 parenteral super-refined GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "GMP",
+            "US DMF",
+            "CEP",
+            "USP-NF",
+            "Ph. Eur."
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "directory",
+          "judged_relevant": false,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 5,
+          "name": "Americanpharmaceuticalreview",
+          "host": "americanpharmaceuticalreview.com",
+          "href": "https://www.americanpharmaceuticalreview.com/25283-Pharmaceutical-Excipients/5822104-Super-Refined-Polysorbate-80/",
+          "kind": "supplier_site",
+          "query": "polysorbate 80 parenteral super-refined GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "noise",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 6,
+          "name": "Sigmaaldrich",
+          "host": "sigmaaldrich.com",
+          "href": "https://www.sigmaaldrich.com/US/en/product/mm/137171",
+          "kind": "supplier_site",
+          "query": "polysorbate 80 parenteral super-refined GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "USP-NF",
+            "Ph. Eur.",
+            "JP",
+            "ChP",
+            "parenteral grade"
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [
+            "Merck / SAFC (MilliporeSigma)"
+          ],
+          "judged_category": "distributor",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 7,
+          "name": "Anmol",
+          "host": "anmol.org",
+          "href": "https://www.anmol.org/polysorbate80BP-USP-FCC-Food.html",
+          "kind": "supplier_site",
+          "query": "polysorbate 80 parenteral super-refined GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "GMP",
+            "USP-NF",
+            "Ph. Eur.",
+            "JP",
+            "ISO 9001"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "manufacturer",
+          "judged_relevant": false,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 8,
+          "name": "Mubychem",
+          "host": "mubychem.com",
+          "href": "https://mubychem.com/polysorbate80.html",
+          "kind": "supplier_site",
+          "query": "polysorbate 80 USP-NF Ph. Eur. pharmaceutical grade supplier",
+          "page_read": false,
+          "signals": [
+            "USP-NF",
+            "Ph. Eur.",
+            "JP"
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        }
+      ]
+    },
+    {
+      "material_id": "MAT-TRE-HP",
+      "label": "Trehalose dihydrate",
+      "truth": [
+        "Pfanstiehl"
+      ],
+      "queries": [
+        "trehalose parenteral low-endotoxin GMP manufacturer DMF CEP",
+        "trehalose USP-NF Ph. Eur. pharmaceutical grade supplier"
+      ],
+      "latency_ms": 2275,
+      "errors": [],
+      "candidate_count": 8,
+      "at5": {
+        "recall": 1,
+        "found": [
+          "Pfanstiehl"
+        ],
+        "precision_judged": 0.8
+      },
+      "at8": {
+        "recall": 1,
+        "found": [
+          "Pfanstiehl"
+        ],
+        "precision_judged": 0.875
+      },
+      "gmp_dmf_cep_share": 0.625,
+      "directory_share_tool": 0.125,
+      "directory_share_judged": 0.125,
+      "scout_rule_survivors": 5,
+      "scout_rule_truth_kept": [
+        "Pfanstiehl"
+      ],
+      "raw": {
+        "results": 24,
+        "unique_hosts": 12,
+        "truth_found_anywhere": [
+          "Pfanstiehl"
+        ]
+      },
+      "hits": [
+        {
+          "rank": 1,
+          "name": "Pfanstiehl",
+          "host": "pfanstiehl.com",
+          "href": "https://pfanstiehl.com/en/high-purity-ingredients/trehalose-dihydrate-gmp-excipient/",
+          "kind": "supplier_site",
+          "query": "trehalose parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": true,
+          "signals": [
+            "GMP",
+            "USP-NF",
+            "Ph. Eur.",
+            "JP",
+            "ChP",
+            "parenteral grade",
+            "US DMF",
+            "low endotoxin"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [
+            "Pfanstiehl"
+          ],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 2,
+          "name": "Pharmacompass (directory listing)",
+          "host": "pharmacompass.com",
+          "href": "https://www.pharmacompass.com/active-pharmaceutical-ingredients/trehalose-dihydrate",
+          "kind": "directory",
+          "query": "trehalose parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "GMP",
+            "US DMF",
+            "CEP"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "directory",
+          "judged_relevant": false,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 3,
+          "name": "Dfepharma",
+          "host": "estore.dfepharma.com",
+          "href": "https://estore.dfepharma.com/products/biohale-trehalose-dihydrate",
+          "kind": "supplier_site",
+          "query": "trehalose parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": true,
+          "signals": [
+            "GMP",
+            "USP-NF",
+            "Ph. Eur.",
+            "JP",
+            "low endotoxin",
+            "US DMF",
+            "ChP",
+            "parenteral grade"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 4,
+          "name": "Spectrumchemical",
+          "host": "spectrumchemical.com",
+          "href": "https://www.spectrumchemical.com/trehalose-dihydrate-low-endotoxin-uspnf-ep-jp-chp-1181599",
+          "kind": "supplier_site",
+          "query": "trehalose parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "GMP",
+            "USP-NF",
+            "Ph. Eur.",
+            "JP",
+            "ChP",
+            "low endotoxin"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": true,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 5,
+          "name": "Sigmaaldrich",
+          "host": "sigmaaldrich.com",
+          "href": "https://www.sigmaaldrich.com/US/en/product/mm/102776",
+          "kind": "supplier_site",
+          "query": "trehalose parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "USP-NF",
+            "Ph. Eur.",
+            "JP",
+            "ChP"
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 6,
+          "name": "Anmol",
+          "host": "anmol.org",
+          "href": "https://www.anmol.org/trehalosemanufacturers.html",
+          "kind": "supplier_site",
+          "query": "trehalose parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "USP-NF",
+            "Ph. Eur.",
+            "parenteral grade"
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 7,
+          "name": "Biospectra",
+          "host": "biospectra.us",
+          "href": "https://www.biospectra.us/trehalose-dihydrate-excipient-gmp-lble",
+          "kind": "supplier_site",
+          "query": "trehalose parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "GMP",
+            "USP-NF",
+            "Ph. Eur.",
+            "JP",
+            "ChP",
+            "low endotoxin"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 8,
+          "name": "Mubychem",
+          "host": "mubychem.com",
+          "href": "https://mubychem.com/trehalosemanufacturers.html",
+          "kind": "supplier_site",
+          "query": "trehalose USP-NF Ph. Eur. pharmaceutical grade supplier",
+          "page_read": false,
+          "signals": [
+            "USP-NF",
+            "Ph. Eur."
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        }
+      ]
+    },
+    {
+      "material_id": "MAT-MAN-PAR",
+      "label": "Mannitol (parenteral)",
+      "truth": [
+        "Roquette",
+        "Pfanstiehl"
+      ],
+      "queries": [
+        "mannitol parenteral low-endotoxin GMP manufacturer DMF CEP",
+        "mannitol USP-NF Ph. Eur. pharmaceutical grade supplier"
+      ],
+      "latency_ms": 3580,
+      "errors": [],
+      "candidate_count": 8,
+      "at5": {
+        "recall": 1,
+        "found": [
+          "Roquette",
+          "Pfanstiehl"
+        ],
+        "precision_judged": 0.6
+      },
+      "at8": {
+        "recall": 1,
+        "found": [
+          "Roquette",
+          "Pfanstiehl"
+        ],
+        "precision_judged": 0.375
+      },
+      "gmp_dmf_cep_share": 0.75,
+      "directory_share_tool": 0.25,
+      "directory_share_judged": 0.25,
+      "scout_rule_survivors": 6,
+      "scout_rule_truth_kept": [
+        "Roquette",
+        "Pfanstiehl"
+      ],
+      "raw": {
+        "results": 24,
+        "unique_hosts": 15,
+        "truth_found_anywhere": [
+          "Roquette",
+          "Pfanstiehl"
+        ]
+      },
+      "hits": [
+        {
+          "rank": 1,
+          "name": "Pharmacompass (directory listing)",
+          "host": "pharmacompass.com",
+          "href": "https://www.pharmacompass.com/manufacturers-suppliers-exporters/mannitol",
+          "kind": "directory",
+          "query": "mannitol parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "US DMF",
+            "CEP"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "directory",
+          "judged_relevant": false,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 2,
+          "name": "Pfanstiehl",
+          "host": "pfanstiehl.com",
+          "href": "https://pfanstiehl.com/en/high-purity-ingredients/mannitol/",
+          "kind": "supplier_site",
+          "query": "mannitol parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": true,
+          "signals": [
+            "GMP",
+            "USP-NF",
+            "Ph. Eur.",
+            "JP",
+            "ChP",
+            "low endotoxin",
+            "parenteral grade"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [
+            "Pfanstiehl"
+          ],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 3,
+          "name": "Fishersci",
+          "host": "fishersci.com",
+          "href": "https://www.fishersci.com/shop/products/carbohydrate-excipientand-1kg-3/501656644",
+          "kind": "supplier_site",
+          "query": "mannitol parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": true,
+          "signals": [
+            "GMP",
+            "parenteral grade",
+            "USP-NF",
+            "Ph. Eur.",
+            "JP",
+            "ChP",
+            "low endotoxin"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": true,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 4,
+          "name": "Pharmaoffer (directory listing)",
+          "host": "pharmaoffer.com",
+          "href": "https://pharmaoffer.com/api-excipient-supplier/mannitol/cep-coa-dmf-fda-gmp",
+          "kind": "directory",
+          "query": "mannitol parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "GMP",
+            "US DMF",
+            "CEP"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "directory",
+          "judged_relevant": false,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 5,
+          "name": "Roquette",
+          "host": "roquette.com",
+          "href": "https://www.roquette.com/health-pharma/biologics-product-catalog/pearlitol-biopharma-mannitol",
+          "kind": "supplier_site",
+          "query": "mannitol parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "US DMF",
+            "CEP",
+            "low endotoxin"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [
+            "Roquette"
+          ],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 6,
+          "name": "Anmol",
+          "host": "anmol.org",
+          "href": "https://www.anmol.org/mannitolmanufacturers.html",
+          "kind": "supplier_site",
+          "query": "mannitol USP-NF Ph. Eur. pharmaceutical grade supplier",
+          "page_read": false,
+          "signals": [
+            "USP-NF",
+            "Ph. Eur.",
+            "JP"
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "manufacturer",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 7,
+          "name": "Allanchem",
+          "host": "allanchem.com",
+          "href": "https://allanchem.com/mannitol/",
+          "kind": "supplier_site",
+          "query": "mannitol USP-NF Ph. Eur. pharmaceutical grade supplier",
+          "page_read": false,
+          "signals": [
+            "USP-NF"
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 8,
+          "name": "Spectrum Chemical",
+          "host": "spectrumchemical.com",
+          "href": "https://www.spectrumchemical.com/mannitol-powder-usp-ma165",
+          "kind": "supplier_site",
+          "query": "mannitol USP-NF Ph. Eur. pharmaceutical grade supplier",
+          "page_read": false,
+          "signals": [
+            "GMP",
+            "USP-NF",
+            "Ph. Eur.",
+            "JP"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": false,
+          "passes_scout_rule": true
+        }
+      ]
+    },
+    {
+      "material_id": "MAT-HIS",
+      "label": "L-Histidine",
+      "truth": [
+        "Merck / SAFC (MilliporeSigma)",
+        "Pfanstiehl"
+      ],
+      "queries": [
+        "histidine parenteral low-endotoxin GMP manufacturer DMF CEP",
+        "histidine USP-NF Ph. Eur. pharmaceutical grade supplier"
+      ],
+      "latency_ms": 21913,
+      "errors": [],
+      "candidate_count": 8,
+      "at5": {
+        "recall": 1,
+        "found": [
+          "Merck / SAFC (MilliporeSigma)",
+          "Pfanstiehl"
+        ],
+        "precision_judged": 0.4
+      },
+      "at8": {
+        "recall": 1,
+        "found": [
+          "Merck / SAFC (MilliporeSigma)",
+          "Pfanstiehl"
+        ],
+        "precision_judged": 0.25
+      },
+      "gmp_dmf_cep_share": 0.625,
+      "directory_share_tool": 0.25,
+      "directory_share_judged": 0.25,
+      "scout_rule_survivors": 5,
+      "scout_rule_truth_kept": [
+        "Merck / SAFC (MilliporeSigma)",
+        "Pfanstiehl"
+      ],
+      "raw": {
+        "results": 24,
+        "unique_hosts": 12,
+        "truth_found_anywhere": [
+          "Merck / SAFC (MilliporeSigma)",
+          "Pfanstiehl"
+        ]
+      },
+      "hits": [
+        {
+          "rank": 1,
+          "name": "Pfanstiehl",
+          "host": "pfanstiehl.com",
+          "href": "https://pfanstiehl.com/en/high-purity-ingredients/histidine-hcl/",
+          "kind": "supplier_site",
+          "query": "histidine parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": true,
+          "signals": [
+            "GMP",
+            "US DMF",
+            "Ph. Eur.",
+            "JP",
+            "ChP",
+            "parenteral grade",
+            "low endotoxin"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [
+            "Pfanstiehl"
+          ],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 2,
+          "name": "Pharmacompass (directory listing)",
+          "host": "pharmacompass.com",
+          "href": "https://www.pharmacompass.com/manufacturers-suppliers-exporters/l-histidine",
+          "kind": "directory",
+          "query": "histidine parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "US DMF",
+            "CEP"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "directory",
+          "judged_relevant": false,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 3,
+          "name": "Fishersci",
+          "host": "fishersci.com",
+          "href": "https://www.fishersci.com/shop/products/gmp-compendial-l-histidine-1/NC1940138",
+          "kind": "supplier_site",
+          "query": "histidine parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "GMP",
+            "USP-NF",
+            "Ph. Eur.",
+            "JP",
+            "ChP",
+            "low endotoxin",
+            "parenteral grade"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": true,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 4,
+          "name": "Pharmaexcipients (directory listing)",
+          "host": "pharmaexcipients.com",
+          "href": "https://www.pharmaexcipients.com/wp-content/uploads/2020/07/Histidine-Pfanstiehl.pdf",
+          "kind": "directory",
+          "query": "histidine parenteral low-endotoxin GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "GMP",
+            "USP-NF",
+            "Ph. Eur.",
+            "JP",
+            "ChP",
+            "low endotoxin",
+            "parenteral grade"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "directory",
+          "judged_relevant": false,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 5,
+          "name": "Sigmaaldrich",
+          "host": "sigmaaldrich.com",
+          "href": "https://www.sigmaaldrich.com/US/en/product/mm/104352",
+          "kind": "supplier_site",
+          "query": "histidine USP-NF Ph. Eur. pharmaceutical grade supplier",
+          "page_read": false,
+          "signals": [
+            "GMP"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [
+            "Merck / SAFC (MilliporeSigma)"
+          ],
+          "judged_category": "supplier_site",
+          "judged_relevant": false,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 6,
+          "name": "Itwreagents",
+          "host": "itwreagents.com",
+          "href": "https://itwreagents.com/rest-of-world/en/product/l-histidine-base-ph-eur-usp-pure-pharma-grade/A1341",
+          "kind": "supplier_site",
+          "query": "histidine USP-NF Ph. Eur. pharmaceutical grade supplier",
+          "page_read": false,
+          "signals": [
+            "USP-NF",
+            "Ph. Eur."
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "supplier_site",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 7,
+          "name": "Anmol",
+          "host": "anmol.org",
+          "href": "https://www.anmol.org/l-histidinehydrochloridemanufacturers.html",
+          "kind": "supplier_site",
+          "query": "histidine USP-NF Ph. Eur. pharmaceutical grade supplier",
+          "page_read": false,
+          "signals": [
+            "USP-NF",
+            "Ph. Eur.",
+            "JP"
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "supplier_site",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 8,
+          "name": "Glentham",
+          "host": "glentham.com",
+          "href": "https://www.glentham.com/en/products/product/GM1595/",
+          "kind": "supplier_site",
+          "query": "histidine USP-NF Ph. Eur. pharmaceutical grade supplier",
+          "page_read": false,
+          "signals": [
+            "USP-NF",
+            "Ph. Eur."
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "supplier_site",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        }
+      ]
+    },
+    {
+      "material_id": "MAT-FF",
+      "label": "Fluticasone furoate",
+      "truth": [
+        "Hovione"
+      ],
+      "queries": [
+        "fluticasone furoate inhalation micronised GMP manufacturer DMF CEP",
+        "fluticasone furoate Ph. Eur. pharmaceutical grade supplier"
+      ],
+      "latency_ms": 6697,
+      "errors": [],
+      "candidate_count": 8,
+      "at5": {
+        "recall": 1,
+        "found": [
+          "Hovione"
+        ],
+        "precision_judged": 0.2
+      },
+      "at8": {
+        "recall": 1,
+        "found": [
+          "Hovione"
+        ],
+        "precision_judged": 0.125
+      },
+      "gmp_dmf_cep_share": 0.375,
+      "directory_share_tool": 0.375,
+      "directory_share_judged": 0.5,
+      "scout_rule_survivors": 3,
+      "scout_rule_truth_kept": [],
+      "raw": {
+        "results": 24,
+        "unique_hosts": 9,
+        "truth_found_anywhere": [
+          "Hovione"
+        ]
+      },
+      "hits": [
+        {
+          "rank": 1,
+          "name": "Pharmacompass (directory listing)",
+          "host": "pharmacompass.com",
+          "href": "https://www.pharmacompass.com/manufacturers-suppliers-exporters/fluticasone-furoate",
+          "kind": "directory",
+          "query": "fluticasone furoate inhalation micronised GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "US DMF",
+            "CEP"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "directory",
+          "judged_relevant": false,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 2,
+          "name": "Pharmaoffer (directory listing)",
+          "host": "pharmaoffer.com",
+          "href": "https://pharmaoffer.com/api-excipient-supplier/corticosteroids/fluticasone-furoate",
+          "kind": "directory",
+          "query": "fluticasone furoate inhalation micronised GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "GMP",
+            "US DMF",
+            "CEP"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "directory",
+          "judged_relevant": false,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 3,
+          "name": "Echemi (directory listing)",
+          "host": "echemi.com",
+          "href": "https://www.echemi.com/drugs-ingredient-manufacturers/pd2601031003-fluticasone-furoate-micronised.html",
+          "kind": "directory",
+          "query": "fluticasone furoate inhalation micronised GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "directory",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 4,
+          "name": "Mediocon",
+          "host": "mediocon.com",
+          "href": "https://mediocon.com/FLUTICASONE-FUROATE-397864-44-7-supplier-manufacturer-aurangabad-maharashtra-india.html",
+          "kind": "supplier_site",
+          "query": "fluticasone furoate inhalation micronised GMP manufacturer DMF CEP",
+          "page_read": true,
+          "signals": [
+            "GMP",
+            "US DMF",
+            "USP-NF",
+            "ISO 9001",
+            "CEP",
+            "Ph. Eur."
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 5,
+          "name": "Hovione",
+          "host": "hovione.com",
+          "href": "https://www.hovione.com/api/fluticasone-propionate",
+          "kind": "supplier_site",
+          "query": "fluticasone furoate inhalation micronised GMP manufacturer DMF CEP",
+          "page_read": true,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [
+            "Hovione"
+          ],
+          "judged_category": "noise",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 6,
+          "name": "Drugs",
+          "host": "drugs.com",
+          "href": "https://www.drugs.com/international/fluticasone.html",
+          "kind": "supplier_site",
+          "query": "fluticasone furoate Ph. Eur. pharmaceutical grade supplier",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "noise",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 7,
+          "name": "Axplora",
+          "host": "axplora.com",
+          "href": "https://www.axplora.com/api-product/80474-14-2-s/",
+          "kind": "supplier_site",
+          "query": "fluticasone furoate Ph. Eur. pharmaceutical grade supplier",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "noise",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 8,
+          "name": "Drugpatentwatch",
+          "host": "drugpatentwatch.com",
+          "href": "https://www.drugpatentwatch.com/p/bulk-api/fluticasone+furoate",
+          "kind": "supplier_site",
+          "query": "fluticasone furoate Ph. Eur. pharmaceutical grade supplier",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "directory",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        }
+      ]
+    },
+    {
+      "material_id": "MAT-VIAL-2R",
+      "label": "Type I glass vials",
+      "truth": [
+        "SCHOTT Pharma"
+      ],
+      "queries": [
+        "type I glass vial 2R Type I RTU GMP manufacturer DMF CEP",
+        "type I glass vial 2R USP <660> Ph. Eur. 3.2.1 pharmaceutical grade supplier"
+      ],
+      "latency_ms": 1490,
+      "errors": [],
+      "candidate_count": 8,
+      "at5": {
+        "recall": 1,
+        "found": [
+          "SCHOTT Pharma"
+        ],
+        "precision_judged": 1
+      },
+      "at8": {
+        "recall": 1,
+        "found": [
+          "SCHOTT Pharma"
+        ],
+        "precision_judged": 0.875
+      },
+      "gmp_dmf_cep_share": 0.25,
+      "directory_share_tool": 0,
+      "directory_share_judged": 0,
+      "scout_rule_survivors": 0,
+      "scout_rule_truth_kept": [],
+      "raw": {
+        "results": 24,
+        "unique_hosts": 13,
+        "truth_found_anywhere": [
+          "SCHOTT Pharma"
+        ]
+      },
+      "hits": [
+        {
+          "rank": 1,
+          "name": "Linuo Pharma",
+          "host": "linuo-pharma.com",
+          "href": "https://linuo-pharma.com/",
+          "kind": "supplier_site",
+          "query": "type I glass vial 2R Type I RTU GMP manufacturer DMF CEP",
+          "page_read": true,
+          "signals": [
+            "US DMF",
+            "GMP",
+            "CEP",
+            "USP-NF",
+            "Ph. Eur.",
+            "JP",
+            "ChP",
+            "parenteral grade",
+            "ISO 9001"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 2,
+          "name": "Nipro Group",
+          "host": "nipro-group.com",
+          "href": "https://www.nipro-group.com/en/our-offer/products-services/d2ftm-glass-vials",
+          "kind": "supplier_site",
+          "query": "type I glass vial 2R Type I RTU GMP manufacturer DMF CEP",
+          "page_read": true,
+          "signals": [
+            "USP-NF",
+            "Ph. Eur.",
+            "JP",
+            "ISO 9001"
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 3,
+          "name": "SCHOTT Pharma",
+          "host": "schott-pharma.com",
+          "href": "https://www.schott-pharma.com/en/products/vials",
+          "kind": "supplier_site",
+          "query": "type I glass vial 2R Type I RTU GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [
+            "SCHOTT Pharma"
+          ],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 4,
+          "name": "DWK Life Sciences",
+          "host": "dwk.com",
+          "href": "https://www.dwk.com/na/primary-packaging/manufacturing-capabilites/vial-manufacturing",
+          "kind": "supplier_site",
+          "query": "type I glass vial 2R Type I RTU GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "US DMF"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 5,
+          "name": "SGD Pharma",
+          "host": "sgd-pharma.com",
+          "href": "https://www.sgd-pharma.com/type-i-molded-glass-vials",
+          "kind": "supplier_site",
+          "query": "type I glass vial 2R Type I RTU GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "parenteral grade"
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 6,
+          "name": "Westpharma",
+          "host": "westpharma.com",
+          "href": "https://www.westpharma.com/blog/2023/september/faqs-challenges-glass-vial-packaging-solutions",
+          "kind": "supplier_site",
+          "query": "type I glass vial 2R Type I RTU GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "noise",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 7,
+          "name": "Adelphi Healthcare Packaging",
+          "host": "adelphi-hp.com",
+          "href": "https://adelphi-hp.com/products/type-i-tubular-glass-injection-vials",
+          "kind": "supplier_site",
+          "query": "type I glass vial 2R Type I RTU GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 8,
+          "name": "Internationalfilterproducts",
+          "host": "internationalfilterproducts.com",
+          "href": "https://internationalfilterproducts.com/products/gerresheimer-2r-2-ml-clear-sterile-vials-iso-standard-type-i",
+          "kind": "supplier_site",
+          "query": "type I glass vial 2R USP <660> Ph. Eur. 3.2.1 pharmaceutical grade supplier",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        }
+      ]
+    },
+    {
+      "material_id": "MAT-STOP-13",
+      "label": "Elastomeric stoppers",
+      "truth": [
+        "West Pharmaceutical Services"
+      ],
+      "queries": [
+        "bromobutyl stopper 13 mm coated RTS GMP manufacturer DMF CEP",
+        "bromobutyl stopper 13 mm USP <381> Ph. Eur. 3.2.9 pharmaceutical grade supplier"
+      ],
+      "latency_ms": 3927,
+      "errors": [],
+      "candidate_count": 8,
+      "at5": {
+        "recall": 0,
+        "found": [],
+        "precision_judged": 0.4
+      },
+      "at8": {
+        "recall": 1,
+        "found": [
+          "West Pharmaceutical Services"
+        ],
+        "precision_judged": 0.5
+      },
+      "gmp_dmf_cep_share": 0.375,
+      "directory_share_tool": 0,
+      "directory_share_judged": 0,
+      "scout_rule_survivors": 3,
+      "scout_rule_truth_kept": [],
+      "raw": {
+        "results": 24,
+        "unique_hosts": 14,
+        "truth_found_anywhere": [
+          "West Pharmaceutical Services"
+        ]
+      },
+      "hits": [
+        {
+          "rank": 1,
+          "name": "Dedecke Gmbh",
+          "host": "dedecke-gmbh.de",
+          "href": "https://www.dedecke-gmbh.de/en/injection-serum-stoppers-from-datwyler-pharma-packaging",
+          "kind": "supplier_site",
+          "query": "bromobutyl stopper 13 mm coated RTS GMP manufacturer DMF CEP",
+          "page_read": true,
+          "signals": [
+            "GMP",
+            "US DMF",
+            "USP-NF",
+            "JP"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": true,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 2,
+          "name": "Ivpacks",
+          "host": "ivpacks.com",
+          "href": "https://ivpacks.com/13mm-vial-stoppers/972-13mm-ready-for-sterilization-vial-stoppers-hfr-bag-of-10000.html",
+          "kind": "supplier_site",
+          "query": "bromobutyl stopper 13 mm coated RTS GMP manufacturer DMF CEP",
+          "page_read": true,
+          "signals": [
+            "US DMF",
+            "USP-NF",
+            "GMP"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": true,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 3,
+          "name": "Bharatrubberworks",
+          "host": "bharatrubberworks.com",
+          "href": "https://bharatrubberworks.com/rubber-stoppers-and-flip-off-seals/rubber-stoppers/",
+          "kind": "supplier_site",
+          "query": "bromobutyl stopper 13 mm coated RTS GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "US DMF"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "manufacturer",
+          "judged_relevant": false,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 4,
+          "name": "Vialbottle",
+          "host": "vialbottle.com",
+          "href": "https://www.vialbottle.com/showroom/bromobutyl-rubber-stopper-for-medicine-13mm-silicone-rubber-stopper.html",
+          "kind": "supplier_site",
+          "query": "bromobutyl stopper 13 mm coated RTS GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 5,
+          "name": "Medical And Lab Supplies",
+          "host": "medical-and-lab-supplies.com",
+          "href": "https://www.medical-and-lab-supplies.com/products/13mm-pre-washed-rubber-stoppers-bags-of-1000-copy-1",
+          "kind": "supplier_site",
+          "query": "bromobutyl stopper 13 mm coated RTS GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 6,
+          "name": "Ldecpharma",
+          "host": "ldecpharma.com",
+          "href": "https://ldecpharma.com/products/rtu-rts-halogenated-butyl-coated-serum-stopper",
+          "kind": "supplier_site",
+          "query": "bromobutyl stopper 13 mm coated RTS GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 7,
+          "name": "Westpharma",
+          "host": "westpharma.com",
+          "href": "https://www.westpharma.com/shop/13mm-flurotect-bromobutyl-elastomer-stoppers/10122743",
+          "kind": "supplier_site",
+          "query": "bromobutyl stopper 13 mm coated RTS GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [
+            "West Pharmaceutical Services"
+          ],
+          "judged_category": "distributor",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 8,
+          "name": "Qcvialz",
+          "host": "qcvialz.com",
+          "href": "https://qcvialz.com/22-13mm-vial-stoppers",
+          "kind": "supplier_site",
+          "query": "bromobutyl stopper 13 mm coated RTS GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "USP-NF"
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        }
+      ]
+    },
+    {
+      "material_id": "MAT-SUB-2000",
+      "label": "Single-use bioreactor bags",
+      "truth": [
+        "Sartorius",
+        "Cytiva",
+        "Thermo Fisher Scientific",
+        "ABEC"
+      ],
+      "queries": [
+        "single-use bioreactor bag 2000 L validated assembly GMP manufacturer DMF CEP",
+        "single-use bioreactor bag 2000 L USP <665> pharmaceutical grade supplier"
+      ],
+      "latency_ms": 16018,
+      "errors": [],
+      "candidate_count": 8,
+      "at5": {
+        "recall": 0.25,
+        "found": [
+          "Sartorius"
+        ],
+        "precision_judged": 0.6
+      },
+      "at8": {
+        "recall": 0.25,
+        "found": [
+          "Sartorius"
+        ],
+        "precision_judged": 0.5
+      },
+      "gmp_dmf_cep_share": 0.25,
+      "directory_share_tool": 0.125,
+      "directory_share_judged": 0.25,
+      "scout_rule_survivors": 2,
+      "scout_rule_truth_kept": [],
+      "raw": {
+        "results": 24,
+        "unique_hosts": 14,
+        "truth_found_anywhere": [
+          "Sartorius"
+        ]
+      },
+      "hits": [
+        {
+          "rank": 1,
+          "name": "LePure Biotech™",
+          "host": "lepurebiotech.com",
+          "href": "https://www.lepurebiotech.com/product/single-use-bioreactor-bag/",
+          "kind": "supplier_site",
+          "query": "single-use bioreactor bag 2000 L validated assembly GMP manufacturer DMF CEP",
+          "page_read": true,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 2,
+          "name": "Bioprocessintl",
+          "host": "bioprocessintl.com",
+          "href": "https://www.bioprocessintl.com/single-use/development-and-qualification-of-a-scalable-disposable-bioreactor-for-gmp-compliant-cell-culture",
+          "kind": "supplier_site",
+          "query": "single-use bioreactor bag 2000 L validated assembly GMP manufacturer DMF CEP",
+          "page_read": true,
+          "signals": [
+            "GMP",
+            "ISO 9001"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "noise",
+          "judged_relevant": false,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 3,
+          "name": "Sartorius",
+          "host": "sartorius.com",
+          "href": "https://www.sartorius.com/en/products/fermentation-bioreactors/single-use-bioreactors",
+          "kind": "supplier_site",
+          "query": "single-use bioreactor bag 2000 L validated assembly GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [
+            "Sartorius"
+          ],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 4,
+          "name": "Rootsanalysis",
+          "host": "rootsanalysis.com",
+          "href": "https://www.rootsanalysis.com/key-insights/leading-single-use-bioreactor-companies.html",
+          "kind": "supplier_site",
+          "query": "single-use bioreactor bag 2000 L validated assembly GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "directory",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 5,
+          "name": "BioLink",
+          "host": "biolink.com",
+          "href": "https://www.biolink.com/products/cytolinx-br-single-use-bioreactor/",
+          "kind": "supplier_site",
+          "query": "single-use bioreactor bag 2000 L validated assembly GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 6,
+          "name": "Pro Analytics",
+          "host": "pro-analytics.net",
+          "href": "https://pro-analytics.net/product/gmp-bioreactor/",
+          "kind": "supplier_site",
+          "query": "single-use bioreactor bag 2000 L validated assembly GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "GMP"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "noise",
+          "judged_relevant": false,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 7,
+          "name": "Pharmaceutical Technology (directory listing)",
+          "host": "pharmtech.com",
+          "href": "https://www.pharmtech.com/view/bioreactor-family-includes-single-use-bags",
+          "kind": "directory",
+          "query": "single-use bioreactor bag 2000 L validated assembly GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "directory",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 8,
+          "name": "Cobetter",
+          "host": "shop.cobetter.com",
+          "href": "https://shop.cobetter.com/products/cobetter-2000l-lifecube-3d-single-use-standard-bag",
+          "kind": "supplier_site",
+          "query": "single-use bioreactor bag 2000 L validated assembly GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        }
+      ]
+    },
+    {
+      "material_id": "MAT-PROA",
+      "label": "Protein A resin",
+      "truth": [
+        "Cytiva",
+        "Purolite (Ecolab)"
+      ],
+      "queries": [
+        "protein A resin bioprocess GMP manufacturer DMF CEP",
+        "protein A resin  pharmaceutical grade supplier"
+      ],
+      "latency_ms": 16619,
+      "errors": [],
+      "candidate_count": 8,
+      "at5": {
+        "recall": 0.5,
+        "found": [
+          "Cytiva"
+        ],
+        "precision_judged": 0.4
+      },
+      "at8": {
+        "recall": 0.5,
+        "found": [
+          "Cytiva"
+        ],
+        "precision_judged": 0.375
+      },
+      "gmp_dmf_cep_share": 0.375,
+      "directory_share_tool": 0,
+      "directory_share_judged": 0,
+      "scout_rule_survivors": 3,
+      "scout_rule_truth_kept": [],
+      "raw": {
+        "results": 24,
+        "unique_hosts": 21,
+        "truth_found_anywhere": [
+          "Cytiva"
+        ]
+      },
+      "hits": [
+        {
+          "rank": 1,
+          "name": "Bioprocesstools",
+          "host": "bioprocesstools.com",
+          "href": "https://bioprocesstools.com/blog/chromatography-resin-selection/",
+          "kind": "supplier_site",
+          "query": "protein A resin bioprocess GMP manufacturer DMF CEP",
+          "page_read": true,
+          "signals": [
+            "GMP",
+            "US DMF"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "noise",
+          "judged_relevant": false,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 2,
+          "name": "Jsrlifesciences",
+          "host": "jsrlifesciences.com",
+          "href": "https://www.jsrlifesciences.com/en/bioprocess/amsphere-a3",
+          "kind": "supplier_site",
+          "query": "protein A resin bioprocess GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 3,
+          "name": "Bioprocessintl",
+          "host": "bioprocessintl.com",
+          "href": "https://www.bioprocessintl.com/biochemicals-raw-materials/protein-a",
+          "kind": "supplier_site",
+          "query": "protein A resin bioprocess GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "noise",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 4,
+          "name": "Cytiva",
+          "host": "cytivalifesciences.com",
+          "href": "https://www.cytivalifesciences.com/en/us/solutions/protein-research/products-and-technologies/bioprocess-chromatography-resins",
+          "kind": "supplier_site",
+          "query": "protein A resin bioprocess GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [
+            "Cytiva"
+          ],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 5,
+          "name": "Rndsystems",
+          "host": "rndsystems.com",
+          "href": "https://www.rndsystems.com/products/good-manufacturing-practices-gmp-grade-proteins",
+          "kind": "supplier_site",
+          "query": "protein A resin bioprocess GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "GMP"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "noise",
+          "judged_relevant": false,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 6,
+          "name": "RayBiotech",
+          "host": "raybiotech.com",
+          "href": "https://www.raybiotech.com/custom-protein-production-service/gmp-protein-production",
+          "kind": "supplier_site",
+          "query": "protein A resin bioprocess GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "GMP"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "noise",
+          "judged_relevant": false,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 7,
+          "name": "Biopharminternational",
+          "host": "biopharminternational.com",
+          "href": "https://www.biopharminternational.com/view/re-use-protein-resin-fouling-and-economics",
+          "kind": "supplier_site",
+          "query": "protein A resin bioprocess GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "noise",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 8,
+          "name": "Thermo Fisher Scientific",
+          "host": "thermofisher.com",
+          "href": "https://www.thermofisher.com/us/en/home/life-science/bioproduction/poros-chromatography-resin/bioprocess-resins/protein-a-chromatography-resins.html",
+          "kind": "supplier_site",
+          "query": "protein A resin bioprocess GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        }
+      ]
+    },
+    {
+      "material_id": "MAT-HPMC",
+      "label": "Hypromellose (HPMC)",
+      "truth": [
+        "Shin-Etsu"
+      ],
+      "queries": [
+        "hypromellose 2910   5 mPa.s film former GMP manufacturer DMF CEP",
+        "hypromellose Ph. Eur. USP-NF pharmaceutical grade supplier"
+      ],
+      "latency_ms": 3794,
+      "errors": [],
+      "candidate_count": 8,
+      "at5": {
+        "recall": 0,
+        "found": [],
+        "precision_judged": 0.2
+      },
+      "at8": {
+        "recall": 0,
+        "found": [],
+        "precision_judged": 0.25
+      },
+      "gmp_dmf_cep_share": 0.125,
+      "directory_share_tool": 0.125,
+      "directory_share_judged": 0.125,
+      "scout_rule_survivors": 1,
+      "scout_rule_truth_kept": [],
+      "raw": {
+        "results": 24,
+        "unique_hosts": 15,
+        "truth_found_anywhere": []
+      },
+      "hits": [
+        {
+          "rank": 1,
+          "name": "Nih",
+          "host": "gsrs.ncats.nih.gov",
+          "href": "https://gsrs.ncats.nih.gov/ginas/app/beta/substances/R75537T0T4",
+          "kind": "supplier_site",
+          "query": "hypromellose 2910   5 mPa.s film former GMP manufacturer DMF CEP",
+          "page_read": true,
+          "signals": [
+            "USP-NF"
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "noise",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 2,
+          "name": "Drugs",
+          "host": "drugs.com",
+          "href": "https://www.drugs.com/inactive/hypromellose-2910-5-mpa-s-572.html",
+          "kind": "supplier_site",
+          "query": "hypromellose 2910   5 mPa.s film former GMP manufacturer DMF CEP",
+          "page_read": true,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "noise",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 3,
+          "name": "Spectrumchemical",
+          "host": "spectrumchemical.com",
+          "href": "https://www.spectrumchemical.com/hypromellose-substitution-type-2910-50-mpas-usp-hy122",
+          "kind": "supplier_site",
+          "query": "hypromellose 2910   5 mPa.s film former GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "GMP",
+            "USP-NF",
+            "Ph. Eur.",
+            "JP"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": true,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 4,
+          "name": "Drugpatentwatch",
+          "host": "drugpatentwatch.com",
+          "href": "https://www.drugpatentwatch.com/p/excipients/excipient/HYPROMELLOSE+2910",
+          "kind": "supplier_site",
+          "query": "hypromellose 2910   5 mPa.s film former GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "USP-NF",
+            "Ph. Eur.",
+            "JP"
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "noise",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 5,
+          "name": "Pharma Excipients (directory listing)",
+          "host": "pharmaexcipients.com",
+          "href": "https://www.pharmaexcipients.com/product/bonucel-d-5-h-2910/",
+          "kind": "directory",
+          "query": "hypromellose 2910   5 mPa.s film former GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "directory",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 6,
+          "name": "Ndclist",
+          "host": "ndclist.com",
+          "href": "https://ndclist.com/unii/0HO1H52958",
+          "kind": "supplier_site",
+          "query": "hypromellose 2910   5 mPa.s film former GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "noise",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 7,
+          "name": "Anmol",
+          "host": "anmol.org",
+          "href": "https://www.anmol.org/hypromellosemanufacturers.html",
+          "kind": "supplier_site",
+          "query": "hypromellose Ph. Eur. USP-NF pharmaceutical grade supplier",
+          "page_read": false,
+          "signals": [
+            "USP-NF",
+            "Ph. Eur.",
+            "JP"
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "manufacturer",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 8,
+          "name": "Usp",
+          "host": "store.usp.org",
+          "href": "https://store.usp.org/product/1330005",
+          "kind": "supplier_site",
+          "query": "hypromellose Ph. Eur. USP-NF pharmaceutical grade supplier",
+          "page_read": false,
+          "signals": [
+            "USP-NF"
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "noise",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        }
+      ]
+    },
+    {
+      "material_id": "MAT-MGST",
+      "label": "Magnesium stearate",
+      "truth": [
+        "Peter Greven"
+      ],
+      "queries": [
+        "magnesium stearate tablet lubricant GMP manufacturer DMF CEP",
+        "magnesium stearate Ph. Eur. USP-NF pharmaceutical grade supplier"
+      ],
+      "latency_ms": 1352,
+      "errors": [],
+      "candidate_count": 8,
+      "at5": {
+        "recall": 0,
+        "found": [],
+        "precision_judged": 0.2
+      },
+      "at8": {
+        "recall": 0,
+        "found": [],
+        "precision_judged": 0.5
+      },
+      "gmp_dmf_cep_share": 0.5,
+      "directory_share_tool": 0.375,
+      "directory_share_judged": 0.375,
+      "scout_rule_survivors": 4,
+      "scout_rule_truth_kept": [],
+      "raw": {
+        "results": 24,
+        "unique_hosts": 18,
+        "truth_found_anywhere": []
+      },
+      "hits": [
+        {
+          "rank": 1,
+          "name": "Pharma Excipients (directory listing)",
+          "host": "pharmaexcipients.com",
+          "href": "https://www.pharmaexcipients.com/product/magnesium-stearate/",
+          "kind": "directory",
+          "query": "magnesium stearate tablet lubricant GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "GMP",
+            "US DMF",
+            "USP-NF",
+            "Ph. Eur.",
+            "JP"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "directory",
+          "judged_relevant": false,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 2,
+          "name": "Pharmacompass (directory listing)",
+          "host": "pharmacompass.com",
+          "href": "https://www.pharmacompass.com/manufacturers-suppliers-exporters/magnesium-stearate",
+          "kind": "directory",
+          "query": "magnesium stearate tablet lubricant GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "US DMF",
+            "CEP"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "directory",
+          "judged_relevant": false,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 3,
+          "name": "Made In China (directory listing)",
+          "host": "sunhereexcipients.en.made-in-china.com",
+          "href": "https://sunhereexcipients.en.made-in-china.com/product/ewzGBdWuwqhK/China-Magnesium-Stearate-FCC-Used-as-Pharmaceutical-Excipient-Lubricant-for-Tablets-Capsules.html",
+          "kind": "directory",
+          "query": "magnesium stearate tablet lubricant GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "USP-NF",
+            "Ph. Eur."
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "directory",
+          "judged_relevant": false,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 4,
+          "name": "Allanchem",
+          "host": "allanchem.com",
+          "href": "https://allanchem.com/magnesium-stearate-nf-tablet-lubricant-regulatory-specs-alternatives/",
+          "kind": "supplier_site",
+          "query": "magnesium stearate tablet lubricant GMP manufacturer DMF CEP",
+          "page_read": true,
+          "signals": [
+            "USP-NF",
+            "GMP",
+            "Ph. Eur."
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": true,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 5,
+          "name": "Spipharma",
+          "host": "spipharma.com",
+          "href": "https://www.spipharma.com/en/products/functional-excipients/lubripharm-ssf/",
+          "kind": "supplier_site",
+          "query": "magnesium stearate tablet lubricant GMP manufacturer DMF CEP",
+          "page_read": true,
+          "signals": [
+            "GMP",
+            "US DMF",
+            "CEP"
+          ],
+          "gmp_dmf_cep": true,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": false,
+          "passes_scout_rule": true
+        },
+        {
+          "rank": 6,
+          "name": "Jeiferpharm",
+          "host": "jeiferpharm.com",
+          "href": "https://www.jeiferpharm.com/products/nutritional-supplement/1.html",
+          "kind": "supplier_site",
+          "query": "magnesium stearate tablet lubricant GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [
+            "USP-NF",
+            "Ph. Eur."
+          ],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 7,
+          "name": "Sfihealth",
+          "host": "us.sfihealth.com",
+          "href": "https://us.sfihealth.com/klairelabs/cache/file/818BEF4B-C08D-45E2-BDE9A0FB8BFFA7C3.pdf",
+          "kind": "supplier_site",
+          "query": "magnesium stearate tablet lubricant GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        },
+        {
+          "rank": 8,
+          "name": "Celluloseankit",
+          "host": "celluloseankit.com",
+          "href": "https://www.celluloseankit.com/magnesium-stearate-a-key-pharmaceutical-excipient/",
+          "kind": "supplier_site",
+          "query": "magnesium stearate tablet lubricant GMP manufacturer DMF CEP",
+          "page_read": false,
+          "signals": [],
+          "gmp_dmf_cep": false,
+          "truth_match": [],
+          "judged_category": "distributor",
+          "judged_relevant": true,
+          "passes_scout_rule": false
+        }
+      ]
+    }
+  ],
+  "wall_s": 211.56,
+  "usage": {
+    "by_model": {
+      "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B": {
+        "calls": 12,
+        "errors": 0,
+        "tokens_in": 14672,
+        "tokens_out": 11392,
+        "cost_usd": 0.0317,
+        "attempts": 12
+      }
+    },
+    "total_cost_usd": 0.0317,
+    "total_calls": 12
+  }
+}

@@ -138,6 +138,30 @@ This run happened on the Vercel deployment during the hackathon. Inventory and s
 - Time: about 5 minutes on Vercel (about 2 minutes locally).
 - The judge flagged two misstated details in the doers' prose. The numbers the agent acted on came from code, so the plan stood, and the flags were reported. This is why the judge exists.
 
+### Self-improvement
+
+Within a mission the agent self-corrects: failed checks turn into concrete instructions for the next attempt. Across missions it learns in four places, all persisted in the store:
+
+| What learns | From | Changes |
+|---|---|---|
+| Supplier reliability | Every recorded delivery (`record_delivery`): promised vs received date, incoming QC result | Beta beliefs per supplier for on-time rate, lateness and QC pass rate. Supplier-stated metrics are only a weak prior, and recent deliveries weigh more. |
+| Supplier choice and reorder timing | Those beliefs plus a client profile (stockout cost per day, risk aversion, minimum P(in time)) | `supplier_reliability` ranks approved suppliers by risk-adjusted expected cost from a seeded Monte Carlo, with no fixed weights. The same suppliers rank differently for a tight vs loose deadline and for different clients. |
+| Negotiation | Each accepted offer: opening vs settled price, expedite, turns | The next negotiator with that supplier gets the history on its first reply. |
+| Mission lessons | Failed numeric checks and the judge's grounding flags | Added to every doer's context on the next mission for the same material. |
+
+Learning moves rankings, reorder points, prompts and negotiation tactics only. Qualification state, the no-substitution rule, BIOSECURE blocks and the $25,000 limit stay fixed in code. When a supplier's observed on-time rate falls well below what it states, the agent recommends a QA supplier review. It does not disqualify the supplier itself.
+
+In a 360-day synthetic simulation where a quarter of suppliers overstate their reliability (mean of 10 seeds, [docs/learning-results.md](docs/learning-results.md)):
+
+| | Rule-based agent | Risk-scored, no learning | Risk-scored + learning |
+|---|---|---|---|
+| Stockout pair-days | 386 | 316 | 300 |
+| Stockout cost (Corvane profile) | $78.6M | $73.9M | $67.4M |
+| Belief error vs hidden truth | 11.7 pp | 11.7 pp | 7.9 pp |
+| Expedite spend | $1.8M | $2.1M | $2.1M |
+
+When suppliers perform as stated, the learning policy matches the non-learning one (164 vs 164 stockout pair-days). Under a lean-generics profile with cheap stockouts, the same agent buys fewer expedites than the rule-based one (60 vs 80). Reproduce with `pnpm --filter @supply-agent/core sim:learning`.
+
 ## Real vs simulated
 
 | Component | Status | Notes |

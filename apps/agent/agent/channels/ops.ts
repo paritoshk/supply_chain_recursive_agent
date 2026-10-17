@@ -1,6 +1,7 @@
-import { createStore, defaultPersistence } from "@supply-agent/core";
-import { defineChannel, POST } from "eve/channels";
+import { BoardKind, createStore, defaultPersistence, openStore, type BoardItem } from "@supply-agent/core";
+import { defineChannel, GET, POST } from "eve/channels";
 import { sentinelPrompt } from "../lib/alert.ts";
+import { renderBoardHtml } from "../lib/board-html.ts";
 import telegram from "./telegram.ts";
 
 const APP_AUTH = { authenticator: "app", principalId: "eve:app", principalType: "runtime" } as const;
@@ -11,8 +12,37 @@ function authorized(request: Request): boolean {
   return !!secret && request.headers.get("authorization") === `Bearer ${secret}`;
 }
 
+/** Board items filtered by ?mission_id=&material_id=&kind=&limit= (newest first). */
+async function boardItems(request: Request): Promise<{ items: BoardItem[]; filter: string }> {
+  const q = new URL(request.url).searchParams;
+  const kind = BoardKind.safeParse(q.get("kind") ?? undefined);
+  const limit = Math.min(200, Math.max(1, Number(q.get("limit")) || 60));
+  const store = await openStore(defaultPersistence());
+  const f = {
+    mission_id: q.get("mission_id") || undefined,
+    material_id: q.get("material_id") || undefined,
+    kind: kind.success ? kind.data : undefined,
+  };
+  const items = store.boardItems({ ...f, limit });
+  return { items, filter: Object.entries(f).filter(([, v]) => v).map(([k, v]) => `${k}=${v}`).join(" ") };
+}
+
 export default defineChannel({
   routes: [
+    // Evidence board as JSON (operator, same bearer auth as the other ops routes).
+    GET("/ops/board", async (request) => {
+      if (!authorized(request)) return new Response("unauthorized", { status: 401 });
+      const { items, filter } = await boardItems(request);
+      return Response.json({ ok: true, filter, count: items.length, items });
+    }),
+    // Evidence board as a read-only HTML page (public; synthetic data and public sources only, no secrets).
+    GET("/board", async (request) => {
+      const { items, filter } = await boardItems(request);
+      const refresh = Number(new URL(request.url).searchParams.get("refresh")) || 0;
+      return new Response(renderBoardHtml(items, { filter, refreshSeconds: refresh }), {
+        headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
+      });
+    }),
     // Reseed the synthetic Corvane state (deterministic seed) before a demo run.
     POST("/ops/reset", async (request) => {
       if (!authorized(request)) return new Response("unauthorized", { status: 401 });
