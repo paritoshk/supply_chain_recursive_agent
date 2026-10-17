@@ -1,7 +1,7 @@
 {
   "benchmark": "b1-tool-selection",
-  "generated_at": "2026-10-17T21:12:32.342Z",
-  "git_sha": "21fefbc",
+  "generated_at": "2026-10-17T21:48:39.819Z",
+  "git_sha": "ddb4c64",
   "synthetic_data": true,
   "method": {
     "prompts": 24,
@@ -25,6 +25,10 @@
       "apply_approval",
       "message_supplier",
       "accept_offer",
+      "line_feasibility",
+      "material_dossier",
+      "record_delivery",
+      "supplier_reliability",
       "run_mission"
     ],
     "system_prompt": "apps/agent/agent/instructions.md + date line",
@@ -320,51 +324,6 @@
       "n": 24,
       "errors": 0,
       "tool_accuracy": {
-        "p": 0.9583,
-        "lo": 0.7976,
-        "hi": 0.9926,
-        "k": 23,
-        "n": 24
-      },
-      "arg_validity": {
-        "p": 1,
-        "lo": 0.862,
-        "hi": 1,
-        "k": 24,
-        "n": 24
-      },
-      "arg_correctness": {
-        "p": 1,
-        "lo": 0.8569,
-        "hi": 1,
-        "k": 23,
-        "n": 23
-      },
-      "latency_ms": {
-        "p50": 672,
-        "p95": 983,
-        "mean": 705
-      },
-      "tokens": {
-        "in_mean": 4171,
-        "out_mean": 101
-      },
-      "gate_b1_90pct": true,
-      "misses": [
-        {
-          "id": "dsc-01",
-          "got": "lookup_parts",
-          "content": null
-        }
-      ]
-    },
-    {
-      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
-      "label": "Super-120B (judge)",
-      "available": true,
-      "n": 24,
-      "errors": 0,
-      "tool_accuracy": {
         "p": 0.9167,
         "lo": 0.7415,
         "hi": 0.9768,
@@ -386,13 +345,13 @@
         "n": 22
       },
       "latency_ms": {
-        "p50": 3106,
-        "p95": 5766,
-        "mean": 3285
+        "p50": 900,
+        "p95": 1516,
+        "mean": 983
       },
       "tokens": {
-        "in_mean": 4171,
-        "out_mean": 134
+        "in_mean": 6463,
+        "out_mean": 106
       },
       "gate_b1_90pct": true,
       "misses": [
@@ -409,16 +368,71 @@
       ]
     },
     {
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "label": "Super-120B (judge)",
+      "available": true,
+      "n": 24,
+      "errors": 0,
+      "tool_accuracy": {
+        "p": 0.875,
+        "lo": 0.69,
+        "hi": 0.9566,
+        "k": 21,
+        "n": 24
+      },
+      "arg_validity": {
+        "p": 1,
+        "lo": 0.862,
+        "hi": 1,
+        "k": 24,
+        "n": 24
+      },
+      "arg_correctness": {
+        "p": 1,
+        "lo": 0.8454,
+        "hi": 1,
+        "k": 21,
+        "n": 21
+      },
+      "latency_ms": {
+        "p50": 3975,
+        "p95": 8517,
+        "mean": 4639
+      },
+      "tokens": {
+        "in_mean": 6463,
+        "out_mean": 151
+      },
+      "gate_b1_90pct": false,
+      "misses": [
+        {
+          "id": "trf-01",
+          "got": "lookup_parts",
+          "content": null
+        },
+        {
+          "id": "trf-02",
+          "got": "lookup_parts",
+          "content": null
+        },
+        {
+          "id": "dsc-01",
+          "got": "lookup_parts",
+          "content": null
+        }
+      ]
+    },
+    {
       "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
       "label": "Nano-30B (persona)",
       "available": true,
       "n": 24,
       "errors": 0,
       "tool_accuracy": {
-        "p": 1,
-        "lo": 0.862,
-        "hi": 1,
-        "k": 24,
+        "p": 0.9583,
+        "lo": 0.7976,
+        "hi": 0.9926,
+        "k": 23,
         "n": 24
       },
       "arg_validity": {
@@ -430,58 +444,64 @@
       },
       "arg_correctness": {
         "p": 1,
-        "lo": 0.862,
+        "lo": 0.8569,
         "hi": 1,
-        "k": 24,
-        "n": 24
+        "k": 23,
+        "n": 23
       },
       "latency_ms": {
-        "p50": 3325,
-        "p95": 17090,
-        "mean": 4903
+        "p50": 4628,
+        "p95": 11447,
+        "mean": 5179
       },
       "tokens": {
-        "in_mean": 4171,
-        "out_mean": 723
+        "in_mean": 6463,
+        "out_mean": 719
       },
       "gate_b1_90pct": true,
-      "misses": []
+      "misses": [
+        {
+          "id": "spc-01",
+          "got": "material_dossier",
+          "content": null
+        }
+      ]
     },
     {
       "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
       "label": "Lightning-30B",
       "available": true,
       "n": 24,
-      "errors": 4,
+      "errors": 0,
       "tool_accuracy": {
-        "p": 0.95,
-        "lo": 0.7639,
-        "hi": 0.9911,
-        "k": 19,
-        "n": 20
+        "p": 0.9583,
+        "lo": 0.7976,
+        "hi": 0.9926,
+        "k": 23,
+        "n": 24
       },
       "arg_validity": {
         "p": 1,
-        "lo": 0.8389,
+        "lo": 0.862,
         "hi": 1,
-        "k": 20,
-        "n": 20
+        "k": 24,
+        "n": 24
       },
       "arg_correctness": {
         "p": 1,
-        "lo": 0.8318,
+        "lo": 0.8569,
         "hi": 1,
-        "k": 19,
-        "n": 19
+        "k": 23,
+        "n": 23
       },
       "latency_ms": {
-        "p50": 3818,
-        "p95": 11063,
-        "mean": 5613
+        "p50": 1863,
+        "p95": 6093,
+        "mean": 2754
       },
       "tokens": {
-        "in_mean": 4307,
-        "out_mean": 442
+        "in_mean": 6625,
+        "out_mean": 273
       },
       "gate_b1_90pct": true,
       "misses": [
@@ -508,9 +528,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 953,
-      "tokens_in": 4163,
-      "tokens_out": 79,
+      "latency_ms": 979,
+      "tokens_in": 6455,
+      "tokens_out": 88,
       "attempts": 1
     },
     {
@@ -527,9 +547,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 1194,
-      "tokens_in": 4169,
-      "tokens_out": 70,
+      "latency_ms": 771,
+      "tokens_in": 6461,
+      "tokens_out": 81,
       "attempts": 1
     },
     {
@@ -547,9 +567,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 983,
-      "tokens_in": 4173,
-      "tokens_out": 91,
+      "latency_ms": 885,
+      "tokens_in": 6465,
+      "tokens_out": 102,
       "attempts": 1
     },
     {
@@ -567,9 +587,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 628,
-      "tokens_in": 4173,
-      "tokens_out": 114,
+      "latency_ms": 869,
+      "tokens_in": 6465,
+      "tokens_out": 124,
       "attempts": 1
     },
     {
@@ -585,9 +605,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 562,
-      "tokens_in": 4165,
-      "tokens_out": 51,
+      "latency_ms": 568,
+      "tokens_in": 6457,
+      "tokens_out": 58,
       "attempts": 1
     },
     {
@@ -603,9 +623,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 532,
-      "tokens_in": 4161,
-      "tokens_out": 57,
+      "latency_ms": 602,
+      "tokens_in": 6453,
+      "tokens_out": 58,
       "attempts": 1
     },
     {
@@ -622,9 +642,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 601,
-      "tokens_in": 4174,
-      "tokens_out": 107,
+      "latency_ms": 900,
+      "tokens_in": 6466,
+      "tokens_out": 110,
       "attempts": 1
     },
     {
@@ -641,9 +661,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 677,
-      "tokens_in": 4178,
-      "tokens_out": 111,
+      "latency_ms": 1082,
+      "tokens_in": 6470,
+      "tokens_out": 109,
       "attempts": 1
     },
     {
@@ -660,8 +680,8 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 684,
-      "tokens_in": 4176,
+      "latency_ms": 871,
+      "tokens_in": 6468,
       "tokens_out": 127,
       "attempts": 1
     },
@@ -680,9 +700,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 724,
-      "tokens_in": 4173,
-      "tokens_out": 123,
+      "latency_ms": 812,
+      "tokens_in": 6465,
+      "tokens_out": 127,
       "attempts": 1
     },
     {
@@ -690,8 +710,7 @@
       "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
       "tool": "find_suppliers",
       "args": {
-        "material_id": "MAT-HPMC",
-        "include_candidates": false
+        "material_id": "MAT-HPMC"
       },
       "content": null,
       "correct_tool": true,
@@ -699,9 +718,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 524,
-      "tokens_in": 4164,
-      "tokens_out": 79,
+      "latency_ms": 574,
+      "tokens_in": 6456,
+      "tokens_out": 62,
       "attempts": 1
     },
     {
@@ -718,8 +737,8 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 559,
-      "tokens_in": 4168,
+      "latency_ms": 900,
+      "tokens_in": 6460,
       "tokens_out": 84,
       "attempts": 1
     },
@@ -737,9 +756,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 516,
-      "tokens_in": 4165,
-      "tokens_out": 74,
+      "latency_ms": 644,
+      "tokens_in": 6457,
+      "tokens_out": 80,
       "attempts": 1
     },
     {
@@ -756,9 +775,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 584,
-      "tokens_in": 4171,
-      "tokens_out": 77,
+      "latency_ms": 1206,
+      "tokens_in": 6463,
+      "tokens_out": 84,
       "attempts": 1
     },
     {
@@ -774,9 +793,9 @@
       "args_correct": false,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 769,
-      "tokens_in": 4173,
-      "tokens_out": 91,
+      "latency_ms": 867,
+      "tokens_in": 6465,
+      "tokens_out": 93,
       "attempts": 1
     },
     {
@@ -785,7 +804,6 @@
       "tool": "discover_suppliers",
       "args": {
         "material_id": "MAT-MGST-INH",
-        "query": "inhalation grade magnesium stearate supplier pharmaceutical",
         "max_results": 8,
         "read_pages": 2
       },
@@ -795,9 +813,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 890,
-      "tokens_in": 4177,
-      "tokens_out": 183,
+      "latency_ms": 1300,
+      "tokens_in": 6469,
+      "tokens_out": 120,
       "attempts": 1
     },
     {
@@ -813,30 +831,28 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 556,
-      "tokens_in": 4166,
-      "tokens_out": 76,
+      "latency_ms": 834,
+      "tokens_in": 6458,
+      "tokens_out": 65,
       "attempts": 1
     },
     {
       "id": "spc-01",
       "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
-      "tool": "match_spec",
+      "tool": "lookup_parts",
       "args": {
-        "material_id": "MAT-HIS",
-        "candidate_ids": [
-          "MAT-HIS-HCL"
-        ]
+        "query": "MAT-HIS",
+        "limit": 10
       },
       "content": null,
-      "correct_tool": true,
+      "correct_tool": false,
       "args_valid": true,
-      "args_correct": true,
+      "args_correct": false,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 743,
-      "tokens_in": 4171,
-      "tokens_out": 112,
+      "latency_ms": 1207,
+      "tokens_in": 6463,
+      "tokens_out": 146,
       "attempts": 1
     },
     {
@@ -852,9 +868,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 548,
-      "tokens_in": 4170,
-      "tokens_out": 72,
+      "latency_ms": 970,
+      "tokens_in": 6462,
+      "tokens_out": 70,
       "attempts": 1
     },
     {
@@ -864,7 +880,7 @@
       "args": {
         "material_id": "MAT-SUC-INJ",
         "site_id": "SITE-GHE",
-        "trigger": "low cover at Ghent (~3 weeks)"
+        "trigger": "low stock at Ghent"
       },
       "content": null,
       "correct_tool": true,
@@ -872,9 +888,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 710,
-      "tokens_in": 4182,
-      "tokens_out": 139,
+      "latency_ms": 1516,
+      "tokens_in": 6474,
+      "tokens_out": 174,
       "attempts": 1
     },
     {
@@ -892,9 +908,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 672,
-      "tokens_in": 4172,
-      "tokens_out": 114,
+      "latency_ms": 1076,
+      "tokens_in": 6464,
+      "tokens_out": 115,
       "attempts": 1
     },
     {
@@ -911,9 +927,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 564,
-      "tokens_in": 4162,
-      "tokens_out": 94,
+      "latency_ms": 1279,
+      "tokens_in": 6454,
+      "tokens_out": 112,
       "attempts": 1
     },
     {
@@ -932,9 +948,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 787,
-      "tokens_in": 4190,
-      "tokens_out": 134,
+      "latency_ms": 1563,
+      "tokens_in": 6482,
+      "tokens_out": 182,
       "attempts": 1
     },
     {
@@ -944,7 +960,7 @@
       "args": {
         "rfq_id": "RFQ-099",
         "supplier_id": "SUP-019",
-        "message": "Please provide a better unit price on RFQ-099. We need a sharper landed unit cost to move forward."
+        "message": "Please provide a better unit price on RFQ-099. We need a sharper offer to proceed."
       },
       "content": null,
       "correct_tool": true,
@@ -952,9 +968,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 970,
-      "tokens_in": 4176,
-      "tokens_out": 164,
+      "latency_ms": 1314,
+      "tokens_in": 6468,
+      "tokens_out": 161,
       "attempts": 1
     },
     {
@@ -970,9 +986,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 1270,
-      "tokens_in": 4163,
-      "tokens_out": 53,
+      "latency_ms": 3975,
+      "tokens_in": 6455,
+      "tokens_out": 116,
       "attempts": 1
     },
     {
@@ -981,7 +997,7 @@
       "tool": "low_stock_items",
       "args": {
         "include_watch": true,
-        "limit": 25
+        "limit": 200
       },
       "content": null,
       "correct_tool": true,
@@ -989,9 +1005,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 3252,
-      "tokens_in": 4169,
-      "tokens_out": 111,
+      "latency_ms": 2144,
+      "tokens_in": 6461,
+      "tokens_out": 71,
       "attempts": 1
     },
     {
@@ -1000,7 +1016,8 @@
       "tool": "cover_projection",
       "args": {
         "material_id": "MAT-SUC-INJ",
-        "site_id": "SITE-GHE"
+        "site_id": "SITE-GHE",
+        "horizon_days": 90
       },
       "content": null,
       "correct_tool": true,
@@ -1008,9 +1025,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 2182,
-      "tokens_in": 4173,
-      "tokens_out": 73,
+      "latency_ms": 3723,
+      "tokens_in": 6465,
+      "tokens_out": 133,
       "attempts": 1
     },
     {
@@ -1028,9 +1045,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 4068,
-      "tokens_in": 4173,
-      "tokens_out": 172,
+      "latency_ms": 3994,
+      "tokens_in": 6465,
+      "tokens_out": 165,
       "attempts": 1
     },
     {
@@ -1046,9 +1063,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 1496,
-      "tokens_in": 4165,
-      "tokens_out": 56,
+      "latency_ms": 2409,
+      "tokens_in": 6457,
+      "tokens_out": 96,
       "attempts": 1
     },
     {
@@ -1064,9 +1081,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 1147,
-      "tokens_in": 4161,
-      "tokens_out": 57,
+      "latency_ms": 4053,
+      "tokens_in": 6453,
+      "tokens_out": 170,
       "attempts": 1
     },
     {
@@ -1083,9 +1100,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 6639,
-      "tokens_in": 4174,
-      "tokens_out": 346,
+      "latency_ms": 4276,
+      "tokens_in": 6466,
+      "tokens_out": 176,
       "attempts": 1
     },
     {
@@ -1102,48 +1119,47 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 2465,
-      "tokens_in": 4178,
-      "tokens_out": 136,
+      "latency_ms": 4751,
+      "tokens_in": 6470,
+      "tokens_out": 168,
       "attempts": 1
     },
     {
       "id": "trf-01",
       "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
-      "tool": "propose_transfer",
+      "tool": "lookup_parts",
       "args": {
-        "material_id": "MAT-PS80-SR",
-        "to_site_id": "SITE-RAL"
+        "query": "MAT-PS80-SR",
+        "limit": 5
       },
       "content": null,
-      "correct_tool": true,
+      "correct_tool": false,
       "args_valid": true,
-      "args_correct": true,
+      "args_correct": false,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 4301,
-      "tokens_in": 4176,
-      "tokens_out": 186,
+      "latency_ms": 8238,
+      "tokens_in": 6468,
+      "tokens_out": 272,
       "attempts": 1
     },
     {
       "id": "trf-02",
       "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
-      "tool": "propose_transfer",
+      "tool": "lookup_parts",
       "args": {
-        "material_id": "MAT-MAN-PAR",
-        "from_site_id": "SITE-COR",
-        "to_site_id": "SITE-RAL"
+        "query": "MAT-MAN-PAR",
+        "limit": 5
       },
       "content": null,
-      "correct_tool": true,
+      "correct_tool": false,
       "args_valid": true,
-      "args_correct": true,
+      "args_correct": false,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 5090,
-      "tokens_in": 4173,
-      "tokens_out": 194,
+      "latency_ms": 6632,
+      "tokens_in": 6465,
+      "tokens_out": 256,
       "attempts": 1
     },
     {
@@ -1159,9 +1175,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 2223,
-      "tokens_in": 4164,
-      "tokens_out": 66,
+      "latency_ms": 3382,
+      "tokens_in": 6456,
+      "tokens_out": 110,
       "attempts": 1
     },
     {
@@ -1178,9 +1194,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 2255,
-      "tokens_in": 4168,
-      "tokens_out": 89,
+      "latency_ms": 2915,
+      "tokens_in": 6460,
+      "tokens_out": 90,
       "attempts": 1
     },
     {
@@ -1197,9 +1213,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 2149,
-      "tokens_in": 4165,
-      "tokens_out": 75,
+      "latency_ms": 2711,
+      "tokens_in": 6457,
+      "tokens_out": 74,
       "attempts": 1
     },
     {
@@ -1216,9 +1232,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 2044,
-      "tokens_in": 4171,
-      "tokens_out": 83,
+      "latency_ms": 4837,
+      "tokens_in": 6463,
+      "tokens_out": 177,
       "attempts": 1
     },
     {
@@ -1227,7 +1243,7 @@
       "tool": "lookup_parts",
       "args": {
         "query": "MAT-TRE-HP",
-        "limit": 10
+        "limit": 5
       },
       "content": null,
       "correct_tool": false,
@@ -1235,9 +1251,9 @@
       "args_correct": false,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 3106,
-      "tokens_in": 4173,
-      "tokens_out": 117,
+      "latency_ms": 4536,
+      "tokens_in": 6465,
+      "tokens_out": 149,
       "attempts": 1
     },
     {
@@ -1246,7 +1262,6 @@
       "tool": "discover_suppliers",
       "args": {
         "material_id": "MAT-MGST-INH",
-        "query": "inhalation magnesium stearate supplier",
         "max_results": 8,
         "read_pages": 2
       },
@@ -1256,9 +1271,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 4755,
-      "tokens_in": 4177,
-      "tokens_out": 188,
+      "latency_ms": 3552,
+      "tokens_in": 6469,
+      "tokens_out": 120,
       "attempts": 1
     },
     {
@@ -1274,28 +1289,30 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 1142,
-      "tokens_in": 4166,
-      "tokens_out": 59,
+      "latency_ms": 2244,
+      "tokens_in": 6458,
+      "tokens_out": 65,
       "attempts": 1
     },
     {
       "id": "spc-01",
       "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
-      "tool": "lookup_parts",
+      "tool": "match_spec",
       "args": {
-        "query": "MAT-HIS",
-        "limit": 5
+        "material_id": "MAT-HIS",
+        "candidate_ids": [
+          "MAT-HIS-HCL"
+        ]
       },
       "content": null,
-      "correct_tool": false,
+      "correct_tool": true,
       "args_valid": true,
-      "args_correct": false,
+      "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 4142,
-      "tokens_in": 4171,
-      "tokens_out": 156,
+      "latency_ms": 2097,
+      "tokens_in": 6463,
+      "tokens_out": 99,
       "attempts": 1
     },
     {
@@ -1311,9 +1328,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 1714,
-      "tokens_in": 4170,
-      "tokens_out": 57,
+      "latency_ms": 3171,
+      "tokens_in": 6462,
+      "tokens_out": 116,
       "attempts": 1
     },
     {
@@ -1322,8 +1339,7 @@
       "tool": "run_mission",
       "args": {
         "material_id": "MAT-SUC-INJ",
-        "site_id": "SITE-GHE",
-        "trigger": "sentinel"
+        "site_id": "SITE-GHE"
       },
       "content": null,
       "correct_tool": true,
@@ -1331,9 +1347,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 4925,
-      "tokens_in": 4182,
-      "tokens_out": 198,
+      "latency_ms": 8517,
+      "tokens_in": 6474,
+      "tokens_out": 336,
       "attempts": 1
     },
     {
@@ -1342,7 +1358,8 @@
       "tool": "run_mission",
       "args": {
         "material_id": "MAT-PS80-SR",
-        "site_id": "SITE-KOP"
+        "site_id": "SITE-KOP",
+        "trigger": "sentinel"
       },
       "content": null,
       "correct_tool": true,
@@ -1350,9 +1367,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 5556,
-      "tokens_in": 4172,
-      "tokens_out": 183,
+      "latency_ms": 5504,
+      "tokens_in": 6464,
+      "tokens_out": 223,
       "attempts": 1
     },
     {
@@ -1369,9 +1386,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 3915,
-      "tokens_in": 4162,
-      "tokens_out": 154,
+      "latency_ms": 3339,
+      "tokens_in": 6454,
+      "tokens_out": 135,
       "attempts": 1
     },
     {
@@ -1390,10 +1407,10 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 5766,
-      "tokens_in": 4190,
-      "tokens_out": 248,
-      "attempts": 1
+      "latency_ms": 16185,
+      "tokens_in": 6482,
+      "tokens_out": 146,
+      "attempts": 6
     },
     {
       "id": "neg-01",
@@ -1402,7 +1419,7 @@
       "args": {
         "rfq_id": "RFQ-099",
         "supplier_id": "SUP-019",
-        "message": "Please provide a better unit price for this RFQ."
+        "message": "Please provide a better unit price for the material quoted in RFQ-099."
       },
       "content": null,
       "correct_tool": true,
@@ -1410,17 +1427,17 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 3241,
-      "tokens_in": 4176,
-      "tokens_out": 163,
-      "attempts": 1
+      "latency_ms": 4149,
+      "tokens_in": 6468,
+      "tokens_out": 170,
+      "attempts": 2
     },
     {
       "id": "inv-01",
       "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
       "tool": "low_stock_items",
       "args": {
-        "limit": 200,
+        "limit": 25,
         "include_watch": true
       },
       "content": null,
@@ -1429,9 +1446,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 2705,
-      "tokens_in": 4163,
-      "tokens_out": 546,
+      "latency_ms": 5094,
+      "tokens_in": 6455,
+      "tokens_out": 492,
       "attempts": 1
     },
     {
@@ -1448,9 +1465,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 7422,
-      "tokens_in": 4169,
-      "tokens_out": 800,
+      "latency_ms": 4144,
+      "tokens_in": 6461,
+      "tokens_out": 459,
       "attempts": 1
     },
     {
@@ -1467,9 +1484,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 1436,
-      "tokens_in": 4173,
-      "tokens_out": 257,
+      "latency_ms": 2761,
+      "tokens_in": 6465,
+      "tokens_out": 268,
       "attempts": 1
     },
     {
@@ -1486,9 +1503,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 4204,
-      "tokens_in": 4173,
-      "tokens_out": 427,
+      "latency_ms": 4409,
+      "tokens_in": 6465,
+      "tokens_out": 502,
       "attempts": 1
     },
     {
@@ -1504,9 +1521,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 2457,
-      "tokens_in": 4165,
-      "tokens_out": 258,
+      "latency_ms": 2165,
+      "tokens_in": 6457,
+      "tokens_out": 187,
       "attempts": 1
     },
     {
@@ -1522,9 +1539,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 3362,
-      "tokens_in": 4161,
-      "tokens_out": 399,
+      "latency_ms": 3321,
+      "tokens_in": 6453,
+      "tokens_out": 424,
       "attempts": 1
     },
     {
@@ -1541,9 +1558,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 20955,
-      "tokens_in": 4174,
-      "tokens_out": 3141,
+      "latency_ms": 7303,
+      "tokens_in": 6466,
+      "tokens_out": 802,
       "attempts": 1
     },
     {
@@ -1560,9 +1577,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 7959,
-      "tokens_in": 4178,
-      "tokens_out": 1031,
+      "latency_ms": 6325,
+      "tokens_in": 6470,
+      "tokens_out": 678,
       "attempts": 1
     },
     {
@@ -1579,9 +1596,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 4888,
-      "tokens_in": 4176,
-      "tokens_out": 675,
+      "latency_ms": 4628,
+      "tokens_in": 6468,
+      "tokens_out": 800,
       "attempts": 1
     },
     {
@@ -1599,9 +1616,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 6057,
-      "tokens_in": 4173,
-      "tokens_out": 822,
+      "latency_ms": 7611,
+      "tokens_in": 6465,
+      "tokens_out": 814,
       "attempts": 1
     },
     {
@@ -1617,9 +1634,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 3572,
-      "tokens_in": 4164,
-      "tokens_out": 724,
+      "latency_ms": 1850,
+      "tokens_in": 6456,
+      "tokens_out": 323,
       "attempts": 1
     },
     {
@@ -1636,9 +1653,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 1751,
-      "tokens_in": 4168,
-      "tokens_out": 177,
+      "latency_ms": 1948,
+      "tokens_in": 6460,
+      "tokens_out": 234,
       "attempts": 1
     },
     {
@@ -1655,9 +1672,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 2047,
-      "tokens_in": 4165,
-      "tokens_out": 323,
+      "latency_ms": 2259,
+      "tokens_in": 6457,
+      "tokens_out": 261,
       "attempts": 1
     },
     {
@@ -1674,9 +1691,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 2593,
-      "tokens_in": 4171,
-      "tokens_out": 375,
+      "latency_ms": 7383,
+      "tokens_in": 6463,
+      "tokens_out": 924,
       "attempts": 1
     },
     {
@@ -1685,7 +1702,7 @@
       "tool": "discover_suppliers",
       "args": {
         "material_id": "MAT-TRE-HP",
-        "query": "MAT-TRE-HP GMP manufacturer"
+        "query": "GMP manufacturers"
       },
       "content": null,
       "correct_tool": true,
@@ -1693,9 +1710,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 3325,
-      "tokens_in": 4173,
-      "tokens_out": 600,
+      "latency_ms": 6124,
+      "tokens_in": 6465,
+      "tokens_out": 759,
       "attempts": 1
     },
     {
@@ -1704,7 +1721,8 @@
       "tool": "discover_suppliers",
       "args": {
         "material_id": "MAT-MGST-INH",
-        "query": "inhalation magnesium stearate suppliers"
+        "query": "inhalation magnesium stearate suppliers",
+        "max_results": 8
       },
       "content": null,
       "correct_tool": true,
@@ -1712,9 +1730,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 3997,
-      "tokens_in": 4177,
-      "tokens_out": 826,
+      "latency_ms": 4553,
+      "tokens_in": 6469,
+      "tokens_out": 557,
       "attempts": 1
     },
     {
@@ -1730,30 +1748,27 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 1282,
-      "tokens_in": 4166,
-      "tokens_out": 245,
+      "latency_ms": 2748,
+      "tokens_in": 6458,
+      "tokens_out": 343,
       "attempts": 1
     },
     {
       "id": "spc-01",
       "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
-      "tool": "match_spec",
+      "tool": "material_dossier",
       "args": {
-        "material_id": "MAT-HIS",
-        "candidate_ids": [
-          "MAT-HIS-HCL"
-        ]
+        "material_id": "MAT-HIS"
       },
       "content": null,
-      "correct_tool": true,
+      "correct_tool": false,
       "args_valid": true,
-      "args_correct": true,
+      "args_correct": false,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 17090,
-      "tokens_in": 4171,
-      "tokens_out": 2801,
+      "latency_ms": 5542,
+      "tokens_in": 6463,
+      "tokens_out": 1126,
       "attempts": 1
     },
     {
@@ -1769,9 +1784,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 1740,
-      "tokens_in": 4170,
-      "tokens_out": 353,
+      "latency_ms": 2857,
+      "tokens_in": 6462,
+      "tokens_out": 298,
       "attempts": 1
     },
     {
@@ -1779,8 +1794,8 @@
       "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
       "tool": "run_mission",
       "args": {
-        "material_id": "MAT-SUC-INJ",
         "site_id": "SITE-GHE",
+        "material_id": "MAT-SUC-INJ",
         "trigger": "sentinel"
       },
       "content": null,
@@ -1789,9 +1804,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 3514,
-      "tokens_in": 4182,
-      "tokens_out": 610,
+      "latency_ms": 6668,
+      "tokens_in": 6474,
+      "tokens_out": 1029,
       "attempts": 1
     },
     {
@@ -1799,9 +1814,8 @@
       "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
       "tool": "run_mission",
       "args": {
-        "material_id": "MAT-PS80-SR",
         "site_id": "SITE-KOP",
-        "trigger": "sentinel"
+        "material_id": "MAT-PS80-SR"
       },
       "content": null,
       "correct_tool": true,
@@ -1809,9 +1823,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 1892,
-      "tokens_in": 4172,
-      "tokens_out": 338,
+      "latency_ms": 5381,
+      "tokens_in": 6464,
+      "tokens_out": 897,
       "attempts": 1
     },
     {
@@ -1828,9 +1842,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 7865,
-      "tokens_in": 4162,
-      "tokens_out": 858,
+      "latency_ms": 13120,
+      "tokens_in": 6454,
+      "tokens_out": 2884,
       "attempts": 1
     },
     {
@@ -1838,10 +1852,10 @@
       "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
       "tool": "draft_rfq",
       "args": {
+        "need_by": "2026-12-01",
         "material_id": "MAT-TRE-HP",
         "site_id": "SITE-KOP",
-        "qty": 200,
-        "need_by": "2026-12-01"
+        "qty": 200
       },
       "content": null,
       "correct_tool": true,
@@ -1849,9 +1863,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 2308,
-      "tokens_in": 4190,
-      "tokens_out": 423,
+      "latency_ms": 11447,
+      "tokens_in": 6482,
+      "tokens_out": 1612,
       "attempts": 1
     },
     {
@@ -1861,7 +1875,7 @@
       "args": {
         "rfq_id": "RFQ-099",
         "supplier_id": "SUP-019",
-        "message": "We are reviewing the quote for this material and would like to see if you can improve the unit price. Please let us know if a better rate is possible."
+        "message": "We are reviewing the quote for this RFQ and would like to explore if a lower unit price is possible. Please let us know if you can improve the terms."
       },
       "content": null,
       "correct_tool": true,
@@ -1869,13 +1883,32 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 3243,
-      "tokens_in": 4176,
-      "tokens_out": 341,
+      "latency_ms": 4649,
+      "tokens_in": 6468,
+      "tokens_out": 587,
       "attempts": 1
     },
     {
       "id": "inv-01",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "tool": "low_stock_items",
+      "args": {
+        "include_watch": true,
+        "limit": 25
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 2530,
+      "tokens_in": 6617,
+      "tokens_out": 92,
+      "attempts": 3
+    },
+    {
+      "id": "inv-02",
       "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
       "tool": "low_stock_items",
       "args": {
@@ -1888,22 +1921,10 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 3916,
-      "tokens_in": 4299,
-      "tokens_out": 495,
-      "attempts": 2
-    },
-    {
-      "id": "inv-02",
-      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
-      "error": "Crusoe 429: {\"error\":{\"type\":\"rate_limit_error\",\"param\":null,\"message\":\"Too many requests. Reason: max_requests_limit (orchestrator)\",\"code\":null}}",
-      "tool": null,
-      "correct_tool": false,
-      "args_valid": false,
-      "args_correct": false,
-      "latency_ms": null,
-      "tokens_in": 0,
-      "tokens_out": 0
+      "latency_ms": 990,
+      "tokens_in": 6623,
+      "tokens_out": 125,
+      "attempts": 1
     },
     {
       "id": "inv-03",
@@ -1919,22 +1940,29 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 4242,
-      "tokens_in": 4309,
-      "tokens_out": 409,
-      "attempts": 3
+      "latency_ms": 3188,
+      "tokens_in": 6627,
+      "tokens_out": 388,
+      "attempts": 1
     },
     {
       "id": "inv-04",
       "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
-      "error": "Crusoe 429: {\"error\":{\"message\":\"Too many requests. Reason: max_requests_limit (orchestrator)\",\"type\":\"rate_limit_error\",\"param\":null,\"code\":null}}",
-      "tool": null,
-      "correct_tool": false,
-      "args_valid": false,
-      "args_correct": false,
-      "latency_ms": null,
-      "tokens_in": 0,
-      "tokens_out": 0
+      "tool": "cover_projection",
+      "args": {
+        "material_id": "MAT-PS80-SR",
+        "site_id": "SITE-KOP"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 4718,
+      "tokens_in": 6627,
+      "tokens_out": 244,
+      "attempts": 4
     },
     {
       "id": "inv-05",
@@ -1949,10 +1977,10 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 24011,
-      "tokens_in": 4301,
-      "tokens_out": 410,
-      "attempts": 7
+      "latency_ms": 3776,
+      "tokens_in": 6619,
+      "tokens_out": 452,
+      "attempts": 1
     },
     {
       "id": "inv-06",
@@ -1967,10 +1995,10 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 4638,
-      "tokens_in": 4297,
-      "tokens_out": 343,
-      "attempts": 4
+      "latency_ms": 2976,
+      "tokens_in": 6615,
+      "tokens_out": 315,
+      "attempts": 1
     },
     {
       "id": "prc-01",
@@ -1986,10 +2014,10 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 3527,
-      "tokens_in": 4310,
-      "tokens_out": 151,
-      "attempts": 4
+      "latency_ms": 1325,
+      "tokens_in": 6628,
+      "tokens_out": 103,
+      "attempts": 1
     },
     {
       "id": "prc-02",
@@ -2005,9 +2033,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 3307,
-      "tokens_in": 4314,
-      "tokens_out": 400,
+      "latency_ms": 6093,
+      "tokens_in": 6632,
+      "tokens_out": 598,
       "attempts": 2
     },
     {
@@ -2024,9 +2052,9 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 1389,
-      "tokens_in": 4312,
-      "tokens_out": 180,
+      "latency_ms": 1863,
+      "tokens_in": 6630,
+      "tokens_out": 216,
       "attempts": 1
     },
     {
@@ -2044,10 +2072,10 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 4369,
-      "tokens_in": 4309,
-      "tokens_out": 516,
-      "attempts": 3
+      "latency_ms": 1229,
+      "tokens_in": 6627,
+      "tokens_out": 125,
+      "attempts": 1
     },
     {
       "id": "sup-01",
@@ -2062,10 +2090,10 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 3322,
-      "tokens_in": 4300,
-      "tokens_out": 320,
-      "attempts": 3
+      "latency_ms": 932,
+      "tokens_in": 6618,
+      "tokens_out": 108,
+      "attempts": 1
     },
     {
       "id": "sup-02",
@@ -2081,10 +2109,10 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 3818,
-      "tokens_in": 4304,
-      "tokens_out": 508,
-      "attempts": 2
+      "latency_ms": 3783,
+      "tokens_in": 6622,
+      "tokens_out": 460,
+      "attempts": 1
     },
     {
       "id": "sup-03",
@@ -2100,17 +2128,18 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 3714,
-      "tokens_in": 4301,
-      "tokens_out": 268,
-      "attempts": 3
+      "latency_ms": 1145,
+      "tokens_in": 6619,
+      "tokens_out": 85,
+      "attempts": 1
     },
     {
       "id": "sup-04",
       "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
       "tool": "lookup_parts",
       "args": {
-        "query": "L-histidine monohydrochloride"
+        "query": "L-histidine monohydrochloride",
+        "limit": 10
       },
       "content": null,
       "correct_tool": true,
@@ -2118,10 +2147,10 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 3834,
-      "tokens_in": 4307,
-      "tokens_out": 331,
-      "attempts": 3
+      "latency_ms": 813,
+      "tokens_in": 6625,
+      "tokens_out": 87,
+      "attempts": 1
     },
     {
       "id": "dsc-01",
@@ -2129,28 +2158,7 @@
       "tool": "discover_suppliers",
       "args": {
         "material_id": "MAT-TRE-HP",
-        "query": "GMP manufacturers MAT-TRE-HP",
-        "max_results": 8,
-        "read_pages": 2
-      },
-      "content": null,
-      "correct_tool": true,
-      "args_valid": true,
-      "args_correct": true,
-      "arg_failures": [],
-      "arg_error": null,
-      "latency_ms": 5590,
-      "tokens_in": 4309,
-      "tokens_out": 852,
-      "attempts": 1
-    },
-    {
-      "id": "dsc-02",
-      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
-      "tool": "discover_suppliers",
-      "args": {
-        "material_id": "MAT-MGST-INH",
-        "query": "inhalation magnesium stearate",
+        "query": "GMP manufacturers",
         "max_results": 10,
         "read_pages": 2
       },
@@ -2160,10 +2168,31 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 11063,
-      "tokens_in": 4313,
-      "tokens_out": 680,
-      "attempts": 5
+      "latency_ms": 5804,
+      "tokens_in": 6627,
+      "tokens_out": 899,
+      "attempts": 1
+    },
+    {
+      "id": "dsc-02",
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "tool": "discover_suppliers",
+      "args": {
+        "material_id": "MAT-MGST-INH",
+        "query": "inhalation magnesium stearate suppliers",
+        "max_results": 8,
+        "read_pages": 2
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 5801,
+      "tokens_in": 6631,
+      "tokens_out": 798,
+      "attempts": 1
     },
     {
       "id": "reg-01",
@@ -2178,10 +2207,10 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 3209,
-      "tokens_in": 4302,
-      "tokens_out": 424,
-      "attempts": 2
+      "latency_ms": 2184,
+      "tokens_in": 6620,
+      "tokens_out": 325,
+      "attempts": 1
     },
     {
       "id": "spc-01",
@@ -2189,7 +2218,7 @@
       "tool": "lookup_parts",
       "args": {
         "query": "MAT-HIS",
-        "limit": 5
+        "limit": 10
       },
       "content": null,
       "correct_tool": false,
@@ -2197,10 +2226,10 @@
       "args_correct": false,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 8823,
-      "tokens_in": 4307,
-      "tokens_out": 427,
-      "attempts": 5
+      "latency_ms": 1388,
+      "tokens_in": 6625,
+      "tokens_out": 130,
+      "attempts": 1
     },
     {
       "id": "quo-01",
@@ -2215,34 +2244,49 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 3653,
-      "tokens_in": 4306,
-      "tokens_out": 561,
+      "latency_ms": 710,
+      "tokens_in": 6624,
+      "tokens_out": 76,
       "attempts": 1
     },
     {
       "id": "msn-01",
       "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
-      "error": "Crusoe 429: {\"error\":{\"message\":\"Too many requests. Reason: max_requests_limit (orchestrator)\",\"code\":null,\"param\":null,\"type\":\"rate_limit_error\"}}",
-      "tool": null,
-      "correct_tool": false,
-      "args_valid": false,
-      "args_correct": false,
-      "latency_ms": null,
-      "tokens_in": 0,
-      "tokens_out": 0
+      "tool": "run_mission",
+      "args": {
+        "material_id": "MAT-SUC-INJ",
+        "site_id": "SITE-GHE",
+        "trigger": "sentinel"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 1778,
+      "tokens_in": 6636,
+      "tokens_out": 228,
+      "attempts": 1
     },
     {
       "id": "msn-02",
       "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
-      "error": "Crusoe 429: {\"error\":{\"message\":\"Too many requests. Reason: max_requests_limit (orchestrator)\",\"code\":null,\"param\":null,\"type\":\"rate_limit_error\"}}",
-      "tool": null,
-      "correct_tool": false,
-      "args_valid": false,
-      "args_correct": false,
-      "latency_ms": null,
-      "tokens_in": 0,
-      "tokens_out": 0
+      "tool": "run_mission",
+      "args": {
+        "material_id": "MAT-PS80-SR",
+        "site_id": "SITE-KOP"
+      },
+      "content": null,
+      "correct_tool": true,
+      "args_valid": true,
+      "args_correct": true,
+      "arg_failures": [],
+      "arg_error": null,
+      "latency_ms": 1103,
+      "tokens_in": 6626,
+      "tokens_out": 130,
+      "attempts": 1
     },
     {
       "id": "apr-01",
@@ -2258,10 +2302,10 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 3786,
-      "tokens_in": 4298,
-      "tokens_out": 575,
-      "attempts": 1
+      "latency_ms": 1814,
+      "tokens_in": 6616,
+      "tokens_out": 181,
+      "attempts": 2
     },
     {
       "id": "rfq-01",
@@ -2279,10 +2323,10 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 3441,
-      "tokens_in": 4326,
-      "tokens_out": 492,
-      "attempts": 1
+      "latency_ms": 7481,
+      "tokens_in": 6644,
+      "tokens_out": 205,
+      "attempts": 5
     },
     {
       "id": "neg-01",
@@ -2291,7 +2335,7 @@
       "args": {
         "rfq_id": "RFQ-099",
         "supplier_id": "SUP-019",
-        "message": "Could you please review and improve your unit price offer for this RFQ? We are looking for the most competitive landed cost suitable for our supply chain."
+        "message": "We are reviewing your quote for RFQ-099. Could you please provide a better unit price?"
       },
       "content": null,
       "correct_tool": true,
@@ -2299,49 +2343,49 @@
       "args_correct": true,
       "arg_failures": [],
       "arg_error": null,
-      "latency_ms": 8608,
-      "tokens_in": 4312,
-      "tokens_out": 497,
-      "attempts": 5
+      "latency_ms": 2660,
+      "tokens_in": 6630,
+      "tokens_out": 171,
+      "attempts": 3
     }
   ],
-  "wall_s": 224.53,
+  "wall_s": 209.73,
   "usage": {
     "by_model": {
       "nvidia/NVIDIA-Nemotron-3.5-Super-VL": {
         "calls": 24,
         "errors": 0,
-        "tokens_in": 100112,
-        "tokens_out": 2423,
-        "cost_usd": 0.011,
+        "tokens_in": 155120,
+        "tokens_out": 2532,
+        "cost_usd": 0.0165,
         "attempts": 24
       },
       "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B": {
         "calls": 24,
         "errors": 0,
-        "tokens_in": 100112,
-        "tokens_out": 3220,
-        "cost_usd": 0.0378,
-        "attempts": 24
+        "tokens_in": 155120,
+        "tokens_out": 3633,
+        "cost_usd": 0.0553,
+        "attempts": 30
       },
       "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B": {
         "calls": 24,
         "errors": 0,
-        "tokens_in": 100112,
-        "tokens_out": 17350,
-        "cost_usd": 0.0085,
+        "tokens_in": 155120,
+        "tokens_out": 17260,
+        "cost_usd": 0.0112,
         "attempts": 24
       },
       "nvidia/Nemotron-3.5-Lightning-30B-A3B": {
         "calls": 24,
-        "errors": 4,
-        "tokens_in": 86136,
-        "tokens_out": 8839,
-        "cost_usd": 0.0061,
-        "attempts": 58
+        "errors": 0,
+        "tokens_in": 159008,
+        "tokens_out": 6541,
+        "cost_usd": 0.0093,
+        "attempts": 37
       }
     },
-    "total_cost_usd": 0.0633,
+    "total_cost_usd": 0.0922,
     "total_calls": 96
   }
 }

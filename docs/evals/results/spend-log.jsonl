@@ -6,3 +6,6 @@
 {"benchmark": "b5-discovery", "at": "2026-10-17T21:36:00Z", "cost_usd": 0.0317, "calls": 12, "resumed": false}
 {"benchmark": "probes", "at": "2026-10-17T21:02:00Z", "cost_usd": 0.003, "calls": 4, "resumed": false, "note": "model/tool probe"}
 {"benchmark":"b5b-negotiation","at":"2026-10-17T21:44:18.584Z","cost_usd":0.0387,"calls":117,"resumed":false}
+{"benchmark": "b4-spec-matching", "at": "2026-10-17T21:30:00Z", "cost_usd": 0.0435, "calls": 164, "resumed": false, "note": "run before the ledger existed; from the result file usage"}
+{"benchmark":"b1-tool-selection","at":"2026-10-17T21:48:39.819Z","cost_usd":0.0922,"calls":96,"resumed":false}
+{"benchmark":"b3-guardrails","at":"2026-10-17T21:53:52.677Z","cost_usd":0.1379,"calls":113,"resumed":false}

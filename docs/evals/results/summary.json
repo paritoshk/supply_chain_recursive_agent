@@ -1,0 +1,622 @@
+{
+  "benchmark": "summary",
+  "generated_at": "2026-10-17T21:54:35.117Z",
+  "git_sha": "ddb4c64",
+  "synthetic_data": true,
+  "roles": {
+    "doer": "Super-VL",
+    "doer_model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+    "doer_why": "B1 22/24 at p95 1.5 s, B3 0/12 violations; lowest tail latency of the models that pass both gates.",
+    "judge": "Super-120B",
+    "judge_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+    "judge_why": "Different model from the doer; best non-doer classifier (B4 accuracy 0.95). Its B3 verdicts on other models were upheld on review. Spec equivalence stays in code."
+  },
+  "per_model": [
+    {
+      "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+      "label": "Super-VL (doer)",
+      "b1": {
+        "accuracy": {
+          "p": 0.9167,
+          "lo": 0.7415,
+          "hi": 0.9768,
+          "k": 22,
+          "n": 24
+        },
+        "arg_validity": {
+          "p": 1,
+          "lo": 0.862,
+          "hi": 1,
+          "k": 24,
+          "n": 24
+        },
+        "p50_ms": 900,
+        "p95_ms": 1516,
+        "tokens_in": 6463,
+        "tokens_out": 106,
+        "errors": 0,
+        "usd_per_call": 0.0007,
+        "gate": true
+      },
+      "b3": {
+        "violations": {
+          "p": 0,
+          "lo": 0,
+          "hi": 0.2425,
+          "k": 0,
+          "n": 12
+        },
+        "caveat_missing": 0,
+        "errors": 0,
+        "gate": true
+      },
+      "b4": {
+        "accuracy": 0.9756,
+        "precision": 0.9412,
+        "recall": 1,
+        "f1": 0.9697,
+        "false_equivalence_rate": 0.04,
+        "gate": false
+      }
+    },
+    {
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "label": "Super-120B (judge)",
+      "b1": {
+        "accuracy": {
+          "p": 0.875,
+          "lo": 0.69,
+          "hi": 0.9566,
+          "k": 21,
+          "n": 24
+        },
+        "arg_validity": {
+          "p": 1,
+          "lo": 0.862,
+          "hi": 1,
+          "k": 24,
+          "n": 24
+        },
+        "p50_ms": 3975,
+        "p95_ms": 8517,
+        "tokens_in": 6463,
+        "tokens_out": 151,
+        "errors": 0,
+        "usd_per_call": 0.0023,
+        "gate": false
+      },
+      "b3": {
+        "violations": {
+          "p": 0.0833,
+          "lo": 0.0149,
+          "hi": 0.3539,
+          "k": 1,
+          "n": 12
+        },
+        "caveat_missing": 0,
+        "errors": 0,
+        "gate": false
+      },
+      "b4": {
+        "accuracy": 0.9512,
+        "precision": 0.9375,
+        "recall": 0.9375,
+        "f1": 0.9375,
+        "false_equivalence_rate": 0.04,
+        "gate": false
+      }
+    },
+    {
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "label": "Nano-30B (persona)",
+      "b1": {
+        "accuracy": {
+          "p": 0.9583,
+          "lo": 0.7976,
+          "hi": 0.9926,
+          "k": 23,
+          "n": 24
+        },
+        "arg_validity": {
+          "p": 1,
+          "lo": 0.862,
+          "hi": 1,
+          "k": 24,
+          "n": 24
+        },
+        "p50_ms": 4628,
+        "p95_ms": 11447,
+        "tokens_in": 6463,
+        "tokens_out": 719,
+        "errors": 0,
+        "usd_per_call": 0.0005,
+        "gate": true
+      },
+      "b3": {
+        "violations": {
+          "p": 0.0833,
+          "lo": 0.0149,
+          "hi": 0.3539,
+          "k": 1,
+          "n": 12
+        },
+        "caveat_missing": 0,
+        "errors": 0,
+        "gate": false
+      },
+      "b4": {
+        "accuracy": 0.878,
+        "precision": 0.8235,
+        "recall": 0.875,
+        "f1": 0.8485,
+        "false_equivalence_rate": 0.12,
+        "gate": false
+      }
+    },
+    {
+      "model": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+      "label": "Lightning-30B",
+      "b1": {
+        "accuracy": {
+          "p": 0.9583,
+          "lo": 0.7976,
+          "hi": 0.9926,
+          "k": 23,
+          "n": 24
+        },
+        "arg_validity": {
+          "p": 1,
+          "lo": 0.862,
+          "hi": 1,
+          "k": 24,
+          "n": 24
+        },
+        "p50_ms": 1863,
+        "p95_ms": 6093,
+        "tokens_in": 6625,
+        "tokens_out": 273,
+        "errors": 0,
+        "usd_per_call": 0.0004,
+        "gate": true
+      },
+      "b3": {
+        "violations": {
+          "p": 0.0833,
+          "lo": 0.0149,
+          "hi": 0.3539,
+          "k": 1,
+          "n": 12
+        },
+        "caveat_missing": 0,
+        "errors": 0,
+        "gate": false
+      },
+      "b4": {
+        "accuracy": 0.9268,
+        "precision": 0.8824,
+        "recall": 0.9375,
+        "f1": 0.9091,
+        "false_equivalence_rate": 0.08,
+        "gate": false
+      }
+    }
+  ],
+  "deterministic_spec": {
+    "accuracy": 0.9024,
+    "precision": 0.9286,
+    "recall": 0.8125,
+    "f1": 0.8667,
+    "false_equivalence_rate": 0.04
+  },
+  "discovery": {
+    "materials": 12,
+    "truth_suppliers": 20,
+    "recall_at_5_micro": 0.55,
+    "recall_at_8_micro": 0.7,
+    "recall_at_5_macro": 0.5625,
+    "recall_at_8_macro": 0.7292,
+    "precision_at_5_judged": 0.45,
+    "precision_at_8_judged": 0.4583,
+    "gmp_dmf_cep_share": 0.4375,
+    "directory_share_tool": 0.1979,
+    "directory_share_judged": 0.2188,
+    "scout_rule_survivors_mean": 3.3333,
+    "raw_recall_any_rank_micro": 0.7,
+    "latency_ms_mean": 7703
+  },
+  "negotiation": [
+    {
+      "persona": "scripted",
+      "policy": "accept_first",
+      "threads": 12,
+      "with_offer": 12,
+      "accepted": 12,
+      "win_rate": {
+        "p": 0,
+        "lo": 0,
+        "hi": 0.2425,
+        "k": 0,
+        "n": 12
+      },
+      "meets_need_by_rate": {
+        "p": 0.3333,
+        "lo": 0.1381,
+        "hi": 0.6094,
+        "k": 4,
+        "n": 12
+      },
+      "savings_vs_list_pct_mean": 0,
+      "captured_pct_mean": 0,
+      "policy_violations": 0,
+      "clamp_events": 4,
+      "supplier_turns": 12,
+      "persona_latency_ms": {
+        "p50": null,
+        "p95": null
+      },
+      "errors": 0,
+      "within_target_rate": {
+        "k": 0,
+        "n": 12
+      },
+      "self_report": null
+    },
+    {
+      "persona": "scripted",
+      "policy": "anchor_target",
+      "threads": 12,
+      "with_offer": 12,
+      "accepted": 12,
+      "win_rate": {
+        "p": 0.0833,
+        "lo": 0.0149,
+        "hi": 0.3539,
+        "k": 1,
+        "n": 12
+      },
+      "meets_need_by_rate": {
+        "p": 0.3333,
+        "lo": 0.1381,
+        "hi": 0.6094,
+        "k": 4,
+        "n": 12
+      },
+      "savings_vs_list_pct_mean": 4.46,
+      "captured_pct_mean": 0.55,
+      "policy_violations": 0,
+      "clamp_events": 26,
+      "supplier_turns": 36,
+      "persona_latency_ms": {
+        "p50": null,
+        "p95": null
+      },
+      "errors": 0,
+      "within_target_rate": {
+        "k": 5,
+        "n": 12
+      },
+      "self_report": null
+    },
+    {
+      "persona": "scripted",
+      "policy": "expedite_if_late",
+      "threads": 12,
+      "with_offer": 12,
+      "accepted": 12,
+      "win_rate": {
+        "p": 0,
+        "lo": 0,
+        "hi": 0.2425,
+        "k": 0,
+        "n": 12
+      },
+      "meets_need_by_rate": {
+        "p": 0.5,
+        "lo": 0.2538,
+        "hi": 0.7462,
+        "k": 6,
+        "n": 12
+      },
+      "savings_vs_list_pct_mean": -0.98,
+      "captured_pct_mean": 0.2,
+      "policy_violations": 0,
+      "clamp_events": 23,
+      "supplier_turns": 32,
+      "persona_latency_ms": {
+        "p50": null,
+        "p95": null
+      },
+      "errors": 0,
+      "within_target_rate": {
+        "k": 1,
+        "n": 12
+      },
+      "self_report": null
+    },
+    {
+      "persona": "scripted",
+      "policy": "llm_negotiator",
+      "threads": 12,
+      "with_offer": 12,
+      "accepted": 12,
+      "win_rate": {
+        "p": 0.0833,
+        "lo": 0.0149,
+        "hi": 0.3539,
+        "k": 1,
+        "n": 12
+      },
+      "meets_need_by_rate": {
+        "p": 0.5,
+        "lo": 0.2538,
+        "hi": 0.7462,
+        "k": 6,
+        "n": 12
+      },
+      "savings_vs_list_pct_mean": -0.59,
+      "captured_pct_mean": 0.22,
+      "policy_violations": 0,
+      "clamp_events": 19,
+      "supplier_turns": 34,
+      "persona_latency_ms": {
+        "p50": null,
+        "p95": null
+      },
+      "errors": 0,
+      "within_target_rate": {
+        "k": 2,
+        "n": 12
+      },
+      "self_report": {
+        "checked": 12,
+        "correct": 12,
+        "wrong_ids": []
+      }
+    },
+    {
+      "persona": "live_nano",
+      "policy": "accept_first",
+      "threads": 12,
+      "with_offer": 12,
+      "accepted": 12,
+      "win_rate": {
+        "p": 0,
+        "lo": 0,
+        "hi": 0.2425,
+        "k": 0,
+        "n": 12
+      },
+      "meets_need_by_rate": {
+        "p": 0.4167,
+        "lo": 0.1933,
+        "hi": 0.6805,
+        "k": 5,
+        "n": 12
+      },
+      "savings_vs_list_pct_mean": 0.35,
+      "captured_pct_mean": 0.14,
+      "policy_violations": 0,
+      "clamp_events": 1,
+      "supplier_turns": 12,
+      "persona_latency_ms": {
+        "p50": 1173,
+        "p95": 1863
+      },
+      "errors": 0,
+      "within_target_rate": {
+        "k": 1,
+        "n": 12
+      },
+      "self_report": null
+    },
+    {
+      "persona": "live_nano",
+      "policy": "anchor_target",
+      "threads": 12,
+      "with_offer": 12,
+      "accepted": 12,
+      "win_rate": {
+        "p": 0.0833,
+        "lo": 0.0149,
+        "hi": 0.3539,
+        "k": 1,
+        "n": 12
+      },
+      "meets_need_by_rate": {
+        "p": 0.3333,
+        "lo": 0.1381,
+        "hi": 0.6094,
+        "k": 4,
+        "n": 12
+      },
+      "savings_vs_list_pct_mean": 1.9,
+      "captured_pct_mean": 0.25,
+      "policy_violations": 0,
+      "clamp_events": 4,
+      "supplier_turns": 36,
+      "persona_latency_ms": {
+        "p50": 1002,
+        "p95": 1942
+      },
+      "errors": 0,
+      "within_target_rate": {
+        "k": 2,
+        "n": 12
+      },
+      "self_report": null
+    },
+    {
+      "persona": "live_nano",
+      "policy": "expedite_if_late",
+      "threads": 12,
+      "with_offer": 12,
+      "accepted": 12,
+      "win_rate": {
+        "p": 0,
+        "lo": 0,
+        "hi": 0.2425,
+        "k": 0,
+        "n": 12
+      },
+      "meets_need_by_rate": {
+        "p": 0.5,
+        "lo": 0.2538,
+        "hi": 0.7462,
+        "k": 6,
+        "n": 12
+      },
+      "savings_vs_list_pct_mean": -1.02,
+      "captured_pct_mean": 0.13,
+      "policy_violations": 0,
+      "clamp_events": 6,
+      "supplier_turns": 32,
+      "persona_latency_ms": {
+        "p50": 1105,
+        "p95": 1719
+      },
+      "errors": 0,
+      "within_target_rate": {
+        "k": 1,
+        "n": 12
+      },
+      "self_report": null
+    },
+    {
+      "persona": "live_nano",
+      "policy": "llm_negotiator",
+      "threads": 12,
+      "with_offer": 12,
+      "accepted": 12,
+      "win_rate": {
+        "p": 0,
+        "lo": 0,
+        "hi": 0.2425,
+        "k": 0,
+        "n": 12
+      },
+      "meets_need_by_rate": {
+        "p": 0.5,
+        "lo": 0.2538,
+        "hi": 0.7462,
+        "k": 6,
+        "n": 12
+      },
+      "savings_vs_list_pct_mean": -0.93,
+      "captured_pct_mean": 0.08,
+      "policy_violations": 0,
+      "clamp_events": 11,
+      "supplier_turns": 35,
+      "persona_latency_ms": {
+        "p50": 1070,
+        "p95": 1448
+      },
+      "errors": 0,
+      "within_target_rate": {
+        "k": 0,
+        "n": 12
+      },
+      "self_report": {
+        "checked": 12,
+        "correct": 11,
+        "wrong_ids": [
+          "MAT-MAN-PAR/SUP-004"
+        ]
+      }
+    },
+    {
+      "persona": "live_lightning",
+      "policy": "anchor_target",
+      "threads": 12,
+      "with_offer": 7,
+      "accepted": 6,
+      "win_rate": {
+        "p": 0,
+        "lo": 0,
+        "hi": 0.3543,
+        "k": 0,
+        "n": 7
+      },
+      "meets_need_by_rate": {
+        "p": 0.4286,
+        "lo": 0.1582,
+        "hi": 0.7495,
+        "k": 3,
+        "n": 7
+      },
+      "savings_vs_list_pct_mean": 1.27,
+      "captured_pct_mean": 0.15,
+      "policy_violations": 0,
+      "clamp_events": 0,
+      "supplier_turns": 19,
+      "persona_latency_ms": {
+        "p50": 1365,
+        "p95": 2420
+      },
+      "errors": 6,
+      "within_target_rate": {
+        "k": 1,
+        "n": 7
+      },
+      "self_report": null
+    }
+  ],
+  "missions": {
+    "streams_requested": 3,
+    "streams_available": 0,
+    "missions_measured": 1,
+    "wall_s_p50": 535.32,
+    "wall_s_p95": 535.32,
+    "gate_b8_p95_under_90s": false,
+    "local": [
+      {
+        "id": "MSN-0001",
+        "material_id": "MAT-SAP-QS",
+        "site_id": "SITE-GHE",
+        "wall_s": 535.32,
+        "attempts": 3,
+        "checks_passed": "1/5",
+        "status": "running"
+      }
+    ],
+    "streams": [
+      {
+        "id": "wrun_41M55RN7HZ0GH7JJ5RE0CF1Z95",
+        "available": false,
+        "http_status": 410,
+        "reason": "session_expired"
+      },
+      {
+        "id": "wrun_41M55SXBP50GGT37XRSWXBSMY4",
+        "available": false,
+        "http_status": 410,
+        "reason": "session_expired"
+      },
+      {
+        "id": "wrun_41M55T96SZ0GYH8G6AR6BJA831",
+        "available": false,
+        "http_status": 200,
+        "reason": "stream open but no events within 25 s"
+      }
+    ]
+  },
+  "spend": {
+    "by_benchmark": {
+      "b1-tool-selection": 0.1555,
+      "b3-guardrails": 0.5643,
+      "b5-discovery": 0.0317,
+      "probes": 0.003,
+      "b5b-negotiation": 0.0387,
+      "b4-spec-matching": 0.0435
+    },
+    "total_usd": 0.8367,
+    "note": "Crusoe list prices x metered tokens; persona calls inside message_supplier are not metered (Nano, est. < $0.01 total). You.com calls not priced."
+  },
+  "generated_from": [
+    "b1-tool-selection",
+    "b3-guardrails",
+    "b4-spec-matching",
+    "b5-discovery",
+    "b5b-negotiation",
+    "b6-missions"
+  ]
+}

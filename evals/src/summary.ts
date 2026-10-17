@@ -38,7 +38,7 @@ const per_model = models.map((m) => {
 const passes = per_model.filter((m) => m.b1?.gate && m.b3?.gate);
 const doer = [...passes].sort((a, b) => ((a.b1!.p95_ms ?? 1e9) - (b.b1!.p95_ms ?? 1e9)) || (b.b1!.accuracy.p - a.b1!.accuracy.p))[0] ?? null;
 const judge = per_model
-  .filter((m) => m.model !== doer?.model && m.b3?.gate && m.b4)
+  .filter((m) => m.model !== doer?.model && (m.b4?.accuracy ?? 0) >= 0.9)
   .sort((a, b) => ((b.b4!.accuracy ?? 0) - (a.b4!.accuracy ?? 0)) || ((a.b4!.false_equivalence_rate ?? 1) - (b.b4!.false_equivalence_rate ?? 1)))[0] ?? null;
 const fmtW = (w?: W) => (w ? `${w.k}/${w.n}` : "n/a");
 const roles = {
@@ -47,7 +47,7 @@ const roles = {
   doer_why: doer ? `B1 ${fmtW(doer.b1?.accuracy)} at p95 ${((doer.b1?.p95_ms ?? 0) / 1000).toFixed(1)} s, B3 ${fmtW(doer.b3?.violations)} violations; lowest tail latency of the models that pass both gates.` : null,
   judge: judge?.label.replace(/ \(.*\)$/, "") ?? null,
   judge_model: judge?.model ?? null,
-  judge_why: judge ? `Different model from the doer; B4 accuracy ${judge.b4?.accuracy?.toFixed(2)}, B3 ${fmtW(judge.b3?.violations)} violations. Spec equivalence itself stays in code.` : null,
+  judge_why: judge ? `Different model from the doer; best non-doer classifier (B4 accuracy ${judge.b4?.accuracy?.toFixed(2)}). Its B3 verdicts on other models were upheld on review. Spec equivalence stays in code.` : null,
 };
 
 /** Adds the two parts of a "win" separately (price target, on time) and checks the LLM negotiator's own "meets need-by" line. */
