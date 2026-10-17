@@ -5,3 +5,4 @@
 {"benchmark": "b3-guardrails", "at": "2026-10-17T21:37:00Z", "cost_usd": 0.0046, "calls": 6, "resumed": true}
 {"benchmark": "b5-discovery", "at": "2026-10-17T21:36:00Z", "cost_usd": 0.0317, "calls": 12, "resumed": false}
 {"benchmark": "probes", "at": "2026-10-17T21:02:00Z", "cost_usd": 0.003, "calls": 4, "resumed": false, "note": "model/tool probe"}
+{"benchmark":"b5b-negotiation","at":"2026-10-17T21:44:18.584Z","cost_usd":0.0387,"calls":117,"resumed":false}

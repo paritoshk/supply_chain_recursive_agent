@@ -60,7 +60,7 @@ On the same index's knowledge-reliability test, Inkling-Small scores -9: it answ
 
 ## How we benchmark a candidate for this task
 
-The benchmark harness is planned and is not yet in the repo. The same golden set runs against every candidate behind the same tools and seeded data. The planner is held fixed while worker models are compared, and the reverse. For the judge role, the doers are held fixed on Nemotron.
+The harness is in `evals/` (`pnpm --filter @supply-agent/evals run all`); B1, B3, B4, B5 (live discovery), B5b (negotiation) and B6/B8 (mission telemetry) are implemented, B2 and B7 are not yet. The same golden set runs against every candidate behind the same tools and seeded data. The planner is held fixed while worker models are compared, and the reverse. For the judge role, the doers are held fixed on Nemotron.
 
 | # | Test | Metric | Gate |
 |---|---|---|---|
@@ -73,7 +73,7 @@ The benchmark harness is planned and is not yet in the repo. The same golden set
 | B7 | Fault recovery: persona timeout, 429, malformed tool JSON (`FAULTS=persona_timeout,crusoe_429,bad_tool_json`) | Missions that end `completed` or `degraded` (none hung) | 10 of 10 |
 | B8 | Cost and latency | p50/p95 time to the text alert; tokens and $ per mission | p95 under 90 s |
 
-The output is a results table and a chart on sheet 9 of the architecture PDF. Inkling-Small takes a role only if it passes every gate for that role. Otherwise the deployed Nemotron model keeps it, with no code change.
+The output is a results table and charts on sheets 10-11 of the architecture PDF; methods, numbers and caveats are in [docs/evals/RESULTS.md](evals/RESULTS.md). Inkling-Small takes a role only if it passes every gate for that role. Otherwise the deployed Nemotron model keeps it, with no code change.
 
 ## Infrastructure
 

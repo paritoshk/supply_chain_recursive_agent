@@ -256,36 +256,44 @@ def plot_b5b():
     d = load("b5b-negotiation")
     if not d:
         return
+    threads = d["threads"]
     cfg = [c for c in d["by_config"] if c["with_offer"] > 0]
+    for c in cfg:
+        ts = [t for t in threads if t["persona"] == c["persona"] and t["policy"] == c["policy"] and t.get("has_offer")]
+        c["_target"] = (sum(1 for t in ts if t["within_target"]), len(ts))
     labels = [f"{c['persona'].replace('_', ' ')} · {c['policy'].replace('_', ' ')}" for c in cfg]
     y = list(range(len(cfg)))[::-1]
     hi = lambda c: c["persona"] == "live_nano" and c["policy"] == "llm_negotiator"  # noqa: E731
-    fig, (a1, a2, a3) = plt.subplots(1, 3, figsize=(10.4, 0.42 * len(cfg) + 1.6), sharey=True, gridspec_kw={"width_ratios": [1.1, 1, 1]})
+    fig, (a1, a2, a3) = plt.subplots(1, 3, figsize=(10.4, 0.36 * len(cfg) + 1.7), sharey=True, gridspec_kw={"width_ratios": [1, 1, 1.15]})
     for yi, c in zip(y, cfg):
         col = ACC if hi(c) else N30
-        w = c["win_rate"]
-        a1.barh(yi, w["p"] * 100, height=0.6, color=col)
-        a1.plot([w["lo"] * 100, w["hi"] * 100], [yi, yi], color=INK, linewidth=0.8)
-        a1.text(102, yi, f"{w['k']}/{w['n']}", va="center", fontsize=7.5)
-        a2.barh(yi, c["savings_vs_list_pct_mean"] or 0, height=0.6, color=col)
-        a2.text((c["savings_vs_list_pct_mean"] or 0) + 0.3, yi, f"{c['savings_vs_list_pct_mean']:.1f}%", va="center", fontsize=7.5)
+        k, n = c["_target"]
+        a1.barh(yi, 100 * k / n if n else 0, height=0.62, color=col)
+        a1.text((100 * k / n if n else 0) + 2, yi, f"{k}/{n}", va="center", fontsize=7.5)
+        sv = c["savings_vs_list_pct_mean"] or 0
+        a2.barh(yi, sv, height=0.62, color=col)
+        a2.text(max(sv, 0) + 0.3, yi, f"{sv:+.1f}%", va="center", fontsize=7.5)
         m = c["meets_need_by_rate"]
-        a3.barh(yi, m["p"] * 100, height=0.6, color=col)
+        a3.barh(yi, m["p"] * 100, height=0.62, color=col)
         v = c["policy_violations"]
-        a3.text(102, yi, ("✓ 0 violations" if v == 0 else f"✗ {v} violations"), va="center", fontsize=7.5, color=OK if v == 0 else CRIT)
+        a3.text(m["p"] * 100 + 2, yi, f"{m['k']}/{m['n']}  " + ("✓ 0 violations" if v == 0 else f"✗ {v} violations"), va="center", fontsize=7.5, color=INK)
     a1.set_yticks(y, labels)
-    a1.set_xlim(0, 118)
-    a1.set_title("Win rate, % of supplier threads", fontsize=9.5)
-    a2.set_title("Landed saving vs list, mean %", fontsize=9.5)
-    a2.set_xlim(0, max((c["savings_vs_list_pct_mean"] or 0) for c in cfg) * 1.35 + 1)
-    a3.set_xlim(0, 150)
+    a1.set_xlim(0, 115)
+    a1.set_title("At or below price target, % threads", fontsize=9.5)
+    lo = min(0, min((c["savings_vs_list_pct_mean"] or 0) for c in cfg)) - 1
+    a2.set_xlim(lo, max((c["savings_vs_list_pct_mean"] or 0) for c in cfg) * 1.5 + 1.5)
+    a2.axvline(0, color=MUTED, linewidth=0.6)
+    a2.set_title("Landed vs list, mean % saved", fontsize=9.5)
+    a3.set_xlim(0, 165)
     a3.set_xticks([0, 50, 100])
-    a3.set_title("Arrives by need-by, %", fontsize=9.5)
+    a3.set_title("Arrives by need-by, % threads", fontsize=9.5)
     for a in (a1, a2, a3):
         clean(a)
-    fig.suptitle("B5b · Negotiation with simulated supplier personas (3 demo materials, every approved supplier)", x=0.01, ha="left", fontsize=11.5)
-    footer(fig, "Accent = deployed path (LLM negotiator on Super VL vs live Nano persona). Win = landed <= midpoint(list, floor) AND on time AND 0 policy violations. Offers are clamped in code.")
-    fig.tight_layout(rect=(0, 0.05, 1, 0.92))
+    wins = sum(c["win_rate"]["k"] for c in cfg)
+    tot = sum(c["win_rate"]["n"] for c in cfg)
+    fig.suptitle(f"B5b · Negotiation vs simulated supplier personas · full wins (price AND on time AND 0 violations): {wins}/{tot} threads", x=0.01, ha="left", fontsize=11)
+    footer(fig, "Accent = deployed path (LLM negotiator on Super VL vs live Nano persona). Target = midpoint of list and floor (landed). Need-by = projected stockout date. 3 demo materials x every approved supplier.")
+    fig.tight_layout(rect=(0, 0.05, 1, 0.94))
     save(fig, "b5b-negotiation")
 
 

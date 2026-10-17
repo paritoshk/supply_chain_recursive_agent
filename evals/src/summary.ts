@@ -31,6 +31,41 @@ const per_model = models.map((m) => {
   };
 });
 
+/**
+ * Role verdict from the gates: doer = passes B1 (>= 90%) and B3 (0 violations), then lowest p95 latency
+ * (B8 is a latency gate and the B1 accuracy CIs of passing models overlap at n = 24). Judge = best B4 accuracy (then B3) among models that pass B3 and differ from the doer.
+ */
+const passes = per_model.filter((m) => m.b1?.gate && m.b3?.gate);
+const doer = [...passes].sort((a, b) => ((a.b1!.p95_ms ?? 1e9) - (b.b1!.p95_ms ?? 1e9)) || (b.b1!.accuracy.p - a.b1!.accuracy.p))[0] ?? null;
+const judge = per_model
+  .filter((m) => m.model !== doer?.model && m.b3?.gate && m.b4)
+  .sort((a, b) => ((b.b4!.accuracy ?? 0) - (a.b4!.accuracy ?? 0)) || ((a.b4!.false_equivalence_rate ?? 1) - (b.b4!.false_equivalence_rate ?? 1)))[0] ?? null;
+const fmtW = (w?: W) => (w ? `${w.k}/${w.n}` : "n/a");
+const roles = {
+  doer: doer?.label.replace(/ \(.*\)$/, "") ?? null,
+  doer_model: doer?.model ?? null,
+  doer_why: doer ? `B1 ${fmtW(doer.b1?.accuracy)} at p95 ${((doer.b1?.p95_ms ?? 0) / 1000).toFixed(1)} s, B3 ${fmtW(doer.b3?.violations)} violations; lowest tail latency of the models that pass both gates.` : null,
+  judge: judge?.label.replace(/ \(.*\)$/, "") ?? null,
+  judge_model: judge?.model ?? null,
+  judge_why: judge ? `Different model from the doer; B4 accuracy ${judge.b4?.accuracy?.toFixed(2)}, B3 ${fmtW(judge.b3?.violations)} violations. Spec equivalence itself stays in code.` : null,
+};
+
+/** Adds the two parts of a "win" separately (price target, on time) and checks the LLM negotiator's own "meets need-by" line. */
+function negotiation() {
+  if (!b5b) return null;
+  const threads = b5b.threads as Any[];
+  return (b5b.by_config as Any[]).map((c) => {
+    const ts = threads.filter((t) => t.persona === c.persona && t.policy === c.policy && t.has_offer);
+    const self = ts.filter((t) => typeof t.llm_final === "string" && t.llm_final.length);
+    const claimsYes = (t: Any) => /\b(yes|meets)\b/i.test(t.llm_final) && !/\b(no\b|not meet|does not|doesn't|misses|miss\b)/i.test(t.llm_final);
+    return {
+      ...c,
+      within_target_rate: { k: ts.filter((t) => t.within_target).length, n: ts.length },
+      self_report: self.length ? { checked: self.length, correct: self.filter((t) => claimsYes(t) === t.meets_need_by).length, wrong_ids: self.filter((t) => claimsYes(t) !== t.meets_need_by).map((t) => `${t.material_id}/${t.supplier_id}`) } : null,
+    };
+  });
+}
+
 const spendFile = join(RESULTS_DIR, "spend-log.jsonl");
 const spend = existsSync(spendFile)
   ? readFileSync(spendFile, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l) as { benchmark: string; cost_usd: number })
@@ -39,10 +74,11 @@ const spendBy: Record<string, number> = {};
 for (const s of spend) spendBy[s.benchmark] = r4((spendBy[s.benchmark] ?? 0) + s.cost_usd);
 
 writeResult("summary", {
+  roles,
   per_model,
   deterministic_spec: b4 ? { accuracy: b4.deterministic.accuracy, precision: b4.deterministic.precision, recall: b4.deterministic.recall, f1: b4.deterministic.f1, false_equivalence_rate: b4.deterministic.false_equivalence_rate } : null,
   discovery: b5?.summary ?? null,
-  negotiation: b5b?.by_config ?? null,
+  negotiation: negotiation(),
   missions: b6 ? { ...b6.summary, local: (b6.local_missions ?? []).map((m: Any) => ({ id: m.id, material_id: m.material_id, site_id: m.site_id, wall_s: m.wall_s, attempts: m.attempts, checks_passed: m.checks_passed, status: m.status })), streams: (b6.streams ?? []).map((s: Any) => ({ id: s.id, available: s.available, http_status: s.http_status, reason: s.reason ?? null })) } : null,
   spend: { by_benchmark: spendBy, total_usd: r4(Object.values(spendBy).reduce((a, b) => a + b, 0)), note: "Crusoe list prices x metered tokens; persona calls inside message_supplier are not metered (Nano, est. < $0.01 total). You.com calls not priced." },
   generated_from: ["b1-tool-selection", "b3-guardrails", "b4-spec-matching", "b5-discovery", "b5b-negotiation", "b6-missions"].filter((n) => readResult(n)),

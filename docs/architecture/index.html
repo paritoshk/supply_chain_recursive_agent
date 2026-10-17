@@ -142,6 +142,33 @@
   .mission-row div { padding: 1.8mm 2mm 0 0; }
   .mission-row .n { font: 300 17px/1.1 var(--font-display); font-variant-numeric: tabular-nums; }
   .mission-row .n.pending { color: var(--n-30); }
+
+  /* sheets 10-11: evals */
+  .evals { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 6mm; height: 100%; min-height: 0; }
+  .evcol { display: grid; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); gap: 2.5mm; min-height: 0; }
+  .evfig { min-height: 0; display: flex; align-items: center; justify-content: center; }
+  .evfig img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+  .evgrid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1.15fr) minmax(0, 1fr); gap: 2.5mm 6mm; height: 100%; min-height: 0; }
+  .evgrid .tall { grid-row: span 2; }
+  table.ev { width: 100%; border-collapse: collapse; font: 400 8.2px/1.35 var(--font-body); color: var(--n-80); }
+  table.ev th { font: 400 6.6px/1.2 var(--font-label); letter-spacing: .06em; text-transform: uppercase; color: var(--n-50);
+                text-align: right; padding: 0 0 1.2mm 1.5mm; border-bottom: 1px solid var(--n-30); vertical-align: bottom; }
+  table.ev th:first-child, table.ev td:first-child { text-align: left; padding-left: 0; }
+  table.ev td { padding: 1.3mm 0 1.3mm 1.5mm; border-bottom: 1px solid var(--n-20); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  table.ev td.m { color: var(--n-90); }
+  table.ev tr.acc td.m { color: var(--accent); }
+  table.ev .sub { display: block; font-size: 6.6px; color: var(--n-50); }
+  .verdict { margin-top: 2.5mm; border-top: 1px solid var(--n-20); padding-top: 2mm; display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; }
+  .verdict .n { font: 300 13px/1.2 var(--font-display); margin-top: .8mm; }
+  .verdict p { margin: .6mm 0 0; font: 400 7.8px/1.4 var(--font-body); color: var(--n-70); }
+
+  /* sheet 12: learning */
+  .learn { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 7mm; height: 100%; min-height: 0; }
+  .learn .right { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 2mm; }
+  .learn .curve { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); }
+  .learn .curve h3 { font: 400 12px/1.2 var(--font-display); margin: 1.5mm 0 1mm; display: flex; justify-content: space-between; align-items: baseline; }
+  .learn .curve h3 .eyebrow { font-size: 7px; }
+  .learn .curve svg { width: 100%; height: 100%; display: block; }
 </style>
 </head>
 <body>
@@ -160,7 +187,7 @@
     <div class="body"><div class="fig" id="fig-c4-1"></div></div>
     <div class="foot">
       <div class="notes">
-        <div class="note"><div class="eyebrow">[01] Proactive, cheaply</div><p>A sentinel scans every material and site every 30 minutes in code. No model runs until a position breaches its reorder point.</p></div>
+        <div class="note"><div class="eyebrow">[01] Proactive, cheaply</div><p>A sentinel scans every material and site daily in code, or on demand from <code>/ops/sentinel</code>. No model runs until a position breaches its reorder point.</p></div>
         <div class="note"><div class="eyebrow">[02] Authority</div><p>Purchases at or under <code>$25,000</code> with an accepted verdict become a draft PO on their own. Everything else asks the planner on Telegram.</p></div>
         <div class="note"><div class="eyebrow">[03] Never</div><p>It never qualifies a supplier, changes a formulation, releases a batch or sends a real PO. Web discoveries stay discovery candidates.</p></div>
       </div>
@@ -175,16 +202,16 @@
     <div class="head">
       <div>
         <div class="eyebrow"><span class="idx">[02]</span>Containers · C4 level 2</div>
-        <h1>One Vercel project, one shared core. <span class="muted">Models call tools; tools call code.</span></h1>
-        <p class="lead">The eve app owns channels, the schedule, the planner, the workflow and the sub-agents. Every rule, number and tool body lives in <code>packages/core</code> and is unit-tested; the app only wraps core tools with <code>coreTool()</code>.</p>
+        <h1>One agent project, one shared core. <span class="muted">Models call tools; tools call code.</span></h1>
+        <p class="lead">The eve app owns channels, the schedule, the planner, the workflow and the sub-agents. Every rule, number, learned belief and tool body lives in <code>packages/core</code> and is unit-tested; the app only wraps core tools with <code>coreTool()</code>. A separate Next.js project, <code>apps/web</code>, is the browser demo.</p>
       </div>
-      <div class="tags"><span class="tag">apps/agent</span><span class="tag">packages/core</span><span class="tag">TypeScript · Zod</span></div>
+      <div class="tags"><span class="tag">apps/agent</span><span class="tag">apps/web</span><span class="tag">packages/core</span><span class="tag">TypeScript · Zod</span></div>
     </div>
     <div class="body"><div class="fig" id="fig-c4-2"></div></div>
     <div class="foot">
       <div class="notes">
         <div class="note"><div class="eyebrow">[01] Durable workflow</div><p><code>run_mission</code> is an eve workflow tool. Mission setup, run records, finishing and approval are durable steps, so a redeploy or crash resumes instead of repeating a purchase.</p></div>
-        <div class="note"><div class="eyebrow">[02] One state blob</div><p>The <code>Store</code> loads one JSON snapshot, runs a tool, and saves only when the tool wrote. Upstash Redis key <code>scos:state</code> on Vercel; <code>.data/state.json</code> locally.</p></div>
+        <div class="note"><div class="eyebrow">[02] One state blob</div><p>The <code>Store</code> loads one JSON snapshot, runs a tool, and saves only when the tool wrote. It also holds the learning memory: delivery outcomes, lessons, negotiation history. Upstash key <code>scos:state</code>.</p></div>
         <div class="note"><div class="eyebrow">[03] Host-compatible contracts</div><p>Every tool returns <code>ToolOutput</code> with <code>ingestion_status</code>, <code>source</code> and <code>citations</code>, so the agent can later drop into the host manufacturing platform unchanged.</p></div>
       </div>
       <div class="tb-slot"></div>
@@ -206,7 +233,7 @@
     <div class="body"><div class="fig" id="fig-tree"></div></div>
     <div class="foot">
       <div class="notes">
-        <div class="note"><div class="eyebrow">[01] Definition of done first</div><p><code>prepareMission</code> computes need quantity and need-by date in code, then writes five checks: covers_need, lands_in_time, qualified_only, comparable_quotes, grounded.</p></div>
+        <div class="note"><div class="eyebrow">[01] Definition of done first</div><p><code>prepareMission</code> computes need quantity and need-by date in code, then writes six checks: covers_need, lands_in_time, qualified_only, comparable_quotes, batches_feasible, grounded.</p></div>
         <div class="note"><div class="eyebrow">[02] Offers clamped in code</div><p>Each persona has a hidden <code>SupplierProfile</code>. <code>clampOffer</code> forces every reply inside its floor, list, lead time and MOQ; <code>accept_offer</code> stores only the supplier's last offer.</p></div>
         <div class="note"><div class="eyebrow">[03] Bounded recursion</div><p>At most three attempts. A loop guard stops when the next attempt's context is identical to one already tried. Scout runs once; its candidates are reused.</p></div>
       </div>
@@ -386,6 +413,107 @@
         <div class="note"><div class="eyebrow">[01] Source</div><p id="res-source">Reads <code>docs/sim-results.json</code> when present, otherwise <code>docs/architecture/data.json</code>. Re-run the export to refresh.</p></div>
         <div class="note"><div class="eyebrow">[02] Pass rate</div><p>Share of verifier verdicts in which the check passed, across all mission attempts in the run. A failed check is what triggers a re-plan.</p></div>
         <div class="note"><div class="eyebrow">[03] Human minutes</div><p id="res-hm">Planner minutes over the whole horizon: shortage reviews, RFQs, transfers and approval taps, at fixed minutes per touch. With the agent, mostly approval taps.</p></div>
+      </div>
+      <div class="tb-slot"></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================ 10 -->
+<section class="sheet" data-n="10" data-title="Evals · model gates" data-scale="NTS">
+  <div class="inner">
+    <div class="head">
+      <div>
+        <div class="eyebrow"><span class="idx">[10]</span>Evals · benchmark gates B1, B3, B4 · every candidate on Crusoe</div>
+        <h1>Which model earns which role. <span class="muted">Measured on the agent's own tools.</span></h1>
+        <p class="lead">Same golden sets, same Zod-derived tool schemas, same planner prompt for every model. The judge never grades itself. Small n and synthetic data: read the intervals, not just the point estimates. Source: <code>evals/</code>, results in <code>docs/evals/results/</code>.</p>
+      </div>
+      <div class="tags" id="ev-tags"><span class="tag">Synthetic data</span><span class="tag">n = 12 to 41 per test</span><span class="tag">95% Wilson CI</span></div>
+    </div>
+    <div class="body">
+      <div class="evals">
+        <div class="evcol">
+          <div class="evfig"><img src="../evals/png/b1-tool-selection.png" alt="B1 tool selection accuracy and latency by model" /></div>
+          <div class="evfig"><img src="../evals/png/b4-spec-prf.png" alt="B4 spec matching precision, recall and F1" /></div>
+        </div>
+        <div style="min-height:0;display:flex;flex-direction:column">
+          <div class="eyebrow" style="margin-bottom:1.6mm">Gates from docs/model-selection.md · per model</div>
+          <table class="ev">
+            <thead><tr><th>Model</th><th>B1 tool<span class="sub">gate 90%</span></th><th>B1 p50 / p95</th><th>B3 violations<span class="sub">gate 0</span></th><th>B4 acc<span class="sub">gate 90%</span></th><th>B4 false-eq<span class="sub">gate 0</span></th></tr></thead>
+            <tbody id="ev-rows"></tbody>
+          </table>
+          <div class="evfig" style="flex:1;min-height:0;margin-top:2mm"><img src="../evals/png/b3-guardrails.png" alt="B3 guardrail violations by model" /></div>
+          <div class="verdict" id="ev-verdict"></div>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <div class="notes">
+        <div class="note"><div class="eyebrow">[01] Method</div><p>B1: 24 prompts, first tool call scored, args Zod-validated. B3: 12 adversarial asks with real tool outputs; regex, judge and tool-call checks. B4: 41 labelled spec pairs; positive = equivalent.</p></div>
+        <div class="note"><div class="eyebrow">[02] Read with care</div><p>0/12 violations still allows a true rate up to about 24%. Lightning hit provider capacity limits (429 at the orchestrator) on some calls; those are excluded, not counted as misses.</p></div>
+        <div class="note"><div class="eyebrow">[03] Spec matching stays in code</div><p>The deterministic prefilter decides; a model may only veto an exact match. No method caught an origin change that lives only in the material name, so origin belongs in a structured field.</p></div>
+      </div>
+      <div class="tb-slot"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 11 -->
+<section class="sheet" data-n="11" data-title="Evals · discovery, negotiation, missions" data-scale="NTS">
+  <div class="inner">
+    <div class="head">
+      <div>
+        <div class="eyebrow"><span class="idx">[11]</span>Evals · B5 live discovery · B5b negotiation · B6/B8 mission telemetry</div>
+        <h1>Does the web scout find real suppliers? <span class="muted">And do negotiations stay inside the rules?</span></h1>
+        <p class="lead" id="ev-lead2">B5 runs the real <code>discover_suppliers</code> tool against You.com for 12 materials and scores it against suppliers named in the research table. B5b runs <code>message_supplier</code> and <code>accept_offer</code> against every approved supplier of the three demo materials.</p>
+      </div>
+      <div class="tags"><span class="tag">You.com live</span><span class="tag">Personas simulated</span><span class="tag">Offers clamped in code</span></div>
+    </div>
+    <div class="body">
+      <div class="evgrid">
+        <div class="evfig tall"><img src="../evals/png/b5-discovery.png" alt="B5 recall and precision at 5 and 8 per material" /></div>
+        <div class="evfig"><img src="../evals/png/b5b-negotiation.png" alt="B5b negotiation win rate, savings and on-time rate" /></div>
+        <div class="evfig"><img src="../evals/png/mission-timeline.png" alt="Mission timeline per attempt" /></div>
+      </div>
+    </div>
+    <div class="foot">
+      <div class="notes">
+        <div class="note"><div class="eyebrow">[01] What the scout searches for</div><p id="ev-scout">Two queries per material: substance + grade + "GMP manufacturer DMF CEP", and substance + two compendia + "pharmaceutical grade supplier". Reference sites dropped, directories labelled, one hit per host.</p></div>
+        <div class="note"><div class="eyebrow">[02] Negotiation</div><p id="ev-neg">Win = landed cost at or under the list/floor midpoint, arrival by need-by, and zero policy violations. Violations must be 0 because code clamps every offer to the hidden profile.</p></div>
+        <div class="note"><div class="eyebrow">[03] Telemetry</div><p id="ev-tel">Deployed session streams are read from <code>docs/evals/missions.txt</code>; expired streams are recorded, not guessed. The timeline falls back to local mission records.</p></div>
+      </div>
+      <div class="tb-slot"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 12 -->
+<section class="sheet" data-n="12" data-title="Self-improvement" data-scale="NTS">
+  <div class="inner">
+    <div class="head">
+      <div>
+        <div class="eyebrow"><span class="idx">[12]</span>Self-improvement · learning loop · synthetic simulation</div>
+        <h1>Better with every delivery. <span class="muted">Learning moves rankings, not rules.</span></h1>
+        <p class="lead">Each recorded delivery updates a belief about that supplier. The next decision ranks approved suppliers by risk-adjusted cost for this client, with no fixed weights, and the next mission starts with the lessons and negotiation settlements of the last one.</p>
+      </div>
+      <div class="tags" id="learn-tags"><span class="tag">Synthetic simulation</span></div>
+    </div>
+    <div class="body">
+      <div class="learn">
+        <div class="fig" id="fig-learn"></div>
+        <div class="right">
+          <div class="stats" id="learn-stats"></div>
+          <div class="curve"><h3>Stockout pair-days per 30 days<span class="eyebrow">suppliers that overstate · Corvane</span></h3><div id="learn-curve" style="min-height:0"></div></div>
+          <table class="ev"><thead><tr><th>World · client profile</th><th>Rule-based<span class="sub">stockout days</span></th><th>Risk, no learning<span class="sub">stockout days</span></th><th>Risk + learning<span class="sub">stockout days</span></th><th>Expedites<span class="sub">rule → learning</span></th></tr></thead><tbody id="learn-rows"></tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <div class="notes">
+        <div class="note"><div class="eyebrow">[01] Source</div><p id="learn-source">Reads <code>docs/learning-results.json</code>, written by <code>pnpm --filter @supply-agent/core sim:learning</code>. A quarter of suppliers overstate on-time delivery; every policy sees the same demand, delays and outcomes.</p></div>
+        <div class="note"><div class="eyebrow">[02] Limits</div><p>The gain needs suppliers whose stated metrics are wrong: with accurate metrics, learning ties the non-learning policy. 40 of 107 positions have one qualified supplier, so only their timing can change.</p></div>
+        <div class="note"><div class="eyebrow">[03] The trade</div><p>For Corvane a stockout day costs USD 25,000 or more, so the agent buys more expedites. Under the lean generics profile it buys fewer than the rule-based agent.</p></div>
       </div>
       <div class="tb-slot"></div>
     </div>
@@ -665,7 +793,7 @@ stateDiagram-v2
     let s = "";
     s += person({ x: 20, y: 196, w: 170, h: 118, label: "Person", title: "Supply planner", body: "Corvane supply team. Gets proactive alerts and approves purchases above authority with one tap." });
     s += box({ x: 262, y: 196, w: 172, h: 118, label: "External system", title: "Telegram", body: "Bot @supplychief_bot. Messages, plus inline Approve and Reject buttons for decisions." });
-    s += box({ x: 506, y: 176, w: 212, h: 158, accent: true, label: "Software system", title: "Supplier Chief of Staff", tfs: 15, body: "eve agent on Vercel. A code-only sentinel, a planner, parallel sub-agents, simulated supplier negotiations and an independent verifier. Numbers come from code; models explain them." });
+    s += box({ x: 506, y: 176, w: 212, h: 158, accent: true, label: "Software system", title: "Supplier Chief of Staff", tfs: 15, body: "eve agent on Vercel. A code-only sentinel, a planner, parallel sub-agents, simulated supplier negotiations and an independent verifier. Learns supplier reliability from deliveries. Numbers come from code." });
     s += box({ x: 806, y: 14, w: 184, h: 100, label: "External system", title: "Crusoe Managed Inference", body: "Nemotron models for planner, workers, personas and verifier." });
     s += box({ x: 806, y: 128, w: 184, h: 92, label: "External system", title: "You.com", body: "Search and research over MCP, with citations. Candidates only." });
     s += box({ x: 806, y: 234, w: 184, h: 92, label: "External system", title: "openFDA", body: "Drug shortage and enforcement reports, public API." });
@@ -696,10 +824,12 @@ stateDiagram-v2
     s += person({ x: 10, y: 52, w: 122, h: 92, label: "Person", title: "Supply planner", body: "Phone, Telegram app." });
     s += box({ x: 10, y: 196, w: 122, h: 96, label: "External", title: "Telegram", body: "Bot API and webhooks." });
     s += edge([[71, 144], [71, 196]], { both: true });
+    s += box({ x: 10, y: 330, w: 122, h: 110, dashed: false, label: "Vercel project 2", title: "apps/web", fs: 8.2, body: "Next.js browser demo. Proxies /eve/v1 sessions and /ops to the agent." });
+    s += edge([[132, 360], [146, 360], [146, 300], [150, 300]], { label: "HTTPS proxy", at: [71, 322], fs: 7 });
     s += boundary({ x: 150, y: 6, w: 632, h: 304, label: "Vercel project · apps/agent · eve runtime", sub: "supplier-chief-of-staff · Node 24" });
     // row 1
     s += box({ x: 166, y: 40, w: 132, h: 76, label: "Channel", title: "telegram.ts", fs: 8.5, body: "@supplychief_bot. Webhook in, HITL buttons out." });
-    s += box({ x: 328, y: 40, w: 132, h: 76, label: "Schedule", title: "sentinel.ts", fs: 8.5, body: "Cron */30. lowStockScan() in code." });
+    s += box({ x: 328, y: 40, w: 132, h: 76, label: "Schedule", title: "sentinel.ts", fs: 8.5, body: "Cron daily 13:00 UTC. Scan in code." });
     s += box({ x: 490, y: 40, w: 132, h: 76, label: "Channel", title: "eve.ts", fs: 8.5, body: "Web chat and REPL. Vercel OIDC." });
     s += box({ x: 652, y: 40, w: 116, h: 76, label: "Tools", title: "tools/*", fs: 8.5, body: "Planner tools via coreTool()." });
     s += edge([[328, 78], [298, 78]], { label: "alert", at: [313, 72] });
@@ -724,8 +854,8 @@ stateDiagram-v2
     const core = [
       ["types.ts", "Zod contracts. Host-compatible entities."],
       ["store.ts", "Store + Persistence: file or Upstash."],
-      ["logic/", "coverDays, reorderPoint, normalizeQuote, priceInventory, canPromote."],
-      ["tools/", "Tool bodies returning ToolOutput."],
+      ["logic/", "Cover, ROP, landed cost, line feasibility, risk ranking, learning."],
+      ["tools/", "Tool bodies returning ToolOutput, incl. record_delivery."],
       ["negotiation.ts", "Profiles, clampOffer, acceptOffer."],
       ["crusoe.ts", "Client: backoff, concurrency, MODEL_*."],
     ];
@@ -746,16 +876,16 @@ stateDiagram-v2
   {
     let s = "";
     s += box({ x: 8, y: 160, w: 158, h: 150, ink: true, label: "Root agent", title: "Planner", tfs: 15, fs: 8.6, body: "Telegram conversation. Calls run_mission for any stockout risk; answers quick questions itself.", meta: ["Nemotron 3.5 Super VL", "MODEL_PLANNER"] });
-    s += box({ x: 190, y: 120, w: 176, h: 230, label: "Workflow tool · code", title: "run_mission", tfs: 14, fs: 8.6, body: "prepareMission (code) writes the definition of done:\ncovers_need\nlands_in_time\nqualified_only\ncomparable_quotes\ngrounded\nThen fans out, grades, re-plans or asks.", meta: ["≤ 3 attempts · loop guard"] });
+    s += box({ x: 190, y: 120, w: 176, h: 230, label: "Workflow tool · code", title: "run_mission", tfs: 14, fs: 8.6, body: "prepareMission (code) writes the definition of done:\ncovers_need\nlands_in_time\nqualified_only\ncomparable_quotes\nbatches_feasible\ngrounded\nLessons from past missions go to every doer. Then fans out, grades, re-plans or asks.", meta: ["≤ 3 attempts · loop guard"] });
     s += edge([[166, 235], [190, 235]], {});
     s += boundary({ x: 382, y: 6, w: 372, h: 426, label: "Doers · MODEL_WORKER", sub: "Nemotron 3.5 Super VL" });
     s += box({ x: 398, y: 40, w: 168, h: 98, label: "Sub-agent", title: "transfer", fs: 8.4, body: "Sister-site surplus that covers the need in time.", meta: ["cover_projection · price_inventory", "propose_transfer"] });
-    s += box({ x: 398, y: 160, w: 168, h: 122, label: "Sub-agent", title: "sourcing", fs: 8.4, body: "Approved suppliers only. Drafts the RFQ, negotiates through children, recommends.", meta: ["find_suppliers · draft_rfq", "compare_quotes"] });
+    s += box({ x: 398, y: 160, w: 168, h: 122, label: "Sub-agent", title: "sourcing", fs: 8.4, body: "Approved suppliers only. Drafts the RFQ, negotiates through children, recommends.", meta: ["find_suppliers · draft_rfq", "supplier_reliability", "compare_quotes"] });
     s += box({ x: 398, y: 304, w: 168, h: 120, label: "Sub-agent · attempt 1", title: "scout", fs: 8.4, body: "Discovery candidates only.", meta: ["skills you-web · you-research", "MCP youcom: search, contents", "MCP youresearch: research", "discover_suppliers · openFDA", "find_suppliers · match_spec"] });
     // bus
     s += `<path d="M366,235 L382,235" stroke="${C.ink}" fill="none"/><path d="M382,89 L382,363" stroke="${C.ink}" fill="none"/>`;
     s += edge([[382, 89], [398, 89]], {}); s += edge([[382, 221], [398, 221]], {}); s += edge([[382, 363], [398, 363]], {});
-    s += stack({ x: 590, y: 146, w: 140, h: 82, label: "Sub-sub-agent × N", title: "negotiator", fs: 8.2, body: "One per approved supplier.", meta: ["message_supplier · accept_offer"] });
+    s += stack({ x: 590, y: 146, w: 140, h: 82, label: "Sub-sub-agent × N", title: "negotiator", fs: 8.2, body: "One per approved supplier. Sees past settlements.", meta: ["message_supplier · accept_offer"] });
     s += edge([[566, 187], [590, 187]], { label: "spawn", at: [578, 181] });
     s += stack({ x: 590, y: 270, w: 140, h: 104, dashed: true, label: "Simulated × N", title: "supplier persona", fs: 8.2, body: "In character, but every offer is clamped to a hidden profile.", meta: ["Nemotron 3 Nano 30B-A3B", "MODEL_PERSONA"] });
     s += edge([[660, 236], [660, 270]], { both: true, label: "≤ 3 turns", at: [668, 256], anchor: "start" });
@@ -841,13 +971,13 @@ stateDiagram-v2
     s += assoc([Bt("RFQ", 18), [X(6) + 18, gap2], [X(5) + 92, gap2], T("Quote", 92)], "1", "*");
     s += assoc([L("Quote"), Rt("PurchaseOrder")], "1", "0..1");
     // legend
-    const lx = 8, ly = 352;
+    const lx = 8, ly = 326;
     s += mono(lx, ly, "Legend", { fs: 6.8 });
     s += `<rect x="${lx}" y="${ly + 10}" width="18" height="11" rx="2" fill="${C.n0}" stroke="${C.acc}" stroke-width="1.3"/>` + textBlock(lx + 26, ly + 19, ["Host-compatible: field names match the host platform"], { fs: 8.6, fill: C.n80 });
     s += `<rect x="${lx}" y="${ly + 28}" width="18" height="11" rx="2" fill="${C.n0}" stroke="${C.n30}"/>` + textBlock(lx + 26, ly + 37, ["New in this prototype"], { fs: 8.6, fill: C.n80 });
     s += `<path d="M${lx},${ly + 52} L${lx + 18},${ly + 52}" stroke="${C.ink}"/>` + textBlock(lx + 26, ly + 55, ["Association, with multiplicity (1, *, 0..1)"], { fs: 8.6, fill: C.n80 });
     s += `<path d="M${lx},${ly + 68} L${lx + 18},${ly + 68}" stroke="${C.ink}" stroke-dasharray="4 3" marker-end="url(#arr)"/>` + textBlock(lx + 26, ly + 71, ["Derived or soft reference: Lot rolls up to InventoryItem,", "MaterialSupplier derives SupplierProfile, AgentRun.tool_calls", "return ToolOutput, BOM lines point at material_external_id"], { fs: 8.6, fill: C.n80 });
-    s += textBlock(lx, ly + 112, ["Keys are external_ids (MAT-SUC-INJ, RFQ-102). ? marks a nullable field: a missing price stays null."], { fs: 8.2, fill: C.n50 });
+    s += textBlock(lx, ly + 108, ["Keys are external_ids (MAT-SUC-INJ, RFQ-102). ? marks a nullable field: a missing price stays null.", "Not drawn, also in the Store: SupplierOutcome, Lesson, NegotiationMemory (learning);", "ProductionLine, BatchWorkOrder (line feasibility); BoardItem (evidence board)."], { fs: 8.2, fill: C.n50 });
     put("fig-cls", svg(1000, 470, s));
   }
 
@@ -862,7 +992,7 @@ stateDiagram-v2
     s += mono(206, 72, "eve runtime · Fluid compute · Node 24", { fs: 6.8, fill: C.n70 });
     s += artifact({ x: 208, y: 84, w: 140, h: 64, label: "function", title: "channels/telegram", body: "POST webhook, secret-token header." });
     s += artifact({ x: 358, y: 84, w: 140, h: 64, label: "function", title: "channels/eve", body: "Web chat and REPL, Vercel OIDC." });
-    s += artifact({ x: 508, y: 84, w: 136, h: 64, label: "Vercel Cron", title: "schedules/sentinel", body: "*/30 * * * *, code-only scan." });
+    s += artifact({ x: 508, y: 84, w: 136, h: 64, label: "Vercel Cron", title: "schedules/sentinel", body: "0 13 * * *, code-only scan." });
     s += artifact({ x: 208, y: 158, w: 216, h: 64, label: "durable workflow", title: "tools/run_mission", body: "Steps survive redeploys; ctx.ask waits for a tap." });
     s += artifact({ x: 434, y: 158, w: 210, h: 64, label: "agents", title: "planner + 5 sub-agents", body: "transfer, sourcing, negotiator, scout, verifier." });
     s += artifact({ x: 208, y: 232, w: 436, h: 80, accent: true, label: "environment variables · encrypted", title: "Secrets, scoped per service",
@@ -875,6 +1005,8 @@ stateDiagram-v2
     s += node3d({ x: 196, y: 352, w: 230, h: 100, label: "Vercel Marketplace", title: "Upstash Redis", body: "Key scos:state holds the whole Store snapshot.", secrets: ["KV_REST_API_URL · KV_REST_API_TOKEN"] });
     s += edge([[310, 322], [310, 345]], { both: true, label: "REST · Bearer", at: [318, 338], anchor: "start" });
     s += node3d({ x: 446, y: 352, w: 210, h: 100, dashed: true, label: "Local development", title: "eve dev", body: "Same agent; state in .data/state.json (filePersistence); env from .env.local." });
+    s += node3d({ x: 10, y: 352, w: 150, h: 100, label: "Vercel project 2", title: "apps/web", body: "Next.js browser demo. Proxies the eve session API and /ops.", secrets: ["AGENT_URL"] });
+    s += edge([[160, 362], [178, 362], [178, 300], [196, 300]], { label: "HTTPS", at: [181, 294], anchor: "start", fs: 7.4 });
     // externals
     s += node3d({ x: 696, y: 22, w: 294, h: 168, label: "Cloud · api.inference.crusoecloud.com/v1", title: "Crusoe Managed Inference", body: "Chat Completions-compatible. Planner and workers: Nemotron 3.5 Super VL. Personas: Nemotron 3 Nano 30B-A3B. Verifier: Nemotron 3 Super 120B-A12B, or an Inkling-Small self-serve deployment.", secrets: ["CRUSOE_API_KEY · Bearer", "MODEL_* per role"] });
     s += node3d({ x: 696, y: 220, w: 294, h: 92, label: "Cloud", title: "You.com", body: "MCP api.you.com/mcp and /mcp/research for the scout, plus search REST. Cited results.", secrets: ["YOU_DOT_COM_API_KEY · Bearer"] });
@@ -934,6 +1066,7 @@ stateDiagram-v2
     ["lands_in_time", "Every chosen source delivers by need_by.", "need_by = today + (cover − safety days)", "compare_quotes"],
     ["qualified_only", "Every purchase source is quality_approved or released_for_use.", "isApproved(qualification_state)", "find_suppliers"],
     ["comparable_quotes", "At least two normalized quotes, or a reason why not.", "normalizeQuote → landed USD / unit", "compare_quotes"],
+    ["batches_feasible", "Every scheduled batch has released material at its start.", "day-by-day line simulation, QC release counted", "line_feasibility"],
     ["grounded", "Every number in the recommendation appears in a tool output.", "ToolOutput.citations", "all tool outputs"],
   ];
   async function renderResults() {
@@ -979,6 +1112,100 @@ stateDiagram-v2
     const mi = data.missions || {};
     const cell = (k, label) => `<div><div class="eyebrow">${label}</div><div class="n ${mi[k] == null ? "pending" : ""}">${mi[k] == null ? "—" : fmt(mi[k])}</div></div>`;
     document.getElementById("res-missions").innerHTML = cell("total", "Missions") + cell("degraded", "Degraded") + cell("asked_human", "Asked a human") + cell("mean_attempts", "Mean attempts");
+  }
+
+
+  // ---------------------------------------------------------------- [10]-[11] evals
+  async function renderEvals() {
+    const imgs = [...document.querySelectorAll('.evfig img')];
+    await Promise.all(imgs.map((im) => im.decode().catch(() => window.__errors.push(`eval image missing: ${im.getAttribute("src")}`))));
+    let d = null;
+    try { const r = await fetch("../evals/results/summary.json", { cache: "no-store" }); d = r.ok ? await r.json() : null; } catch { d = null; }
+    if (!d) { document.getElementById("ev-rows").innerHTML = `<tr><td colspan="6">Run <code>pnpm --filter @supply-agent/evals run all</code> to fill this table.</td></tr>`; return; }
+    const pct = (w) => w ? `${w.k}/${w.n}` : "—";
+    const st = (g) => g === true ? `<span class="st-ok">✓</span>` : g === false ? `<span class="st-crit">✗</span>` : `<span class="st-pend">·</span>`;
+    const f2 = (v) => v == null ? "—" : (+v).toFixed(2);
+    const s1 = (ms) => ms == null ? "—" : (ms / 1000).toFixed(1);
+    const rows = d.per_model.map((m) => {
+      const b1 = m.b1, b3 = m.b3, b4 = m.b4;
+      const doer = /Super-VL/.test(m.model);
+      return `<tr class="${doer ? "acc" : ""}"><td class="m">${m.label}</td>
+        <td>${st(b1?.gate)} ${pct(b1?.accuracy)}</td>
+        <td>${s1(b1?.p50_ms)} / ${s1(b1?.p95_ms)} s</td>
+        <td>${st(b3?.gate)} ${pct(b3?.violations)}</td>
+        <td>${st(b4?.gate)} ${f2(b4?.accuracy)}</td>
+        <td>${f2(b4?.false_equivalence_rate)}</td></tr>`;
+    });
+    const ds = d.deterministic_spec;
+    if (ds) rows.push(`<tr><td class="m">Spec prefilter (code)</td><td>—</td><td>&lt; 1 ms</td><td>—</td><td>${st(ds.accuracy >= 0.9 && ds.false_equivalence_rate === 0)} ${f2(ds.accuracy)}</td><td>${f2(ds.false_equivalence_rate)}</td></tr>`);
+    document.getElementById("ev-rows").innerHTML = rows.join("");
+    const v = d.roles || {};
+    document.getElementById("ev-verdict").innerHTML =
+      `<div><div class="eyebrow">Doer · planner and sub-agents</div><div class="n">${v.doer ?? "Nemotron 3.5 Super VL"}</div><p>${v.doer_why ?? ""}</p></div>` +
+      `<div><div class="eyebrow">Judge · verifier</div><div class="n">${v.judge ?? "Nemotron 3 Super 120B"}</div><p>${v.judge_why ?? ""}</p></div>`;
+    if (d.spend) document.getElementById("ev-tags").insertAdjacentHTML("beforeend", `<span class="tag">spend $${(+d.spend.total_usd).toFixed(2)}</span>`);
+    const ds5 = d.discovery;
+    if (ds5) document.getElementById("ev-scout").insertAdjacentHTML("beforeend", ` Recall@8 ${f2(ds5.recall_at_8_micro)}, judged precision@8 ${f2(ds5.precision_at_8_judged)}, GMP/DMF/CEP evidence on ${Math.round(ds5.gmp_dmf_cep_share * 100)}% of hits.`);
+    const neg = (d.negotiation || []).find((c) => c.persona === "live_nano" && c.policy === "llm_negotiator");
+    if (neg) document.getElementById("ev-neg").insertAdjacentHTML("beforeend", ` Deployed path (LLM negotiator vs live Nano persona): win ${neg.win_rate.k}/${neg.win_rate.n}, ${f2(neg.savings_vs_list_pct_mean)}% below list, ${neg.policy_violations} violations.`);
+    const ms = d.missions;
+    if (ms) document.getElementById("ev-tel").insertAdjacentHTML("beforeend", ` Readable streams: ${ms.streams_available} of ${ms.streams_requested}.`);
+  }
+
+  // ---------------------------------------------------------------- [12] learning loop
+  {
+    let s = "";
+    s += box({ x: 14, y: 28, w: 150, h: 104, label: "Tool · record_delivery", title: "Goods receipt", fs: 8.4, body: "Promised vs received date and the incoming QC result, per supplier lot.", meta: ["supplier_outcomes"] });
+    s += box({ x: 189, y: 28, w: 150, h: 104, accent: true, label: "Learned · per supplier", title: "Reliability belief", fs: 8.4, body: "Beta on-time and QC pass rates, mean lateness. Stated metrics are a weak prior; recent deliveries weigh more." });
+    s += box({ x: 364, y: 28, w: 150, h: 132, label: "Tool · supplier_reliability", title: "Risk ranking", fs: 8.4, body: "Monte Carlo per supplier. Stockout days priced with the client profile; average and worst 10% blended by risk aversion. Reorder point padded by believed lateness." });
+    s += box({ x: 364, y: 196, w: 150, h: 120, ink: true, label: "Workflow · run_mission", title: "Mission", fs: 8.4, body: "Sourcing negotiates with the ranked suppliers. The judge recomputes the checks. Failures become lessons.", meta: ["≤ 3 attempts"] });
+    s += box({ x: 189, y: 196, w: 150, h: 88, label: "Memory · accept_offer", title: "Negotiation history", fs: 8.4, body: "Opening vs settled price. Shown on the next negotiator's first reply." });
+    s += box({ x: 189, y: 298, w: 150, h: 86, label: "Memory · per material", title: "Lessons", fs: 8.4, body: "Failed checks and judge flags, added to every doer's context next time." });
+    s += box({ x: 14, y: 172, w: 150, h: 172, dashed: true, label: "Fixed in code", title: "Never learned", fs: 8.4, body: "Qualification state, no substitution, BIOSECURE blocks, the USD 25,000 limit. A supplier far below its stated on-time rate gets a QA review flag, not a status change." });
+    s += edge([[164, 80], [189, 80]], { accent: true });
+    s += edge([[339, 80], [364, 80]], {});
+    s += edge([[439, 160], [439, 196]], { label: "ranked suppliers", at: [446, 181], anchor: "start", fs: 7.4 });
+    s += edge([[364, 238], [339, 238]], { both: true });
+    s += edge([[364, 306], [339, 306]], { both: true });
+    s += edge([[264, 132], [264, 152], [89, 152], [89, 172]], { dashed: true, label: "QA review flag", at: [176, 156], fs: 7.4 });
+    s += edge([[439, 316], [439, 420], [6, 420], [6, 80], [14, 80]], { accent: true, label: "draft PO, then the goods receipt", at: [222, 424], fs: 7.8 });
+    put("fig-learn", svg(520, 440, s));
+  }
+  async function renderLearning() {
+    let d = null;
+    try { const r = await fetch("../learning-results.json", { cache: "no-store" }); d = r.ok ? await r.json() : null; } catch { d = null; }
+    if (!d) { document.getElementById("learn-rows").innerHTML = `<tr><td colspan="5">Run <code>pnpm --filter @supply-agent/core sim:learning</code> to fill this sheet.</td></tr>`; return; }
+    const sc = (truth, profile) => d.scenarios.find((x) => x.truth === truth && x.profile === profile);
+    const row = (s, p) => s.rows.find((r) => r.policy === p);
+    const drift = sc("drifted", "corvane");
+    const A = row(drift, "agent"), R = row(drift, "agent_risk"), L = row(drift, "agent_learning");
+    const pct = (a, b) => `${b - a > 0 ? "+" : ""}${Math.round(((b - a) / a) * 100)}%`;
+    document.getElementById("learn-tags").innerHTML = `<span class="tag">Synthetic simulation</span><span class="tag">${d.days}-day horizon</span><span class="tag">mean of ${d.seeds.length} seeds</span>`;
+    const stat = (label, v, cap, acc) => `<div class="stat"><div class="eyebrow">${label}</div><div class="fig-n ${acc ? "acc" : ""}">${v}</div><div class="cap2">${cap}</div></div>`;
+    document.getElementById("learn-stats").innerHTML =
+      stat("Stockout pair-days", pct(A.stockout_days, L.stockout_days), "learning agent vs rule-based", true) +
+      stat("Stockout cost", pct(A.stockout_cost_usd, L.stockout_cost_usd), "priced with Corvane's profile") +
+      stat("Belief error", `${R.belief_error_pp}→${L.belief_error_pp}`, "pp vs hidden on-time rate, no learning → learning") +
+      stat("Learning alone", pct(R.stockout_days, L.stockout_days), `stockout days vs no learning · ${L.qa_review_flags} QA flags`);
+    // curve
+    const W = 460, H = 150, x0 = 30, x1 = W - 6, y0 = 8, y1 = H - 18;
+    const series = [[A, C.n30, ""], [R, C.ink, "4 3"], [L, C.acc, ""]];
+    const n = L.stockout_days_by_period.length;
+    const max = Math.max(...series.flatMap(([r]) => r.stockout_days_by_period)) * 1.1;
+    const X = (i) => x0 + (i / (n - 1)) * (x1 - x0), Y = (v) => y1 - (v / max) * (y1 - y0);
+    let c = `<line x1="${x0}" x2="${x1}" y1="${y1}" y2="${y1}" stroke="${C.ink}"/>`;
+    for (const t of [0, Math.round(max / 2 / 10) * 10]) c += `<text x="${x0 - 4}" y="${Y(t) + 3}" font-family="Geist Mono" font-size="7" fill="${C.n50}" text-anchor="end">${t}</text>`;
+    for (let i = 0; i < n; i += 2) c += `<text x="${X(i)}" y="${H - 6}" font-family="Geist Mono" font-size="7" fill="${C.n50}" text-anchor="middle">${i * 30}</text>`;
+    c += `<text x="${x1}" y="${H - 6}" font-family="Geist Mono" font-size="7" fill="${C.n50}" text-anchor="end">DAY</text>`;
+    for (const [r, col, dash] of series) c += `<polyline fill="none" stroke="${col}" stroke-width="${col === C.acc ? 1.8 : 1.2}" ${dash ? `stroke-dasharray="${dash}"` : ""} points="${r.stockout_days_by_period.map((v, i) => `${X(i)},${Y(v)}`).join(" ")}"/>`;
+    const leg = [["Rule-based", C.n30, ""], ["Risk, no learning", C.ink, "4 3"], ["Risk + learning", C.acc, ""]];
+    leg.forEach(([t, col, dash], i) => { const lx = x0 + 10 + i * 120; c += `<line x1="${lx}" x2="${lx + 16}" y1="${y0 + 4}" y2="${y0 + 4}" stroke="${col}" stroke-width="1.6" ${dash ? `stroke-dasharray="${dash}"` : ""}/><text x="${lx + 20}" y="${y0 + 7}" font-family="Geist Mono" font-size="7" letter-spacing=".5" fill="${C.n70}">${t.toUpperCase()}</text>`; });
+    document.getElementById("learn-curve").innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${c}</svg>`;
+    const NAMES = { "drifted|corvane": "Suppliers overstate · Corvane", "as_stated|corvane": "Metrics accurate · Corvane (control)", "drifted|lean-generics": "Suppliers overstate · lean generics" };
+    document.getElementById("learn-rows").innerHTML = d.scenarios.map((x) => {
+      const a = row(x, "agent"), r = row(x, "agent_risk"), l = row(x, "agent_learning");
+      return `<tr class="${x === drift ? "acc" : ""}"><td class="m">${NAMES[`${x.truth}|${x.profile}`] ?? `${x.truth} · ${x.profile}`}</td><td>${a.stockout_days}</td><td>${r.stockout_days}</td><td>${l.stockout_days}</td><td>${Math.round(a.expedites)} → ${Math.round(l.expedites)}</td></tr>`;
+    }).join("");
   }
 
   // ---------------------------------------------------------------- Mermaid
@@ -1053,6 +1280,8 @@ stateDiagram-v2
     await document.fonts.ready;
     await Promise.all(["300 12px 'Inter Tight'", "400 12px 'Inter Tight'", "400 12px Inter", "500 12px Inter", "400 12px 'Geist Mono'"].map((f) => document.fonts.load(f)));
     await renderResults();
+    await renderEvals();
+    await renderLearning();
     await renderMermaid();
   } catch (e) {
     window.__errors.push(String(e && e.stack || e));

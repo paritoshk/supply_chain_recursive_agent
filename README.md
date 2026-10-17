@@ -8,6 +8,12 @@ Supplier Chief of Staff is a recursive agent that keeps a specialty-pharma manuf
 
 The customer, **Corvane Biologics**, is fictional. Its sites, inventory, demand, suppliers and prices are synthetic (deterministic seed 1729).
 
+## Watch it run
+
+Mission theater (simulated Telegram phone wired to the live agent, next to a 3D view of the agent pipeline driven by the real event stream): https://supplier-chief-of-staff-web.vercel.app
+
+Evidence board (PubChem structure images, feasibility tables, QA packets, supplier evidence): https://supplier-chief-of-staff.vercel.app/board
+
 ## What it does
 
 Two outcomes matter to a supply planner: less time spent chasing shortages, and fewer stockouts. We measured both in a 90-day simulation over 107 material/site positions. The baseline policy is a manual planner: weekly review against a static reorder point, primary supplier only. Both policies see the same demand and the same injected supplier delays. Full results are in [docs/sim-results.md](docs/sim-results.md).
@@ -71,7 +77,7 @@ Without Upstash credentials, state is stored in a local JSON file (`.data/state.
 
 ## Architecture
 
-The full drawing set is [docs/architecture.pdf](docs/architecture.pdf) (nine sheets), with one PNG per sheet in [docs/architecture/png/](docs/architecture/png/):
+The full drawing set is [docs/architecture.pdf](docs/architecture.pdf) (eleven sheets), with one PNG per sheet in [docs/architecture/png/](docs/architecture/png/):
 
 | Sheet | Title |
 |---|---|
@@ -84,6 +90,8 @@ The full drawing set is [docs/architecture.pdf](docs/architecture.pdf) (nine she
 | [7](docs/architecture/png/sheet-07.png) | The data model |
 | [8](docs/architecture/png/sheet-08.png) | Deployed on Vercel |
 | [9](docs/architecture/png/sheet-09.png) | Does it prevent stockouts? |
+| [10](docs/architecture/png/sheet-10.png) | Which model earns which role (evals B1, B3, B4) |
+| [11](docs/architecture/png/sheet-11.png) | Does the web scout find real suppliers? (evals B5, B5b, B6/B8) |
 
 In short:
 
@@ -102,7 +110,7 @@ In short:
 ```
 run_mission(material, site):
   brief = prepare_mission()                 # need_qty, need_by, from the inventory position (code)
-  done  = [covers_need, lands_in_time, qualified_only, comparable_quotes, grounded]
+  done  = [covers_need, lands_in_time (lead + QC release), qualified_only, comparable_quotes, batches_feasible, grounded]
 
   for attempt in 1..3:
     if feedback was already tried: break    # loop guard
@@ -114,7 +122,7 @@ run_mission(material, site):
                                             #    accept_offer stores only the supplier's last offer)
       scout    = agent("scout")             # You.com + openFDA; discovery candidates only
 
-    facts   = recompute_in_code(store)      # judge part 1: transfer, quotes, plan, 4 numeric checks
+    facts   = recompute_in_code(store)      # judge part 1: transfer, quotes, plan, 5 numeric checks incl. line feasibility
     verdict = agent("verifier", claims, facts)  # judge part 2: different model, grounding check
 
     if numeric checks pass:         decision = accept;   break
@@ -134,7 +142,7 @@ This run happened on the Vercel deployment during the hackathon. Inventory and s
 
 - Trigger: Ghent injectable sucrose at 24 days of cover against a 280 kg reorder point.
 - Plan: transfer 160 kg from King of Prussia, and buy 210 kg from an approved supplier on RFQ-102 at about $29/kg landed (about $6.1k).
-- All 4 numeric checks passed. The purchase was under $25k from an approved supplier, so it was auto-approved.
+- Latest production run (after adding QC release time and production-line feasibility): 6 of 6 checks passed, including `grounded`; all 18 scheduled sucrose batches at Ghent stay feasible (11 of 18 at risk with no action); change control flagged because the supplier is new to Ghent. Purchase 210 kg at $29.18/kg landed (lead 23 d + QC 7 d, $6,128), under $25k from a released_for_use supplier, so it was auto-approved. About 3.5 minutes end to end.
 - Time: about 5 minutes on Vercel (about 2 minutes locally).
 - The judge flagged two misstated details in the doers' prose. The numbers the agent acted on came from code, so the plan stood, and the flags were reported. This is why the judge exists.
 
