@@ -479,9 +479,9 @@
     </div>
     <div class="foot">
       <div class="notes">
-        <div class="note"><div class="eyebrow">[01] What the scout searches for</div><p id="ev-scout">Two queries per material: substance + grade + "GMP manufacturer DMF CEP", and substance + two compendia + "pharmaceutical grade supplier". Reference sites dropped, directories labelled, one hit per host.</p></div>
-        <div class="note"><div class="eyebrow">[02] Negotiation</div><p id="ev-neg">Win = landed cost at or under the list/floor midpoint, arrival by need-by, and zero policy violations. Violations must be 0 because code clamps every offer to the hidden profile.</p></div>
-        <div class="note"><div class="eyebrow">[03] Telemetry</div><p id="ev-tel">Deployed session streams are read from <code>docs/evals/missions.txt</code>; expired streams are recorded, not guessed. The timeline falls back to local mission records.</p></div>
+        <div class="note"><div class="eyebrow">[01] What the scout searches for</div><p id="ev-scout">Two queries: substance + grade + "GMP manufacturer DMF CEP", and substance + compendia + "pharmaceutical grade supplier". Reference sites dropped, directories labelled.</p></div>
+        <div class="note"><div class="eyebrow">[02] Negotiation</div><p id="ev-neg">Win = landed at or under the list/floor midpoint, on time, 0 violations. Code clamps every offer, so violations must be 0.</p></div>
+        <div class="note"><div class="eyebrow">[03] Telemetry</div><p id="ev-tel">Streams listed in <code>docs/evals/missions.txt</code> are read live; expired ones are recorded, not guessed. The timeline uses local mission records.</p></div>
       </div>
       <div class="tb-slot"></div>
     </div>
@@ -1145,9 +1145,9 @@ stateDiagram-v2
       `<div><div class="eyebrow">Judge · verifier</div><div class="n">${v.judge ?? "Nemotron 3 Super 120B"}</div><p>${v.judge_why ?? ""}</p></div>`;
     if (d.spend) document.getElementById("ev-tags").insertAdjacentHTML("beforeend", `<span class="tag">spend $${(+d.spend.total_usd).toFixed(2)}</span>`);
     const ds5 = d.discovery;
-    if (ds5) document.getElementById("ev-scout").insertAdjacentHTML("beforeend", ` Recall@8 ${f2(ds5.recall_at_8_micro)}, judged precision@8 ${f2(ds5.precision_at_8_judged)}, GMP/DMF/CEP evidence on ${Math.round(ds5.gmp_dmf_cep_share * 100)}% of hits.`);
+    if (ds5) document.getElementById("ev-scout").insertAdjacentHTML("beforeend", ` Recall@8 ${f2(ds5.recall_at_8_micro)}, precision@8 ${f2(ds5.precision_at_8_judged)}.`);
     const neg = (d.negotiation || []).find((c) => c.persona === "live_nano" && c.policy === "llm_negotiator");
-    if (neg) document.getElementById("ev-neg").insertAdjacentHTML("beforeend", ` Deployed path (LLM negotiator vs live Nano persona): win ${neg.win_rate.k}/${neg.win_rate.n}, ${f2(neg.savings_vs_list_pct_mean)}% below list, ${neg.policy_violations} violations.`);
+    if (neg) { const sv = +neg.savings_vs_list_pct_mean; document.getElementById("ev-neg").insertAdjacentHTML("beforeend", ` Deployed path: ${neg.policy_violations} violations, ${Math.abs(sv).toFixed(1)}% ${sv < 0 ? "above" : "below"} list (buys expedites).`); }
     const ms = d.missions;
     if (ms) document.getElementById("ev-tel").insertAdjacentHTML("beforeend", ` Readable streams: ${ms.streams_available} of ${ms.streams_requested}.`);
   }

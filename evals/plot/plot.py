@@ -330,7 +330,7 @@ def plot_timeline():
     m0 = missions[0]
     src = m0.get("source", "")
     summ = d["summary"]
-    note = "\nEscalated to a human after 3 attempts. Expected: licensed adjuvant, quote-only, no compliant source lands in time; no analogue offered." if m0.get("material_id") == "MAT-SAP-QS" else ""
+    note = "\nEscalated to a human after 3 attempts, as intended: licensed adjuvant, quote-only, no analogue offered." if m0.get("material_id") == "MAT-SAP-QS" else ""
     ax.set_title(f"Mission timeline · {m0.get('material_id') or ''} @ {m0.get('site_id') or ''} · {src}{note}", fontsize=9.5)
     footer(fig, f"Deployed session streams: {summ['streams_available']}/{summ['streams_requested']} readable (others expired or empty). Bar = plan + sub-agents + verify per attempt; diamond = verifier verdict.")
     fig.tight_layout(rect=(0, 0.06, 1, 1))

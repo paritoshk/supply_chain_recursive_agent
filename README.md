@@ -77,7 +77,7 @@ Without Upstash credentials, state is stored in a local JSON file (`.data/state.
 
 ## Architecture
 
-The full drawing set is [docs/architecture.pdf](docs/architecture.pdf) (eleven sheets), with one PNG per sheet in [docs/architecture/png/](docs/architecture/png/):
+The full drawing set is [docs/architecture.pdf](docs/architecture.pdf) (twelve sheets), with one PNG per sheet in [docs/architecture/png/](docs/architecture/png/):
 
 | Sheet | Title |
 |---|---|
@@ -92,6 +92,7 @@ The full drawing set is [docs/architecture.pdf](docs/architecture.pdf) (eleven s
 | [9](docs/architecture/png/sheet-09.png) | Does it prevent stockouts? |
 | [10](docs/architecture/png/sheet-10.png) | Which model earns which role (evals B1, B3, B4) |
 | [11](docs/architecture/png/sheet-11.png) | Does the web scout find real suppliers? (evals B5, B5b, B6/B8) |
+| [12](docs/architecture/png/sheet-12.png) | Better with every delivery |
 
 In short:
 

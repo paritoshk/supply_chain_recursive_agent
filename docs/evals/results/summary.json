@@ -1,7 +1,7 @@
 {
   "benchmark": "summary",
-  "generated_at": "2026-10-17T21:54:35.117Z",
-  "git_sha": "ddb4c64",
+  "generated_at": "2026-10-17T21:56:42.132Z",
+  "git_sha": "f1f7309",
   "synthetic_data": true,
   "roles": {
     "doer": "Super-VL",
