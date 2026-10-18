@@ -23,8 +23,9 @@ import {
   Plus,
   RotateCcw,
   Settings,
-  SlidersHorizontal,
-  Star,
+
+  Pause,
+  RefreshCw,
   X,
   XCircle,
 } from "lucide-react";
@@ -263,6 +264,19 @@ export default function Theater() {
   const [drawer, setDrawer] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [plan, setPlan] = useState<AnyObj | null>(null);
+  const [settings, setSettings] = useStored<CardSettings>("sc.cardSettings.v1", DEFAULT_SETTINGS);
+  const [layout, setLayout] = useStored<{ order: CanvasCardId[]; collapsed: CardId[] }>("sc.layout.v1", { order: DEFAULT_ORDER, collapsed: [] });
+  const [maxCard, setMaxCard] = useState<CardId | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [dragId, setDragId] = useState<CanvasCardId | null>(null);
+  const dragRef = useRef<CanvasCardId | null>(null);
+  const [overId, setOverId] = useState<CanvasCardId | null>(null);
+  const [floorPlaying, setFloorPlaying] = useState(false);
+  const [floorMode, setFloorMode] = useState<"assembled" | "cutaway" | "stations" | "order">("assembled");
+  const floorHostRef = useRef<HTMLDivElement>(null);
+  const floorHomeRef = useRef<HTMLDivElement>(null);
+  const floorModalRef = useRef<HTMLDivElement>(null);
 
   const sessionRef = useRef<string | null>(null);
   const countRef = useRef(0);
@@ -303,22 +317,41 @@ export default function Theater() {
     if (hot("sentinel")) return "cabinet";
     return null;
   })();
+  const follow = settings.FL.follow;
   useEffect(() => {
     try {
-      if (pipe.mission) machine()?.setMode("order");
+      if (follow && pipe.mission) {
+        machine()?.setMode("order");
+        setFloorMode("order");
+      }
     } catch {}
-  }, [pipe.mission]);
+  }, [pipe.mission, follow]);
   useEffect(() => {
     try {
-      if (focusKey) machine()?.focusStation(focusKey);
+      if (follow && focusKey) machine()?.focusStation(focusKey);
     } catch {}
-  }, [focusKey]);
+  }, [focusKey, follow]);
   useEffect(() => {
+    if (!follow) return;
     try {
-      if (busy && pipe.nodes.approval !== "waiting") machine()?.play();
+      const run = busy && pipe.nodes.approval !== "waiting";
+      if (run) machine()?.play();
       else machine()?.pause();
+      setFloorPlaying(run);
     } catch {}
-  }, [busy, pipe.nodes.approval]);
+  }, [busy, pipe.nodes.approval, follow]);
+  // Camera choice from the $FL settings; retried once in case the scene is still loading.
+  const camera = settings.FL.camera;
+  useEffect(() => {
+    const apply = () => {
+      try {
+        machine()?.setCamera(camera);
+      } catch {}
+    };
+    apply();
+    const t = setTimeout(apply, 1500);
+    return () => clearTimeout(t);
+  }, [camera]);
 
   const pushMsg = useCallback((m: Omit<ChatMsg, "id" | "at"> & { at?: number }) => {
     setMsgs((prev) => [...prev, { id: nid(), at: Date.now(), ...m }]);
@@ -791,6 +824,255 @@ export default function Theater() {
   const missions = ACTIONS.filter((a) => a.mission);
   const asks = ACTIONS.filter((a) => !a.mission);
 
+  /* ------------------------------------------------------ canvas helpers */
+  const order: CanvasCardId[] = [
+    ...layout.order.filter((id): id is CanvasCardId => DEFAULT_ORDER.includes(id as CanvasCardId)),
+    ...DEFAULT_ORDER.filter((id) => !layout.order.includes(id)),
+  ];
+  const isCollapsed = (id: CardId) => layout.collapsed.includes(id);
+  const toggleCollapse = (id: CardId) =>
+    setLayout((l) => ({ ...l, collapsed: l.collapsed.includes(id) ? l.collapsed.filter((x) => x !== id) : [...l.collapsed, id] }));
+  const moveBy = (id: CanvasCardId, delta: number) =>
+    setLayout((l) => {
+      const o = [...order];
+      const i = o.indexOf(id);
+      const j = Math.max(0, Math.min(o.length - 1, i + delta));
+      if (i < 0 || i === j) return l;
+      o.splice(i, 1);
+      o.splice(j, 0, id);
+      return { ...l, order: o };
+    });
+  const moveTo = (from: CanvasCardId, to: CanvasCardId) =>
+    setLayout((l) => {
+      const o = [...order];
+      const i = o.indexOf(from);
+      const j = o.indexOf(to);
+      if (i < 0 || j < 0) return l;
+      o.splice(i, 1);
+      o.splice(j, 0, from);
+      return { ...l, order: o };
+    });
+  const showToast = (t: string) => {
+    setToast(t);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 1800);
+  };
+  const setS = <K extends keyof CardSettings>(k: K, patch: Partial<CardSettings[K]>) =>
+    setSettings((s) => ({ ...s, [k]: { ...s[k], ...patch } }));
+
+  const cardData = (id: CardId): unknown => {
+    switch (id) {
+      case "PL":
+        return { mission_id: pipe.missionId ?? null, attempt: pipe.attempt, decision: pipe.decision ?? null, nodes: pipe.nodes, notes: pipe.notes, tools: pipe.tools, negotiators: pipe.negotiators };
+      case "MO":
+        return { material_id: qa?.material_id ?? null, material_name: qa?.material_name ?? null, molecule: qa?.molecule ?? null };
+      case "LN":
+        return { lines: qa?.lines ?? [], batches: filterBatches(qa?.batches ?? [], settings.LN), batches_total: qa?.batches_total ?? null, batches_at_risk: qa?.batches_at_risk ?? null };
+      case "QF":
+        return { chosen_supplier_id: qa?.chosen_supplier_id ?? null, suppliers: sortSuppliers(qa?.suppliers ?? [], settings.QF) };
+      case "DD":
+        return { decision: pipe.decision ?? null, checks: pipe.checks };
+      case "PO":
+        return { plan, approval: pipe.approval ?? null, plan_line: pipe.planLine ?? null };
+      case "FL":
+        return { follow_live_stage: settings.FL.follow, camera: settings.FL.camera, focused_station: focusKey, playing: floorPlaying };
+    }
+  };
+  const copyJson = async (id: CardId) => {
+    const text = JSON.stringify(cardData(id), null, 2);
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+    }
+    showToast("Copied");
+  };
+  const downloadJson = (id: CardId) => {
+    const blob = new Blob([JSON.stringify(cardData(id), null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${CARD_META[id].title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${pipe.missionId ?? "no-mission"}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast("Downloaded");
+  };
+  const cardMenu = (id: CardId): MenuItem[] => {
+    const items: MenuItem[] = [
+      { label: "Copy data as JSON", onClick: () => copyJson(id) },
+      { label: "Download JSON", onClick: () => downloadJson(id) },
+      { label: isCollapsed(id) ? "Expand card" : "Collapse card", onClick: () => toggleCollapse(id) },
+    ];
+    if (id !== "FL" && view === "canvas") {
+      const i = order.indexOf(id as CanvasCardId);
+      if (i > 0) items.push({ label: "Move up", onClick: () => moveBy(id as CanvasCardId, -1) });
+      if (i < order.length - 1) items.push({ label: "Move down", onClick: () => moveBy(id as CanvasCardId, 1) });
+    }
+    if (CARD_META[id].mission && pipe.missionId)
+      items.push({ label: "Open evidence board", onClick: () => {}, href: `https://supplier-chief-of-staff.vercel.app/board?mission_id=${encodeURIComponent(pipe.missionId)}` });
+    return items;
+  };
+
+  const openCard = (id: CardId) => setMaxCard(id);
+  const closeCard = useCallback(() => {
+    const host = floorHostRef.current;
+    const home = floorHomeRef.current;
+    if (host && home && host.parentElement !== home) home.appendChild(host);
+    setMaxCard(null);
+  }, []);
+  // Move the one WebGL scene into the modal and back; never mount a second one.
+  useLayoutEffect(() => {
+    if (maxCard !== "FL") return;
+    const host = floorHostRef.current;
+    const slot = floorModalRef.current;
+    if (host && slot && host.parentElement !== slot) slot.appendChild(host);
+  }, [maxCard]);
+
+  const toggleFloorPlay = () => {
+    try {
+      if (floorPlaying) machine()?.pause();
+      else machine()?.play();
+    } catch {}
+    setFloorPlaying((p) => !p);
+  };
+
+  const floorSettings = (
+    <>
+      <Toggle label="Auto-follow live stage" on={settings.FL.follow} onChange={(v) => setS("FL", { follow: v })} />
+      <Segmented
+        label="Camera"
+        value={settings.FL.camera}
+        options={[
+          ["overview", "Overview"],
+          ["side", "Side"],
+          ["top", "Top"],
+        ]}
+        onChange={(v) => setS("FL", { camera: v })}
+      />
+      <div className="px-2 py-1.5">
+        <button onClick={toggleFloorPlay} className="flex h-9 w-full items-center justify-center gap-2 rounded-[6px] border border-hair text-[14px] text-ink hover:border-ink" data-floor-play>
+          {floorPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+          {floorPlaying ? "Pause" : "Play"}
+        </button>
+      </div>
+    </>
+  );
+
+  const settingsFor = (id: CanvasCardId): React.ReactNode => {
+    switch (id) {
+      case "PL":
+        return (
+          <>
+            <Toggle label="Show model labels" on={settings.PL.models} onChange={(v) => setS("PL", { models: v })} />
+            <Toggle label="Animate edges" on={settings.PL.animate} onChange={(v) => setS("PL", { animate: v })} />
+            <Toggle label="Show tool chips" on={settings.PL.tools} onChange={(v) => setS("PL", { tools: v })} />
+          </>
+        );
+      case "MO":
+        return (
+          <>
+            <Toggle label="Show CAS numbers" on={settings.MO.cas} onChange={(v) => setS("MO", { cas: v })} />
+            <Segmented
+              label="Image size"
+              value={settings.MO.size}
+              options={[
+                ["S", "S"],
+                ["M", "M"],
+                ["L", "L"],
+              ]}
+              onChange={(v) => setS("MO", { size: v })}
+            />
+          </>
+        );
+      case "LN":
+        return (
+          <>
+            <Segmented
+              label="Horizon"
+              value={settings.LN.horizon}
+              options={[
+                [30, "30 days"],
+                [60, "60 days"],
+              ]}
+              onChange={(v) => setS("LN", { horizon: v })}
+            />
+            <Toggle label="Only at-risk batches" on={settings.LN.atRiskOnly} onChange={(v) => setS("LN", { atRiskOnly: v })} />
+          </>
+        );
+      case "QF":
+        return (
+          <>
+            <Segmented
+              label="Sort by"
+              value={settings.QF.sort}
+              options={[
+                ["rank", "Rank"],
+                ["score", "Score"],
+                ["name", "Name"],
+              ]}
+              onChange={(v) => setS("QF", { sort: v })}
+            />
+            <Toggle label="Only suppliers meeting the line" on={settings.QF.meetsOnly} onChange={(v) => setS("QF", { meetsOnly: v })} />
+          </>
+        );
+      case "DD":
+        return (
+          <>
+            <Toggle label="Show reasons" on={settings.DD.reasons} onChange={(v) => setS("DD", { reasons: v })} />
+            <Toggle label="Failed checks first" on={settings.DD.failedFirst} onChange={(v) => setS("DD", { failedFirst: v })} />
+          </>
+        );
+      case "PO":
+        return <Toggle label="Show raw plan JSON" on={settings.PO.raw} onChange={(v) => setS("PO", { raw: v })} />;
+    }
+  };
+
+  const renderBody = (id: CardId, expanded: boolean, tall?: boolean): React.ReactNode => {
+    switch (id) {
+      case "PL":
+        return <PipelineGraph pipe={pipe} opts={settings.PL} fill={expanded} tall={tall} />;
+      case "MO":
+        return <MoleculeBody qa={qa} mission={pipe.mission} s={settings.MO} expanded={expanded} />;
+      case "LN":
+        return <LinesBody qa={qa} mission={pipe.mission} s={settings.LN} expanded={expanded} />;
+      case "QF":
+        return <SuppliersBody qa={qa} mission={pipe.mission} s={settings.QF} expanded={expanded} />;
+      case "DD":
+        return <DodBody pipe={pipe} s={settings.DD} expanded={expanded} />;
+      case "PO":
+        return <PlanBody pipe={pipe} plan={plan} pending={pending} onAnswer={answer} s={settings.PO} />;
+      case "FL":
+        return null;
+    }
+  };
+
+  const timer = <span className="mr-1 font-mono text-[12px] tabular-nums text-fg2">{pipe.startedAt ? `${mm}:${ss}` : "0:00"}</span>;
+
+  const newSession = () => {
+    streamAbort.current?.abort();
+    streamingRef.current = false;
+    sessionRef.current = null;
+    countRef.current = 0;
+    seenRef.current = new Set();
+    mirrorRef.current = false;
+    localTexts.current = [];
+    setMirroring(false);
+    setBusyBoth(false);
+    setMsgs([]);
+    setPipe(EMPTY_PIPE);
+    setQa(null);
+    setPlan(null);
+    setEvents([]);
+    showToast("New session");
+  };
+
   const inspector = (
     <Inspector
       pipe={pipe}
@@ -817,7 +1099,6 @@ export default function Theater() {
             <span className="hidden text-muted md:inline">Supplier Chief of Staff</span>
             <ChevronRight className="hidden h-3.5 w-3.5 text-muted md:inline" />
             <span className="truncate font-medium text-ink">Mission theater</span>
-            <Star className="h-3.5 w-3.5 shrink-0 text-muted" />
           </nav>
           <div className="mt-0.5 hidden flex-nowrap gap-1 overflow-hidden min-[1100px]:flex">
             {HEADER_TAGS.map((t) => (
@@ -906,6 +1187,17 @@ export default function Theater() {
             >
               <PanelRight className="h-3.5 w-3.5" /> Inspector
             </button>
+            {view === "canvas" && (
+              <button
+                onClick={() => {
+                  setLayout({ order: DEFAULT_ORDER, collapsed: [] });
+                  showToast("Layout reset");
+                }}
+                className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-[6px] px-2.5 text-[14px] text-fg2 hover:bg-muted-surface"
+              >
+                <RefreshCw className="h-3.5 w-3.5" /> Reset layout
+              </button>
+            )}
             {(["canvas", "graph"] as const).map((t) => (
               <button
                 key={t}
@@ -939,46 +1231,72 @@ export default function Theater() {
               scrollRef={scrollRef}
             />
           </div>
-          <div className="w-full max-w-[440px] overflow-hidden rounded-[8px] border border-hair bg-surface">
-            <CardHead id="$FL" title="Mission floor" type="3D · live" />
-            <div className="h-[440px] bg-[#141311]">
-              <AgenticFactory3D height={440} embed />
+          <CardShell
+            id="FL"
+            className="w-full max-w-[440px] overflow-visible"
+            collapsed={isCollapsed("FL")}
+            onMaximize={() => openCard("FL")}
+            settings={floorSettings}
+            menu={cardMenu("FL")}
+          >
+            <div ref={floorHomeRef} className="h-[440px] overflow-hidden rounded-b-[8px] bg-[#141311]">
+              <div ref={floorHostRef} className="h-full w-full">
+                <AgenticFactory3D height="100%" embed />
+              </div>
             </div>
-          </div>
+          </CardShell>
         </aside>
 
         {/* center canvas */}
         <main className="@container min-w-0">
           {view === "graph" ? (
-            <Card id="$PL" title="Agent pipeline" type="Live graph">
-              <PipelineGraph pipe={pipe} />
-            </Card>
+            <CardShell id="PL" onMaximize={() => openCard("PL")} settings={settingsFor("PL")} menu={cardMenu("PL")} right={timer}>
+              {renderBody("PL", false, true)}
+            </CardShell>
           ) : (
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <Card id="$PL" title="Agent pipeline" type="Live graph" right={<span className="font-mono text-[12px] tabular-nums text-fg2">{pipe.startedAt ? `${mm}:${ss}` : "0:00"}</span>}>
-                  <PipelineGraph pipe={pipe} />
-                </Card>
-              </div>
-              <div className="grid grid-cols-1 gap-4 @[880px]:grid-cols-2">
-                <Card id="$MO" title="Molecule" type="PubChem">
-                  <MoleculeBody qa={qa} mission={pipe.mission} />
-                </Card>
-                <Card id="$PO" title="Plan & approval" type="Decision">
-                  <PlanBody pipe={pipe} plan={plan} pending={pending} onAnswer={answer} />
-                </Card>
-                <Card id="$LN" title="Production lines & batches" type="Feasibility">
-                  <LinesBody qa={qa} mission={pipe.mission} />
-                </Card>
-                <Card id="$DD" title="Definition of done" type="Judge">
-                  <DodBody pipe={pipe} />
-                </Card>
-              </div>
-              <div>
-                <Card id="$QF" title="Supplier quality ranking" type="Grade fit">
-                  <SuppliersBody qa={qa} mission={pipe.mission} />
-                </Card>
-              </div>
+            <div className="grid grid-cols-1 gap-4 @[880px]:grid-cols-2" data-canvas-order={order.join(",")}>
+              {order.map((id) => (
+                <CardShell
+                  key={id}
+                  id={id}
+                  className={CARD_META[id].wide ? "@[880px]:col-span-2" : ""}
+                  collapsed={isCollapsed(id)}
+                  onMaximize={() => openCard(id)}
+                  settings={settingsFor(id)}
+                  menu={cardMenu(id)}
+                  right={id === "PL" ? timer : undefined}
+                  drag={{
+                    over: overId === id && dragId !== id,
+                    onDragStart: (e) => {
+                      dragRef.current = id;
+                      setDragId(id);
+                      e.dataTransfer.effectAllowed = "move";
+                      e.dataTransfer.setData("text/plain", id);
+                    },
+                    onDragOver: (e) => {
+                      if (!dragRef.current) return;
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = "move";
+                      if (overId !== id) setOverId(id);
+                    },
+                    onDrop: (e) => {
+                      e.preventDefault();
+                      const from = (dragRef.current || e.dataTransfer.getData("text/plain")) as CanvasCardId | null;
+                      dragRef.current = null;
+                      if (from && from !== id) moveTo(from, id);
+                      setDragId(null);
+                      setOverId(null);
+                    },
+                    onDragEnd: () => {
+                      dragRef.current = null;
+                      setDragId(null);
+                      setOverId(null);
+                    },
+                  }}
+                >
+                  {renderBody(id, false)}
+                </CardShell>
+              ))}
             </div>
           )}
         </main>
@@ -999,9 +1317,70 @@ export default function Theater() {
         </div>
       )}
 
+      {maxCard && (
+        <CardModal id={maxCard} onClose={closeCard} right={maxCard === "PL" ? timer : undefined}>
+          {maxCard === "FL" ? (
+            <div className="flex h-full flex-col">
+              <div className="flex flex-wrap items-end gap-3 border-b border-hair px-3 py-2" data-floor-controls>
+                <div className="w-[340px]">
+                  <Segmented
+                    label="Mode"
+                    value={floorMode}
+                    options={[
+                      ["assembled", "Assembled"],
+                      ["cutaway", "Cutaway"],
+                      ["stations", "Stations"],
+                      ["order", "Order"],
+                    ]}
+                    onChange={(v) => {
+                      try {
+                        machine()?.setMode(v);
+                      } catch {}
+                      setFloorMode(v);
+                    }}
+                  />
+                </div>
+                <div className="w-[280px]">
+                  <Segmented
+                    label="Camera"
+                    value={settings.FL.camera}
+                    options={[
+                      ["overview", "Overview"],
+                      ["side", "Side"],
+                      ["top", "Top"],
+                    ]}
+                    onChange={(v) => setS("FL", { camera: v })}
+                  />
+                </div>
+                <div className="w-[240px]">
+                  <Toggle label="Auto-follow live stage" on={settings.FL.follow} onChange={(v) => setS("FL", { follow: v })} />
+                </div>
+                <div className="py-1.5">
+                  <button onClick={toggleFloorPlay} className="flex h-9 items-center gap-2 rounded-[6px] border border-hair px-3 text-[14px] text-ink hover:border-ink" data-floor-play>
+                    {floorPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                    {floorPlaying ? "Pause" : "Play"}
+                  </button>
+                </div>
+              </div>
+              <div ref={floorModalRef} className="min-h-0 flex-1 bg-[#141311]" data-floor-slot />
+            </div>
+          ) : (
+            <div className="h-full">{renderBody(maxCard, true)}</div>
+          )}
+        </CardModal>
+      )}
+
+      {toast && (
+        <div role="status" className="fixed bottom-14 left-1/2 z-[60] -translate-x-1/2 rounded-full bg-ink px-4 py-2 text-[14px] text-white shadow-lg" data-toast>
+          {toast}
+        </div>
+      )}
+
       {/* bottom tab bar */}
       <div className="sticky bottom-0 z-20 flex h-10 items-center gap-3 border-t border-hair bg-surface px-4 text-[14px]">
-        <Plus className="h-3.5 w-3.5 text-muted" />
+        <button onClick={newSession} aria-label="New chat session" title="New chat session" className="flex h-8 items-center gap-1.5 rounded-[6px] px-2 text-[13px] text-fg2 hover:bg-muted-surface hover:text-ink">
+          <Plus className="h-4 w-4" /> New session
+        </button>
         <span className="flex h-full items-center border-t-2 border-accent px-2 text-ink">{view === "canvas" ? "Canvas" : "Graph"}</span>
         <span className="text-muted">·</span>
         <span className="font-mono text-[12px] text-fg2">{pipe.missionId ? `Mission ${pipe.missionId}` : pipe.mission ? "Mission starting" : "No mission yet"}</span>
@@ -1064,33 +1443,304 @@ function IdChip({ id }: { id: string }) {
   return <span className="rounded-[4px] border border-hair bg-muted-surface px-1.5 py-[1px] font-mono text-[12px] text-fg2">{id}</span>;
 }
 
-function CardHead({ id, title, type, right }: { id: string; title: string; type?: string; right?: React.ReactNode }) {
+/* ------------------------------------------------------- card settings */
+
+type CardId = "PL" | "MO" | "PO" | "LN" | "DD" | "QF" | "FL";
+type CanvasCardId = Exclude<CardId, "FL">;
+
+const CARD_META: Record<CardId, { title: string; type: string; wide?: boolean; mission?: boolean }> = {
+  PL: { title: "Agent pipeline", type: "Live graph", wide: true, mission: true },
+  MO: { title: "Molecule", type: "PubChem", mission: true },
+  PO: { title: "Plan & approval", type: "Decision", mission: true },
+  LN: { title: "Production lines & batches", type: "Feasibility", mission: true },
+  DD: { title: "Definition of done", type: "Judge", mission: true },
+  QF: { title: "Supplier quality ranking", type: "Grade fit", wide: true, mission: true },
+  FL: { title: "Mission floor", type: "3D · live" },
+};
+
+const DEFAULT_ORDER: CanvasCardId[] = ["PL", "MO", "PO", "LN", "DD", "QF"];
+
+type CardSettings = {
+  PL: { models: boolean; animate: boolean; tools: boolean };
+  MO: { cas: boolean; size: "S" | "M" | "L" };
+  LN: { horizon: 30 | 60; atRiskOnly: boolean };
+  QF: { sort: "score" | "rank" | "name"; meetsOnly: boolean };
+  DD: { reasons: boolean; failedFirst: boolean };
+  PO: { raw: boolean };
+  FL: { follow: boolean; camera: "overview" | "side" | "top" };
+};
+
+const DEFAULT_SETTINGS: CardSettings = {
+  PL: { models: true, animate: true, tools: true },
+  MO: { cas: true, size: "M" },
+  LN: { horizon: 60, atRiskOnly: false },
+  QF: { sort: "rank", meetsOnly: false },
+  DD: { reasons: true, failedFirst: false },
+  PO: { raw: false },
+  FL: { follow: true, camera: "overview" },
+};
+
+/** useState backed by localStorage (read after mount so SSR markup stays stable). */
+function useStored<T>(key: string, initial: T): [T, (next: T | ((p: T) => T)) => void] {
+  const [val, setVal] = useState<T>(initial);
+  const loaded = useRef(false);
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (raw) setVal((p) => ({ ...(p as object), ...JSON.parse(raw) }) as T);
+    } catch {}
+    loaded.current = true;
+  }, [key]);
+  useEffect(() => {
+    if (!loaded.current) return;
+    try {
+      window.localStorage.setItem(key, JSON.stringify(val));
+    } catch {}
+  }, [key, val]);
+  return [val, setVal];
+}
+
+/** Closes a popover on outside click or Esc. */
+function useDismiss(open: boolean, close: () => void, ref: React.RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) close();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, close, ref]);
+}
+
+function Toggle({ label, on, onChange }: { label: string; on: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div className="flex h-12 items-center gap-2.5 border-b border-hair px-3">
-      <GripVertical className="h-3.5 w-3.5 shrink-0 text-[#D4D2CF]" />
-      <IdChip id={id} />
-      <span className="truncate font-display text-[17px] font-normal text-ink">{title}</span>
-      {type && (
-        <span className="hidden shrink-0 rounded-[4px] border border-hair px-1.5 py-[1px] font-mono text-[11px] uppercase tracking-[0.04em] text-muted sm:inline">
-          {type}
-        </span>
-      )}
-      <div className="ml-auto flex shrink-0 items-center gap-2 text-muted">
-        {right}
-        <Maximize2 className="h-3.5 w-3.5" />
-        <Settings className="h-3.5 w-3.5" />
-        <MoreHorizontal className="h-3.5 w-3.5" />
+    <label className="flex h-9 cursor-pointer items-center justify-between gap-3 rounded-[6px] px-2 text-[14px] text-ink hover:bg-muted-surface">
+      <span>{label}</span>
+      <input type="checkbox" checked={on} onChange={(e) => onChange(e.target.checked)} className="h-4 w-4 accent-[#F25C05]" />
+    </label>
+  );
+}
+
+function Segmented<T extends string | number>({ label, value, options, onChange }: { label: string; value: T; options: [T, string][]; onChange: (v: T) => void }) {
+  return (
+    <div className="px-2 py-1.5">
+      <div className="label-mono mb-1">{label}</div>
+      <div className="flex h-9 overflow-hidden rounded-[6px] border border-hair" role="group" aria-label={label}>
+        {options.map(([v, l], i) => (
+          <button
+            key={String(v)}
+            onClick={() => onChange(v)}
+            aria-pressed={value === v}
+            className={`flex-1 text-[13px] ${i ? "border-l border-hair" : ""} ${value === v ? "bg-muted-surface text-ink" : "text-muted hover:text-ink"}`}
+          >
+            {l}
+          </button>
+        ))}
       </div>
     </div>
   );
 }
 
-function Card(props: { id: string; title: string; type?: string; right?: React.ReactNode; children: React.ReactNode }) {
+type MenuItem = { label: string; onClick: () => void; href?: string };
+
+function HeaderIconButton(props: { label: string; onClick: () => void; children: React.ReactNode; active?: boolean }) {
   return (
-    <section className="flex h-full min-w-0 flex-col overflow-hidden rounded-[8px] border border-hair bg-surface" data-card={props.id}>
-      <CardHead id={props.id} title={props.title} type={props.type} right={props.right} />
-      <div className="min-w-0 flex-1">{props.children}</div>
+    <button
+      type="button"
+      aria-label={props.label}
+      title={props.label}
+      onClick={(e) => {
+        e.stopPropagation();
+        props.onClick();
+      }}
+      onDoubleClick={(e) => e.stopPropagation()}
+      className={`flex h-8 w-8 items-center justify-center rounded-[6px] hover:bg-muted-surface hover:text-ink ${props.active ? "bg-muted-surface text-ink" : "text-muted"}`}
+    >
+      {props.children}
+    </button>
+  );
+}
+
+function CardShell(props: {
+  id: CardId;
+  right?: React.ReactNode;
+  collapsed?: boolean;
+  onMaximize: () => void;
+  settings: React.ReactNode;
+  menu: MenuItem[];
+  drag?: {
+    onDragStart: (e: React.DragEvent) => void;
+    onDragOver: (e: React.DragEvent) => void;
+    onDrop: (e: React.DragEvent) => void;
+    onDragEnd: () => void;
+    over: boolean;
+  };
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const meta = CARD_META[props.id];
+  const [pop, setPop] = useState<"settings" | "menu" | null>(null);
+  const popRef = useRef<HTMLDivElement>(null);
+  const close = useCallback(() => setPop(null), []);
+  useDismiss(pop !== null, close, popRef);
+  return (
+    <section
+      className={`flex min-w-0 flex-col rounded-[8px] border bg-surface ${props.drag?.over ? "border-accent" : "border-hair"} ${props.className ?? ""}`}
+      data-card={props.id}
+      onDragOver={props.drag?.onDragOver}
+      onDrop={props.drag?.onDrop}
+    >
+      <div
+        className="relative flex h-12 shrink-0 select-none items-center gap-2.5 border-b border-hair px-3"
+        onDoubleClick={props.onMaximize}
+        data-card-head={props.id}
+      >
+        {props.drag && (
+          <span
+            draggable
+            onDragStart={props.drag.onDragStart}
+            onDragEnd={props.drag.onDragEnd}
+            className="flex h-8 w-5 shrink-0 cursor-grab items-center justify-center text-muted hover:text-ink active:cursor-grabbing"
+            aria-label={`Drag to reorder ${meta.title}`}
+            title="Drag to reorder"
+            data-drag-handle={props.id}
+          >
+            <GripVertical className="h-4 w-4" />
+          </span>
+        )}
+        <IdChip id={`$${props.id}`} />
+        <span className="truncate font-display text-[17px] font-normal text-ink">{meta.title}</span>
+        <span className="hidden shrink-0 rounded-[4px] border border-hair px-1.5 py-[1px] font-mono text-[11px] uppercase tracking-[0.04em] text-muted sm:inline">
+          {meta.type}
+        </span>
+        <div className="ml-auto flex shrink-0 items-center gap-0.5" ref={popRef}>
+          {props.right}
+          <HeaderIconButton label={`Enlarge ${meta.title}`} onClick={props.onMaximize}>
+            <Maximize2 className="h-4 w-4" />
+          </HeaderIconButton>
+          <HeaderIconButton label={`${meta.title} settings`} onClick={() => setPop((p) => (p === "settings" ? null : "settings"))} active={pop === "settings"}>
+            <Settings className="h-4 w-4" />
+          </HeaderIconButton>
+          <HeaderIconButton label={`More actions for ${meta.title}`} onClick={() => setPop((p) => (p === "menu" ? null : "menu"))} active={pop === "menu"}>
+            <MoreHorizontal className="h-4 w-4" />
+          </HeaderIconButton>
+          {pop === "settings" && (
+            <div
+              role="dialog"
+              aria-label={`${meta.title} settings`}
+              className="absolute right-2 top-11 z-30 w-[260px] rounded-[8px] border border-hair bg-surface p-1.5 shadow-[0_12px_32px_-12px_rgba(20,19,17,0.3)]"
+              data-popover="settings"
+            >
+              <div className="label-mono px-2 pb-1 pt-1">{meta.title} · settings</div>
+              {props.settings}
+            </div>
+          )}
+          {pop === "menu" && (
+            <div role="menu" className="absolute right-2 top-11 z-30 w-[230px] rounded-[8px] border border-hair bg-surface p-1.5 shadow-[0_12px_32px_-12px_rgba(20,19,17,0.3)]" data-popover="menu">
+              {props.menu.map((m) =>
+                m.href ? (
+                  <a
+                    key={m.label}
+                    role="menuitem"
+                    href={m.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={close}
+                    className="flex h-9 items-center rounded-[6px] px-2 text-[14px] text-ink hover:bg-muted-surface"
+                  >
+                    {m.label}
+                  </a>
+                ) : (
+                  <button
+                    key={m.label}
+                    role="menuitem"
+                    onClick={() => {
+                      close();
+                      m.onClick();
+                    }}
+                    className="flex h-9 w-full items-center rounded-[6px] px-2 text-left text-[14px] text-ink hover:bg-muted-surface"
+                  >
+                    {m.label}
+                  </button>
+                )
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+      {!props.collapsed && <div className="min-w-0 flex-1">{props.children}</div>}
     </section>
+  );
+}
+
+/** In-page modal: dimmed backdrop, focus trap, Esc and backdrop close, body scroll lock. */
+function CardModal({ id, onClose, right, children }: { id: CardId; onClose: () => void; right?: React.ReactNode; children: React.ReactNode }) {
+  const meta = CARD_META[id];
+  const panelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const opener = document.activeElement as HTMLElement | null;
+    panelRef.current?.querySelector<HTMLElement>("[data-modal-close]")?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if (e.key !== "Tab" || !panelRef.current) return;
+      const f = Array.from(
+        panelRef.current.querySelectorAll<HTMLElement>('a[href],button:not([disabled]),input,select,textarea,[tabindex]:not([tabindex="-1"])')
+      ).filter((el) => el.offsetParent !== null);
+      if (!f.length) return;
+      const first = f[0];
+      const last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+      opener?.focus?.();
+    };
+  }, [onClose]);
+  return (
+    <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()} data-modal={id}>
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={meta.title}
+        className="modal-panel flex flex-col overflow-hidden rounded-[8px] border border-hair bg-surface shadow-[0_32px_80px_-24px_rgba(20,19,17,0.5)]"
+        style={{ width: "min(1280px, 92vw)", height: "min(860px, 88vh)" }}
+      >
+        <div className="flex h-12 shrink-0 items-center gap-2.5 border-b border-hair px-4">
+          <IdChip id={`$${id}`} />
+          <span className="truncate font-display text-[18px] font-normal text-ink">{meta.title}</span>
+          <span className="shrink-0 rounded-[4px] border border-hair px-1.5 py-[1px] font-mono text-[11px] uppercase tracking-[0.04em] text-muted">{meta.type}</span>
+          <div className="ml-auto flex items-center gap-2">
+            {right}
+            <button data-modal-close onClick={onClose} aria-label="Close" className="flex h-9 w-9 items-center justify-center rounded-[6px] text-fg2 hover:bg-muted-surface hover:text-ink">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+        <div className="min-h-0 flex-1 overflow-auto">{children}</div>
+      </div>
+    </div>
   );
 }
 
@@ -1111,61 +1761,90 @@ function Row({ k, v }: { k: string; v: React.ReactNode }) {
   );
 }
 
-function MoleculeBody({ qa, mission }: { qa: QaFit | null; mission: boolean }) {
+const IMG_SIZE = { S: 140, M: 220, L: 300 } as const;
+
+function MoleculeBody({ qa, mission, s, expanded }: { qa: QaFit | null; mission: boolean; s: CardSettings["MO"]; expanded?: boolean }) {
   const mol = qa?.molecule;
   if (!mol) return <Empty mission={mission} text="Looking the molecule up on PubChem…" />;
+  const px = expanded ? 420 : IMG_SIZE[s.size];
   return (
-    <div className="flex flex-wrap gap-5 p-5">
-      <div className="flex h-[220px] w-[220px] shrink-0 items-center justify-center rounded-[8px] border border-hair bg-white">
+    <div className="flex flex-wrap gap-5 p-5" data-mo-size={s.size}>
+      <div className="flex shrink-0 items-center justify-center rounded-[8px] border border-hair bg-white" style={{ width: px, height: px }}>
         {mol.structure_image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={mol.structure_image_url} alt={`PubChem structure${mol.cid ? `, CID ${mol.cid}` : ""}`} className="max-h-[208px] max-w-[208px] object-contain" />
+          <img src={mol.structure_image_url} alt={`PubChem structure${mol.cid ? `, CID ${mol.cid}` : ""}`} className="object-contain" style={{ maxWidth: px - 12, maxHeight: px - 12 }} />
         ) : (
           <span className="px-3 text-center text-[12px] text-muted">No single structure (mixture or biologic)</span>
         )}
       </div>
       <div className="min-w-0 flex-1">
-        {qa?.material_name && <div className="text-[14px] text-ink">{qa.material_name}</div>}
-        <dl className="mt-1 grid grid-cols-[80px_1fr] gap-x-3 gap-y-1.5 text-[14px]">
+        {qa?.material_name && <div className={expanded ? "font-display text-[22px] font-light text-ink" : "text-[14px] text-ink"}>{qa.material_name}</div>}
+        <dl className="mt-1 grid grid-cols-[96px_1fr] gap-x-3 gap-y-1.5 text-[14px]">
+          {expanded && <Row k="Material" v={qa?.material_id ?? "—"} />}
+          {expanded && <Row k="Site" v={qa?.site_name ? `${qa.site_name} · ${qa.site_id}` : qa?.site_id ?? "—"} />}
           <Row k="CID" v={mol.cid ?? "—"} />
           <Row k="Formula" v={mol.molecular_formula ?? "—"} />
           <Row k="MW" v={mol.molecular_weight != null ? `${mol.molecular_weight} g/mol` : "—"} />
-          <Row k="CAS" v={mol.cas?.length ? mol.cas.slice(0, 2).join(", ") : "—"} />
+          {s.cas && <Row k="CAS" v={mol.cas?.length ? (expanded ? mol.cas.join(", ") : mol.cas.slice(0, 2).join(", ")) : "—"} />}
           <Row k="PubChem" v={mol.pubchem_status ?? "—"} />
+          {expanded && mol.cid != null && (
+            <Row
+              k="Source"
+              v={
+                <a className="text-ink underline decoration-hair-strong underline-offset-2 hover:text-accent" href={`https://pubchem.ncbi.nlm.nih.gov/compound/${mol.cid}`} target="_blank" rel="noreferrer">
+                  pubchem.ncbi.nlm.nih.gov/compound/{mol.cid}
+                </a>
+              }
+            />
+          )}
         </dl>
-        {mol.explanation && <p className="mt-2 line-clamp-4 text-[13px] leading-snug text-fg2">{mol.explanation}</p>}
+        {mol.explanation && <p className={`mt-2 text-[13px] leading-snug text-fg2 ${expanded ? "" : "line-clamp-4"}`}>{mol.explanation}</p>}
       </div>
     </div>
   );
 }
 
-function LinesBody({ qa, mission }: { qa: QaFit | null; mission: boolean }) {
+function filterBatches(batches: Batch[], s: CardSettings["LN"]): Batch[] {
+  if (!batches.length) return batches;
+  const ref = Math.min(...batches.map((b) => Date.parse(b.start_date)).filter((n) => !Number.isNaN(n)));
+  const limit = ref + s.horizon * 86_400_000;
+  return batches.filter((b) => {
+    const t = Date.parse(b.start_date);
+    return (Number.isNaN(t) || t <= limit) && (!s.atRiskOnly || !b.feasible);
+  });
+}
+
+function LinesBody({ qa, mission, s, expanded }: { qa: QaFit | null; mission: boolean; s: CardSettings["LN"]; expanded?: boolean }) {
   const lines = qa?.lines ?? [];
-  const batches = qa?.batches ?? [];
-  if (!lines.length && !batches.length) return <Empty mission={mission} text="Waiting for the judge to recompute line feasibility…" />;
+  const batches = filterBatches(qa?.batches ?? [], s);
+  if (!lines.length && !(qa?.batches ?? []).length) return <Empty mission={mission} text="Waiting for the judge to recompute line feasibility…" />;
   return (
     <div className="flex flex-col gap-4 p-5">
-      {lines.slice(0, 2).map((l) => (
-        <div key={l.line_id} className="rounded-[6px] border border-hair p-2.5">
-          <div className="flex items-baseline justify-between gap-2">
-            <span className="text-[14px] text-ink">{l.line_name ?? l.line_id}</span>
-            <span className="font-mono text-[11px] uppercase tracking-[0.05em] text-muted">{l.line_id}</span>
+      <div className={expanded ? "grid grid-cols-2 gap-3" : "flex flex-col gap-3"}>
+        {lines.slice(0, expanded ? lines.length : 2).map((l) => (
+          <div key={l.line_id} className="rounded-[6px] border border-hair p-3">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-[14px] text-ink">{l.line_name ?? l.line_id}</span>
+              <span className="font-mono text-[11px] uppercase tracking-[0.05em] text-muted">{l.line_id}</span>
+            </div>
+            <div className="mt-1 flex flex-wrap gap-1">
+              {l.line_type && <Tag>{l.line_type}</Tag>}
+              {l.cleanroom_grade && <Tag>cleanroom {l.cleanroom_grade}</Tag>}
+              {l.needs_parenteral && <Tag>parenteral</Tag>}
+              {l.needs_low_endotoxin && <Tag>low endotoxin</Tag>}
+              {(l.needs_compendia ?? []).map((c) => (
+                <Tag key={c}>{c}</Tag>
+              ))}
+            </div>
+            {l.rationale && <p className="mt-1.5 text-[13px] leading-snug text-fg2">{l.rationale}</p>}
           </div>
-          <div className="mt-1 flex flex-wrap gap-1">
-            {l.line_type && <Tag>{l.line_type}</Tag>}
-            {l.cleanroom_grade && <Tag>cleanroom {l.cleanroom_grade}</Tag>}
-            {l.needs_parenteral && <Tag>parenteral</Tag>}
-            {l.needs_low_endotoxin && <Tag>low endotoxin</Tag>}
-            {(l.needs_compendia ?? []).map((c) => (
-              <Tag key={c}>{c}</Tag>
-            ))}
-          </div>
-          {l.rationale && <p className="mt-1.5 text-[13px] leading-snug text-fg2">{l.rationale}</p>}
-        </div>
-      ))}
+        ))}
+      </div>
       <div>
         <div className="flex items-center gap-3">
-          <span className="label-mono">Batches · next 60 days</span>
+          <span className="label-mono" data-ln-horizon={s.horizon}>
+            Batches · next {s.horizon} days{s.atRiskOnly ? " · at risk only" : ""}
+          </span>
           {qa?.batches_total != null && (
             <span className="text-[13px] text-fg2">
               {qa.batches_total} planned · <span style={{ color: (qa.batches_at_risk ?? 0) > 0 ? "#DC2626" : "#16A34A" }}>{qa.batches_at_risk ?? 0} at risk</span>
@@ -1173,7 +1852,7 @@ function LinesBody({ qa, mission }: { qa: QaFit | null; mission: boolean }) {
           )}
         </div>
         <div className="mt-1.5 flex flex-wrap gap-1" data-testid="batch-strip">
-          {batches.length === 0 && <span className="text-[13px] text-muted">—</span>}
+          {batches.length === 0 && <span className="text-[13px] text-muted">No batches in this view</span>}
           {batches.map((b) => (
             <span
               key={b.batch_no}
@@ -1184,49 +1863,95 @@ function LinesBody({ qa, mission }: { qa: QaFit | null; mission: boolean }) {
           ))}
         </div>
       </div>
+      {expanded && batches.length > 0 && (
+        <table className="w-full border-collapse text-[14px]">
+          <thead>
+            <tr className="text-left text-muted">
+              {["Batch", "Line", "Product", "Start", "Needed", "Available at start", "Feasible"].map((h) => (
+                <th key={h} className="py-2 font-normal">
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {batches.map((b) => (
+              <tr key={b.batch_no} className="border-t border-hair">
+                <td className="py-2 font-mono text-[13px]">{b.batch_no}</td>
+                <td className="py-2">{b.line_name ?? b.line_id ?? "—"}</td>
+                <td className="py-2 text-fg2">{b.product_id ?? "—"}</td>
+                <td className="py-2 tabular-nums">{b.start_date}</td>
+                <td className="py-2 tabular-nums">{b.material_needed ?? "—"}</td>
+                <td className="py-2 tabular-nums">{b.available_at_start ?? "—"}</td>
+                <td className="py-2" style={{ color: b.feasible ? "#16A34A" : "#DC2626" }}>
+                  {b.feasible ? "✓ feasible" : "✗ at risk"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }
 
-function SuppliersBody({ qa, mission }: { qa: QaFit | null; mission: boolean }) {
-  const suppliers = [...(qa?.suppliers ?? [])].sort((a, b) => a.rank - b.rank);
-  if (!suppliers.length) return <Empty mission={mission} text="Ranked once the judge recomputes the checks…" />;
+function sortSuppliers(list: SupplierFit[], s: CardSettings["QF"]): SupplierFit[] {
+  const out = list.filter((x) => !s.meetsOnly || x.meets_requirement);
+  if (s.sort === "score") out.sort((a, b) => b.quality_score - a.quality_score);
+  else if (s.sort === "name") out.sort((a, b) => (a.supplier_name ?? a.supplier_id).localeCompare(b.supplier_name ?? b.supplier_id));
+  else out.sort((a, b) => a.rank - b.rank);
+  return out;
+}
+
+function SuppliersBody({ qa, mission, s, expanded }: { qa: QaFit | null; mission: boolean; s: CardSettings["QF"]; expanded?: boolean }) {
+  const all = qa?.suppliers ?? [];
+  const suppliers = sortSuppliers(all, s);
+  if (!all.length) return <Empty mission={mission} text="Ranked once the judge recomputes the checks…" />;
   return (
     <div className="overflow-x-auto px-5 pb-3">
-      <table className="w-full border-collapse text-[14px]">
+      <table className="w-full border-collapse text-[14px]" data-qf-sort={s.sort}>
         <thead>
           <tr className="text-left text-muted">
             <th className="w-8 py-2 pl-2 font-normal">#</th>
             <th className="py-2 font-normal">Supplier</th>
+            {expanded && <th className="py-2 font-normal">ID</th>}
             <th className="py-2 font-normal">Approved grade</th>
             <th className="py-2 font-normal">Meets line requirement</th>
             <th className="w-[150px] py-2 font-normal">Quality score</th>
           </tr>
         </thead>
         <tbody>
-          {suppliers.map((s) => {
-            const chosen = s.supplier_id === qa?.chosen_supplier_id;
+          {suppliers.length === 0 && (
+            <tr>
+              <td colSpan={6} className="border-t border-hair py-3 text-muted">
+                No supplier meets the line requirement.
+              </td>
+            </tr>
+          )}
+          {suppliers.map((sp) => {
+            const chosen = sp.supplier_id === qa?.chosen_supplier_id;
             return (
-              <tr key={s.supplier_id} className="border-t border-hair" style={chosen ? { boxShadow: "inset 3px 0 0 #F25C05" } : undefined}>
-                <td className="py-2 pl-2 font-mono text-fg2">{s.rank}</td>
+              <tr key={sp.supplier_id} className="border-t border-hair" style={chosen ? { boxShadow: "inset 3px 0 0 #F25C05" } : undefined} data-supplier={sp.supplier_id}>
+                <td className="py-2 pl-2 font-mono text-fg2">{sp.rank}</td>
                 <td className="py-2 text-ink">
-                  {s.supplier_name ?? s.supplier_id}
+                  {sp.supplier_name ?? sp.supplier_id}
                   {chosen && (
                     <span className="ml-2 rounded-full border px-1.5 font-mono text-[11px] uppercase tracking-[0.06em]" style={{ borderColor: "#F25C05", color: "#F25C05" }}>
                       chosen
                     </span>
                   )}
                 </td>
-                <td className="py-2 text-fg2">{s.approved_grade ?? "—"}</td>
-                <td className="py-2" style={{ color: s.meets_requirement ? "#16A34A" : "#DC2626" }}>
-                  {s.meets_requirement ? "✓ meets" : `✗ ${(s.gaps ?? []).join(", ") || "gap"}`}
+                {expanded && <td className="py-2 font-mono text-[13px] text-fg2">{sp.supplier_id}</td>}
+                <td className="py-2 text-fg2">{sp.approved_grade ?? "—"}</td>
+                <td className="py-2" style={{ color: sp.meets_requirement ? "#16A34A" : "#DC2626" }}>
+                  {sp.meets_requirement ? "✓ meets" : `✗ ${(sp.gaps ?? []).join(", ") || "gap"}`}
                 </td>
                 <td className="py-2">
                   <div className="flex items-center gap-2">
                     <div className="h-2 w-[110px] rounded-full bg-[#EAE8E5]">
-                      <div className="h-2 rounded-full" style={{ width: `${Math.max(0, Math.min(100, s.quality_score))}%`, background: chosen ? "#F25C05" : "#908E87" }} />
+                      <div className="h-2 rounded-full" style={{ width: `${Math.max(0, Math.min(100, sp.quality_score))}%`, background: chosen ? "#F25C05" : "#908E87" }} />
                     </div>
-                    <span className="font-mono text-[12px] text-fg2">{s.quality_score}</span>
+                    <span className="font-mono text-[12px] text-fg2">{sp.quality_score}</span>
                   </div>
                 </td>
               </tr>
@@ -1238,19 +1963,22 @@ function SuppliersBody({ qa, mission }: { qa: QaFit | null; mission: boolean }) 
   );
 }
 
-function DodBody({ pipe }: { pipe: Pipeline }) {
-  const checks = pipe.checks.length ? pipe.checks : DEFAULT_CHECKS.map((id) => ({ id }) as Check);
+function DodBody({ pipe, s, expanded }: { pipe: Pipeline; s: CardSettings["DD"]; expanded?: boolean }) {
+  const base = pipe.checks.length ? pipe.checks : DEFAULT_CHECKS.map((id) => ({ id }) as Check);
+  const checks = s.failedFirst ? [...base].sort((a, b) => Number(a.pass !== false) - Number(b.pass !== false)) : base;
   return (
-    <ul className="divide-y divide-hair px-5 py-2">
+    <ul className="divide-y divide-hair px-5 py-2" data-dd-reasons={s.reasons ? "on" : "off"}>
       {checks.map((c) => (
-        <li key={c.id} className="flex items-start gap-2 py-2">
+        <li key={c.id} className="flex items-start gap-2 py-2" data-check={c.id}>
           <span className="mt-[1px] w-3 font-mono text-[13px]" style={{ color: c.pass === true ? "#16A34A" : c.pass === false ? "#DC2626" : "#908E87" }}>
             {c.pass === true ? "✓" : c.pass === false ? "✗" : "○"}
           </span>
-          <span className="w-[130px] shrink-0 font-mono text-[12px] text-ink">{c.id}</span>
-          <span className="min-w-0 flex-1 truncate text-[13px] text-fg2" title={c.reason}>
-            {c.reason ?? (c.pass == null ? (pipe.mission ? "pending" : "—") : c.pass ? "pass" : "fail")}
-          </span>
+          <span className="w-[150px] shrink-0 font-mono text-[12px] text-ink">{c.id}</span>
+          {s.reasons && (
+            <span className={`min-w-0 flex-1 text-[13px] text-fg2 ${expanded ? "whitespace-normal" : "truncate"}`} title={c.reason}>
+              {c.reason ?? (c.pass == null ? (pipe.mission ? "pending" : "—") : c.pass ? "pass" : "fail")}
+            </span>
+          )}
         </li>
       ))}
     </ul>
@@ -1262,8 +1990,9 @@ function PlanBody(props: {
   plan: AnyObj | null;
   pending: ChatMsg | null;
   onAnswer: (msgId: string, requestId: string, opt: InputOption) => void;
+  s: CardSettings["PO"];
 }) {
-  const { pipe, plan, pending, onAnswer } = props;
+  const { pipe, plan, pending, onAnswer, s } = props;
   const t = plan?.transfer;
   const p = plan?.purchase;
   if (!pipe.mission && !plan && !pending) return <Empty mission={false} />;
@@ -1276,10 +2005,7 @@ function PlanBody(props: {
         <Row k="Landed" v={p?.landed_unit_usd != null ? `${fmtUsd(p.landed_unit_usd)}/kg · ${p.lead_time_days ?? "?"} d lead` : "—"} />
         <Row k="RFQ" v={p?.rfq_id ?? "—"} />
         <Row k="Value" v={<span className="font-display text-[24px] font-light tabular-nums leading-tight">{fmtUsd(p?.value_usd) ?? "—"}</span>} />
-        <Row
-          k="Approval"
-          v={<span style={{ color: STATUS_COLOR[ap] }}>{pipe.approval ?? (pipe.mission ? "waiting for the judge" : "—")}</span>}
-        />
+        <Row k="Approval" v={<span style={{ color: STATUS_COLOR[ap] }}>{pipe.approval ?? (pipe.mission ? "waiting for the judge" : "—")}</span>} />
       </dl>
       {!plan && pipe.planLine && <p className="text-[13px] text-fg2">{pipe.planLine}</p>}
       {pending?.input?.map((req) => (
@@ -1295,6 +2021,11 @@ function PlanBody(props: {
           ))}
         </div>
       ))}
+      {s.raw && (
+        <pre className="max-h-[320px] overflow-auto rounded-[6px] border border-hair bg-muted-surface p-3 font-mono text-[12px] leading-snug text-fg2" data-po-raw>
+          {plan ? JSON.stringify(plan, null, 2) : "No plan yet."}
+        </pre>
+      )}
     </div>
   );
 }
@@ -1331,7 +2062,6 @@ function Inspector(props: {
   return (
     <div className="flex flex-col overflow-hidden rounded-[8px] border border-hair bg-surface">
       <div className="flex h-10 items-center gap-2 border-b border-hair px-3">
-        <SlidersHorizontal className="h-3.5 w-3.5 text-muted" />
         <span className="font-mono text-[12px] uppercase tracking-[0.06em] text-fg2">Mission inspector</span>
         {props.mirroring && <span className="ml-auto font-mono text-[11px] uppercase tracking-[0.05em] text-accent">Telegram</span>}
       </div>
@@ -1425,7 +2155,7 @@ function Inspector(props: {
         <div className="flex h-9 items-center gap-2 px-3">
           <span className="font-mono text-[12px] uppercase tracking-[0.06em] text-fg2">Dependencies</span>
           <span className="ml-auto flex items-center gap-1 text-[12px] text-muted">
-            <Network className="h-3 w-3" /> sub-agents
+            sub-agents
           </span>
         </div>
         <ul className="px-2 pb-2">
@@ -1508,25 +2238,32 @@ const STATUS_COLOR: Record<NodeStatus, string> = {
   waiting: "#F25C05",
 };
 
-function PipelineGraph({ pipe }: { pipe: Pipeline }) {
+function PipelineGraph({ pipe, opts = DEFAULT_SETTINGS.PL, fill, tall }: { pipe: Pipeline; opts?: CardSettings["PL"]; fill?: boolean; tall?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const [w, setW] = useState(720);
+  const [h, setH] = useState(GRAPH_H);
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const measure = () => setW(Math.max(600, el.clientWidth - 40));
+    const measure = () => {
+      setW(Math.max(600, el.clientWidth - 40));
+      setH(el.clientHeight - 40);
+    };
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     measure();
     return () => ro.disconnect();
   }, []);
 
+  const graphH = fill ? Math.max(GRAPH_H, h) : tall ? 620 : GRAPH_H;
+  const k = graphH / GRAPH_H;
+  const rowY = ROW_Y.map((y) => Math.round(y * k));
   const gap = 28;
-  const nodeW = Math.max(130, Math.min(190, (w - 3 * gap) / 4));
+  const nodeW = Math.max(130, Math.min(fill || tall ? 240 : 190, (w - 3 * gap) / 4));
   const colGap = (w - 4 * nodeW) / 3;
   const pos = (id: NodeId) => {
     const n = NODE_DEFS.find((d) => d.id === id)!;
-    return { cx: nodeW / 2 + n.col * (nodeW + colGap), cy: ROW_Y[n.row] };
+    return { cx: nodeW / 2 + n.col * (nodeW + colGap), cy: rowY[n.row] };
   };
   const flowing = (a: NodeId, b: NodeId) => {
     const sa = pipe.nodes[a];
@@ -1551,12 +2288,12 @@ function PipelineGraph({ pipe }: { pipe: Pipeline }) {
   const replan = pipe.attempt > 1;
   const pl = pos("planner");
   const jg = pos("judge");
-  const loopY = (ROW_Y[0] + ROW_Y[1]) / 2 + 2;
+  const loopY = (rowY[0] + rowY[1]) / 2 + 2;
 
   return (
-    <div ref={ref} className="overflow-x-auto p-5">
-      <div className="relative mx-auto" style={{ width: w, height: GRAPH_H }}>
-        <svg className="absolute inset-0 overflow-visible" width={w} height={GRAPH_H} aria-hidden>
+    <div ref={ref} className={`overflow-x-auto p-5 ${fill ? "h-full" : ""}`} data-pl-models={opts.models ? "on" : "off"} data-pl-animate={opts.animate ? "on" : "off"}>
+      <div className="relative mx-auto" style={{ width: w, height: graphH }}>
+        <svg className="absolute inset-0 overflow-visible" width={w} height={graphH} aria-hidden>
           <defs>
             <marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
               <path d="M0,0 L8,4 L0,8 z" fill="#D4D2CF" />
@@ -1575,8 +2312,8 @@ function PipelineGraph({ pipe }: { pipe: Pipeline }) {
                 fill="none"
                 stroke={on ? "#F25C05" : seen ? "#908E87" : "#D4D2CF"}
                 strokeWidth={on ? 1.75 : 1.25}
-                strokeDasharray={on ? "6 6" : undefined}
-                className={on ? "edge-flow" : undefined}
+                strokeDasharray={on && opts.animate ? "6 6" : undefined}
+                className={on && opts.animate ? "edge-flow" : undefined}
                 markerEnd={on ? "url(#arr-on)" : "url(#arr)"}
               />
             );
@@ -1589,7 +2326,7 @@ function PipelineGraph({ pipe }: { pipe: Pipeline }) {
                 stroke="#F25C05"
                 strokeWidth={1.5}
                 strokeDasharray="5 5"
-                className="edge-flow"
+                className={opts.animate ? "edge-flow" : undefined}
                 markerEnd="url(#arr-on)"
               />
               <text x={(jg.cx + pl.cx) / 2} y={loopY - 2} textAnchor="middle" fontFamily="var(--font-geist-mono)" fontSize="12" fill="#F25C05" letterSpacing="0.06em" stroke="#FFFFFF" strokeWidth={6} paintOrder="stroke">
@@ -1609,14 +2346,14 @@ function PipelineGraph({ pipe }: { pipe: Pipeline }) {
               key={n.id}
               data-node={n.id}
               data-status={st}
-              className={`absolute flex flex-col rounded-[8px] border bg-surface px-3.5 py-2.5 ${hot ? "node-pulse" : ""}`}
+              className={`absolute flex flex-col rounded-[8px] border bg-surface px-3.5 py-2.5 ${hot && opts.animate ? "node-pulse" : ""}`}
               style={{ left: p.cx - nodeW / 2, top: p.cy - NODE_H / 2, width: nodeW, minHeight: NODE_H, borderColor: border }}
             >
               <div className="flex items-baseline justify-between gap-1">
                 <span className="font-display text-[17px] font-normal leading-tight text-ink">{n.title}</span>
                 {n.id === "negotiators" && pipe.negotiators > 0 && <span className="font-mono text-[12px] text-fg2">×{pipe.negotiators}</span>}
               </div>
-              {n.models.map((m) => (
+              {opts.models && n.models.map((m) => (
                 <span key={m} className="font-mono text-[11px] uppercase leading-[1.35] tracking-[0.02em] text-muted">
                   {m}
                 </span>
@@ -1634,7 +2371,7 @@ function PipelineGraph({ pipe }: { pipe: Pipeline }) {
         })}
 
         {/* tool chips under the Planner */}
-        {pipe.tools.length > 0 && (
+        {opts.tools && pipe.tools.length > 0 && (
           <div className="absolute flex flex-wrap gap-1.5" style={{ left: pl.cx - nodeW / 2, top: pl.cy + NODE_H / 2 + 14, width: nodeW + 20 }} data-testid="tool-chips">
             {pipe.tools.map((t, i) => (
               <span
@@ -1684,7 +2421,6 @@ function Phone(props: {
         </div>
         {/* chat header */}
         <div className="flex shrink-0 items-center gap-3 border-b border-[#e3e3e3] bg-[#f7f7f7] px-3 pb-2 pt-1">
-          <span className="text-[22px] leading-none text-[#3390ec]">‹</span>
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F25C05] text-[14px] font-semibold text-white">SC</div>
           <div className="min-w-0 flex-1">
             <div className="truncate text-[16px] font-semibold text-black">Supplier Chief of Staff</div>
