@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useReducer, useRef, useState } from "react";
 import {
   CheckCircle2,
   ChevronDown,
@@ -248,22 +248,428 @@ const APPROVAL_LABEL: Record<string, [string, NodeStatus]> = {
 
 /* ------------------------------------------------------------- component */
 
+/* ------------------------------------------------------- mission state */
+
+type Phase =
+  | "idle"
+  | "requesting"
+  | "attached"
+  | "planned"
+  | "running"
+  | "verifying"
+  | "awaiting_approval"
+  | "done"
+  | "escalated"
+  | "failed"
+  | "cancelled";
+
+const LIVE_PHASES: Phase[] = ["attached", "planned", "running", "verifying", "awaiting_approval"];
+const TERMINAL_PHASES: Phase[] = ["done", "escalated", "failed", "cancelled"];
+
+const PHASE_LABEL: Record<Phase, string> = {
+  idle: "Idle",
+  requesting: "Requesting",
+  attached: "Mission starting",
+  planned: "Planned",
+  running: "Running",
+  verifying: "Verifying",
+  awaiting_approval: "Waiting for approval",
+  done: "Done",
+  escalated: "Escalated",
+  failed: "Failed",
+  cancelled: "Cancelled",
+};
+
+type Conn = "none" | "connecting" | "live" | "reconnecting" | "lost";
+
+type TheaterState = {
+  sessionId: string | null;
+  mirror: boolean;
+  phase: Phase;
+  /** a mission is the subject of this session (run_mission called or a mission chip pressed) */
+  turnBusy: boolean;
+  conn: Conn;
+  msgs: ChatMsg[];
+  msgKeys: string[];
+  pipe: Pipeline;
+  qa: QaFit | null;
+  plan: AnyObj | null;
+  events: EventRow[];
+};
+
+const INITIAL_STATE: TheaterState = {
+  sessionId: null,
+  mirror: false,
+  phase: "idle",
+  turnBusy: false,
+  conn: "none",
+  msgs: [],
+  msgKeys: [],
+  pipe: EMPTY_PIPE,
+  qa: null,
+  plan: null,
+  events: [],
+};
+
+type TheaterAction =
+  | { type: "reset" }
+  | { type: "mission_requested"; mode: "phone" | "page"; alert?: string }
+  | { type: "mission_request_failed"; reason: string }
+  | { type: "attached"; sessionId: string; mirror: boolean; note?: string }
+  | { type: "user_sent"; text: string; local: boolean }
+  | { type: "answered"; msgId: string; label: string }
+  | { type: "send_failed"; reason: string }
+  | { type: "conn"; sessionId: string; conn: Conn }
+  | { type: "event"; sessionId: string; ev: AnyObj };
+
+const setNode = (p: Pipeline, patch: Partial<Record<NodeId, NodeStatus>>, notes?: Partial<Record<NodeId, string>>): Pipeline => ({
+  ...p,
+  nodes: { ...p.nodes, ...patch },
+  notes: notes ? { ...p.notes, ...notes } : p.notes,
+});
+
+const missionPipe = (now: number): Pipeline => ({
+  ...EMPTY_PIPE,
+  nodes: { ...idleNodes(), sentinel: "active" },
+  notes: { sentinel: "below reorder point" },
+  mission: true,
+  dod: DEFAULT_CHECKS,
+  checks: DEFAULT_CHECKS.map((id) => ({ id })),
+  startedAt: now,
+});
+
+/** Append a chat message unless an identical one (same key) is already there. */
+function withMsg(s: TheaterState, key: string, m: Omit<ChatMsg, "id" | "at"> & { at?: number }): TheaterState {
+  if (s.msgKeys.includes(key)) return s;
+  const last = s.msgs[s.msgs.length - 1];
+  if (m.role === "system" && last?.role === "system" && last.text === m.text) return s;
+  return { ...s, msgKeys: [...s.msgKeys, key], msgs: [...s.msgs, { id: nid(), at: Date.now(), ...m }] };
+}
+
+/** Clears everything a previous mission left behind; keeps the chat. */
+function clearMission(s: TheaterState): TheaterState {
+  return { ...s, pipe: EMPTY_PIPE, qa: null, plan: null, events: [] };
+}
+
+function endMission(s: TheaterState, phase: Phase): TheaterState {
+  const nodes = { ...s.pipe.nodes };
+  const failed = phase === "failed" || phase === "cancelled";
+  for (const n of ALL_NODES) if (nodes[n] === "active") nodes[n] = failed ? "failed" : "done";
+  return { ...s, phase, pipe: { ...s.pipe, nodes, endedAt: s.pipe.endedAt ?? Date.now() } };
+}
+
+function eventRow(e: AnyObj): EventRow | null {
+  const type: string = String(e?.type ?? "");
+  if (!type || /appended|delta|\.metadata|logprobs/.test(type)) return null;
+  const d: AnyObj = e?.data ?? {};
+  let text = "";
+  if (typeof d.message === "string") text = d.message;
+  else if (type === "actions.requested") text = (d.actions ?? []).map((a: AnyObj) => a.toolName ?? a.name).join(", ");
+  else if (type === "action.partial") text = String(d.result?.output?.stage ?? "");
+  else if (type === "action.result") text = String(d.result?.toolName ?? "");
+  else if (type === "agent.started") text = String(d.name ?? "");
+  else if (type === "turn.waiting") text = String(d.on ?? "");
+  const at = Date.parse(e?.meta?.at ?? "") || Date.now();
+  return { at, type, text: text.replace(/\s+/g, " ").slice(0, 120) };
+}
+
+function applyEvent(s0: TheaterState, e: AnyObj): TheaterState {
+  const type: string = e?.type;
+  const d: AnyObj = e?.data ?? {};
+  const row = eventRow(e);
+  let s: TheaterState = row ? { ...s0, events: [...s0.events.slice(-149), row] } : s0;
+  const p = s.pipe;
+  const turn = String(d.turnId ?? d.sequence ?? "");
+  switch (type) {
+    case "turn.started":
+      return { ...s, turnBusy: true, pipe: p.nodes.planner === "active" ? p : setNode(p, { planner: "active" }) };
+
+    case "message.received": {
+      // Our own page-mode messages are already on screen; in mirror mode the phone's messages come from here.
+      if (!s.mirror) return s;
+      const text = typeof d.message === "string" ? d.message.trim() : "";
+      if (!text) return s;
+      const key = `${s.sessionId}|${turn}|in|${text}`;
+      if (text.startsWith("Sentinel alert")) {
+        const alert = text.replace(/^Sentinel alert:\s*/, "").split(". Run run_mission")[0].replace(/\.?$/, ".");
+        s = withMsg(s, key, { role: "alert", text: alert });
+        if (!LIVE_PHASES.includes(s.phase)) s = { ...clearMission(s), phase: "attached", pipe: missionPipe(Date.now()) };
+        return { ...s, pipe: setNode(s.pipe, { planner: "active" }) };
+      }
+      s = withMsg(s, key, { role: "user", text });
+      return { ...s, pipe: setNode(s.pipe, { planner: "active" }, { planner: "reading your message" }) };
+    }
+
+    case "message.completed": {
+      const text = typeof d.message === "string" ? d.message.trim() : "";
+      if (text) s = withMsg(s, `${s.sessionId}|${turn}|out|${text}`, { role: "bot", text });
+      return { ...s, pipe: setNode(s.pipe, { planner: "done" }, { planner: "replied" }) };
+    }
+
+    case "actions.requested": {
+      const names = (d.actions ?? []).map((a: AnyObj) => String(a.toolName ?? a.name ?? "tool")) as string[];
+      if (names.includes("run_mission") && !LIVE_PHASES.includes(s.phase)) {
+        s = { ...clearMission(s), phase: "attached", pipe: { ...missionPipe(Date.now()), tools: s.pipe.tools } };
+      }
+      const tools = [...s.pipe.tools];
+      for (const n of names) if (!tools.some((t) => t.name === n && !t.done)) tools.push({ name: n, done: false });
+      return { ...s, pipe: { ...setNode(s.pipe, { planner: "active" }, { planner: `calling ${names.join(", ")}` }), tools } };
+    }
+
+    case "action.partial": {
+      const out: AnyObj = d.result?.output ?? {};
+      switch (out.stage) {
+        case "planned":
+          return {
+            ...s,
+            phase: "planned",
+            pipe: {
+              ...setNode(p, { sentinel: "done", planner: "active" }, { sentinel: "alert raised", planner: "mission planned" }),
+              mission: true,
+              startedAt: p.startedAt ?? Date.now(),
+              endedAt: null,
+              missionId: out.mission_id,
+              needQty: out.need_qty,
+              needBy: out.need_by,
+              attempt: 1,
+              dod: Array.isArray(out.definition_of_done) ? out.definition_of_done : p.dod,
+              checks: Array.isArray(out.definition_of_done) ? out.definition_of_done.map((id: string) => ({ id })) : p.checks,
+            },
+          };
+        case "dossier":
+          return {
+            ...s,
+            qa: {
+              ...(s.qa ?? {}),
+              molecule: { ...(s.qa?.molecule ?? {}), pubchem_status: out.pubchem_status, cid: out.cid ?? null, structure_image_url: out.structure_image_url ?? null },
+            },
+          };
+        case "branches_done": {
+          const st = (x: unknown): NodeStatus => (x === "rejected" ? "failed" : "done");
+          return {
+            ...s,
+            phase: "verifying",
+            pipe: {
+              ...setNode(
+                p,
+                { transfer: st(out.transfer), sourcing: st(out.sourcing), negotiators: st(out.sourcing), scout: st(out.scout), judge: "active" },
+                { judge: "recomputing checks in code", sourcing: out.rfq_id ? String(out.rfq_id) : p.notes.sourcing }
+              ),
+              attempt: out.attempt ?? p.attempt,
+            },
+          };
+        }
+        case "qa_fit":
+          return {
+            ...s,
+            phase: "verifying",
+            qa: { ...(out as QaFit), molecule: { ...(s.qa?.molecule ?? {}), ...(out.molecule ?? {}) } },
+            pipe: setNode(p, { judge: "active" }, { judge: "Nemotron checking grounding" }),
+          };
+        case "verified": {
+          const checks: Check[] = Array.isArray(out.checks) ? out.checks : [];
+          const decision: string = out.decision;
+          const merged = p.checks.length
+            ? p.checks
+                .map((c) => {
+                  const hit = checks.find((x) => x.id === c.id);
+                  return hit ? { ...c, pass: hit.pass, reason: hit.reason ?? c.reason } : c;
+                })
+                .concat(checks.filter((x) => !p.checks.some((c) => c.id === x.id)))
+            : checks;
+          const passed = checks.filter((c) => c.pass).length;
+          let next = setNode(p, { judge: decision === "accept" ? "done" : "failed" }, { judge: `${decision} · ${passed}/${checks.length} checks` });
+          const replan = decision === "replan";
+          next = replan
+            ? setNode(next, { planner: "active", sourcing: "idle", negotiators: "idle" }, { planner: `re-planning (attempt ${(out.attempt ?? p.attempt) + 1})` })
+            : setNode(next, { approval: "active" }, { approval: "deciding", planner: "waiting on the mission" });
+          return {
+            ...s,
+            phase: replan ? "running" : "verifying",
+            pipe: { ...next, attempt: replan ? (out.attempt ?? p.attempt) + 1 : out.attempt ?? p.attempt, decision, checks: merged },
+          };
+        }
+      }
+      return s;
+    }
+
+    case "action.result": {
+      const r: AnyObj = d.result ?? {};
+      const tool = String(r.toolName ?? "");
+      s = { ...s, pipe: { ...s.pipe, tools: s.pipe.tools.map((t) => (t.name === tool ? { ...t, done: true } : t)) } };
+      if (tool !== "run_mission") return s;
+      const out: AnyObj = r.output ?? {};
+      const apKey: string = typeof out.approval === "string" ? out.approval : out.approval?.status ?? "none";
+      const [apLabel, apStatus] = APPROVAL_LABEL[apKey] ?? [apKey, "done"];
+      const phase: Phase = apKey === "rejected" ? "cancelled" : apKey === "none" && s.pipe.decision === "escalate" ? "escalated" : "done";
+      const qf: AnyObj | undefined = out.quality_fit;
+      const qa: QaFit | null =
+        qf && !s.qa?.suppliers?.length
+          ? {
+              ...(s.qa ?? {}),
+              lines: qf.requirement ?? s.qa?.lines,
+              suppliers: qf.fits ?? s.qa?.suppliers,
+              chosen_supplier_id: out.plan?.purchase?.supplier_id ?? s.qa?.chosen_supplier_id ?? null,
+              qc_release_days: out.plan?.qc_release_days ?? s.qa?.qc_release_days,
+              change_control_required: out.plan?.qa?.change_control_required ?? s.qa?.change_control_required,
+              documents_required: out.plan?.qa?.documents_required ?? s.qa?.documents_required,
+            }
+          : s.qa;
+      s = {
+        ...s,
+        qa,
+        plan: out.plan ?? s.plan,
+        pipe: {
+          ...setNode(s.pipe, { approval: apStatus, sentinel: "done" }, { approval: apLabel }),
+          attempt: out.attempts ?? s.pipe.attempt,
+          missionId: out.mission_id ?? s.pipe.missionId,
+          checks: Array.isArray(out.checks) && out.checks.length ? out.checks : s.pipe.checks,
+          planLine: planLineFrom(out) ?? (typeof out.summary === "string" ? out.summary : s.pipe.planLine),
+          approval: apLabel,
+        },
+      };
+      return endMission(s, phase);
+    }
+
+    case "agent.started": {
+      const name = String(d.name ?? "agent").toLowerCase();
+      if (s.phase === "attached" || s.phase === "planned") s = { ...s, phase: "running" };
+      if (name === "transfer" || name === "sourcing" || name === "scout") return { ...s, pipe: setNode(s.pipe, { [name]: "active" } as Partial<Record<NodeId, NodeStatus>>) };
+      if (name === "verifier" || name === "judge") return { ...s, phase: "verifying", pipe: setNode(s.pipe, { judge: "active" }, { judge: "Nemotron checking grounding" }) };
+      if (/negot|supplier|persona/.test(name)) return { ...s, pipe: { ...setNode(s.pipe, { negotiators: "active" }), negotiators: s.pipe.negotiators + 1 } };
+      return s;
+    }
+
+    case "input.requested": {
+      for (const r of (d.requests ?? []) as AnyObj[]) {
+        const opts: InputOption[] = (r.options ?? r.question?.options ?? []).map((o: AnyObj) => ({ id: String(o.id ?? o.value), label: String(o.label ?? o.id) }));
+        const prompt: string = r.prompt ?? r.question?.prompt ?? r.title ?? "Approval needed";
+        const requestId = String(r.requestId ?? r.id);
+        s = withMsg(s, `${s.sessionId}|input|${requestId}`, { role: "bot", text: prompt, input: [{ requestId, options: opts }] });
+      }
+      return {
+        ...s,
+        phase: s.pipe.mission ? "awaiting_approval" : s.phase,
+        pipe: { ...setNode(s.pipe, { approval: "waiting" }, { approval: "waiting for you" }), approval: "waiting for you" },
+      };
+    }
+
+    case "input.resolved":
+      return { ...s, msgs: s.msgs.map((m) => (m.input?.some((q) => q.requestId === String(d.requestId ?? "")) && !m.answered ? { ...m, answered: "answered" } : m)) };
+
+    case "turn.waiting":
+      return d.on === "input" ? { ...s, turnBusy: false } : s;
+
+    case "turn.completed":
+    case "turn.failed":
+    case "turn.cancelled": {
+      s = { ...s, turnBusy: false };
+      const failed = type !== "turn.completed";
+      if (failed) s = withMsg(s, `${s.sessionId}|${turn}|ended`, { role: "system", text: "The turn ended early. Try again." });
+      if (LIVE_PHASES.includes(s.phase) || s.phase === "requesting") {
+        // Turn finished without a mission result: a chat answer, or the agent declined to run the mission.
+        if (!s.pipe.missionId && !failed) {
+          const nodes = { ...s.pipe.nodes };
+          for (const n of ALL_NODES) if (nodes[n] === "active") nodes[n] = "done";
+          return { ...s, phase: "idle", pipe: { ...s.pipe, nodes, endedAt: s.pipe.endedAt ?? Date.now() } };
+        }
+        if (s.phase !== "awaiting_approval") return endMission(s, failed ? (type === "turn.cancelled" ? "cancelled" : "failed") : "done");
+      }
+      const nodes = { ...s.pipe.nodes };
+      for (const n of ALL_NODES) if (nodes[n] === "active") nodes[n] = failed ? "failed" : "done";
+      return { ...s, pipe: { ...s.pipe, nodes } };
+    }
+
+    case "session.failed":
+      return LIVE_PHASES.includes(s.phase) ? endMission({ ...s, turnBusy: false }, "failed") : { ...s, turnBusy: false };
+  }
+  return s;
+}
+
+function theaterReducer(s: TheaterState, a: TheaterAction): TheaterState {
+  switch (a.type) {
+    case "reset":
+      return INITIAL_STATE;
+
+    case "mission_requested": {
+      let next: TheaterState = { ...clearMission(s), phase: "requesting", turnBusy: true, pipe: missionPipe(Date.now()) };
+      if (a.mode === "page") {
+        // A page mission gets its own fresh session; the old one is dropped.
+        next = { ...next, sessionId: null, mirror: false, conn: "none" };
+        if (a.alert) next = withMsg(next, `alert|${Date.now()}`, { role: "alert", text: a.alert });
+      }
+      return next;
+    }
+
+    case "mission_request_failed":
+      return withMsg({ ...clearMission(s), phase: "idle", turnBusy: false }, `failed|${a.reason}|${s.msgs.length}`, { role: "system", text: a.reason });
+
+    case "attached": {
+      let next: TheaterState = { ...s, sessionId: a.sessionId, mirror: a.mirror, conn: "connecting", phase: s.phase === "requesting" ? "attached" : s.phase };
+      if (a.mirror) next = { ...next, msgs: [], msgKeys: [] };
+      if (a.note) next = withMsg(next, `note|${a.sessionId}`, { role: "system", text: a.note });
+      return next;
+    }
+
+    case "user_sent": {
+      let next: TheaterState = { ...s, turnBusy: true };
+      if (a.local) next = withMsg(next, `local|${Date.now()}|${a.text}`, { role: "user", text: a.text });
+      const missionLive = LIVE_PHASES.includes(next.phase);
+      return {
+        ...next,
+        pipe: missionLive ? setNode(next.pipe, { planner: "active" }) : { ...setNode(next.pipe, { planner: "active" }, { planner: "reading your message" }), tools: [] },
+      };
+    }
+
+    case "answered": {
+      const next = { ...s, turnBusy: true, msgs: s.msgs.map((m) => (m.id === a.msgId ? { ...m, answered: a.label } : m)) };
+      return {
+        ...withMsg(next, `answer|${a.msgId}`, { role: "user", text: a.label }),
+        phase: next.phase === "awaiting_approval" ? "verifying" : next.phase,
+        pipe: setNode(next.pipe, { approval: "active", planner: "active" }, { approval: `you chose: ${a.label}` }),
+      };
+    }
+
+    case "send_failed": {
+      if (s.phase === "requesting")
+        return withMsg({ ...clearMission(s), phase: "idle", turnBusy: false }, `sendfail|${s.msgs.length}`, { role: "system", text: a.reason });
+      const next = { ...s, turnBusy: false, pipe: setNode(s.pipe, { planner: "failed" }, { planner: "agent unreachable" }) };
+      return withMsg(LIVE_PHASES.includes(s.phase) ? endMission(next, "failed") : next, `sendfail|${s.msgs.length}`, {
+        role: "system",
+        text: a.reason,
+      });
+    }
+
+    case "conn": {
+      if (a.sessionId !== s.sessionId) return s;
+      if (a.conn === "lost") {
+        const next = withMsg({ ...s, conn: "lost", turnBusy: false }, `lost|${s.sessionId}|${s.events.length}`, { role: "system", text: "Connection to the agent was lost." });
+        return LIVE_PHASES.includes(s.phase) ? endMission(next, "failed") : next;
+      }
+      return { ...s, conn: a.conn };
+    }
+
+    case "event":
+      if (a.sessionId !== s.sessionId) return s; // stale stream from a previous session
+      return applyEvent(s.conn === "live" ? s : { ...s, conn: "live" }, a.ev);
+  }
+}
+
 export default function Theater() {
-  const [msgs, setMsgs] = useState<ChatMsg[]>([]);
-  const [busy, setBusy] = useState(false);
+  const [state, dispatch] = useReducer(theaterReducer, INITIAL_STATE);
+  const { msgs, pipe, qa, plan, events, phase } = state;
+  const mirroring = state.mirror;
+  const requesting = phase === "requesting";
+  const busy = state.turnBusy || requesting;
+
   const [draft, setDraft] = useState("");
-  const [pipe, setPipe] = useState<Pipeline>(EMPTY_PIPE);
-  const [qa, setQa] = useState<QaFit | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [opsNote, setOpsNote] = useState<string | null>(null);
   const [runOn, setRunOn] = useState<"phone" | "page">("phone");
-  const [mirroring, setMirroring] = useState(false);
-  const [events, setEvents] = useState<EventRow[]>([]);
   const [inspTab, setInspTab] = useState<"data" | "events">("data");
   const [view, setView] = useState<"canvas" | "graph">("canvas");
   const [drawer, setDrawer] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [plan, setPlan] = useState<AnyObj | null>(null);
   const [settings, setSettings] = useStored<CardSettings>("sc.cardSettings.v1", DEFAULT_SETTINGS);
   const [layout, setLayout] = useStored<{ order: CanvasCardId[]; collapsed: CardId[] }>("sc.layout.v1", { order: DEFAULT_ORDER, collapsed: [] });
   const [maxCard, setMaxCard] = useState<CardId | null>(null);
@@ -277,34 +683,26 @@ export default function Theater() {
   const floorHostRef = useRef<HTMLDivElement>(null);
   const floorHomeRef = useRef<HTMLDivElement>(null);
   const floorModalRef = useRef<HTMLDivElement>(null);
-
-  const sessionRef = useRef<string | null>(null);
-  const countRef = useRef(0);
-  const seenRef = useRef<Set<string>>(new Set());
-  const streamingRef = useRef(false);
-  const busyRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const streamAbort = useRef<AbortController | null>(null);
-  // Mirror mode: the web view follows the real Telegram session started by the sentinel.
-  const mirrorRef = useRef(false);
-  const sinceRef = useRef(0);
-  const localTexts = useRef<string[]>([]);
 
-  const setBusyBoth = (b: boolean) => {
-    busyRef.current = b;
-    setBusy(b);
-  };
+  // I/O handles only (no UI state): the one live stream and the session it belongs to.
+  const stream = useRef<{ sessionId: string; ac: AbortController } | null>(null);
+  const sessionRef = useRef<string | null>(null);
+  sessionRef.current = state.sessionId;
 
+  const timerLive = LIVE_PHASES.includes(phase);
   useEffect(() => {
+    if (!timerLive) return;
+    setNow(Date.now());
     const t = setInterval(() => setNow(Date.now()), 500);
     return () => clearInterval(t);
-  }, []);
+  }, [timerLive]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [msgs, busy]);
 
-  useEffect(() => () => streamAbort.current?.abort(), []);
+  useEffect(() => () => stream.current?.ac.abort(), []);
 
   // Drive the 3D mission floor from the pipeline: focus the station of the latest active node, play during a turn.
   const focusKey = (() => {
@@ -331,15 +729,15 @@ export default function Theater() {
       if (follow && focusKey) machine()?.focusStation(focusKey);
     } catch {}
   }, [focusKey, follow]);
+  const floorRun = busy && phase !== "awaiting_approval";
   useEffect(() => {
     if (!follow) return;
     try {
-      const run = busy && pipe.nodes.approval !== "waiting";
-      if (run) machine()?.play();
+      if (floorRun) machine()?.play();
       else machine()?.pause();
-      setFloorPlaying(run);
+      setFloorPlaying(floorRun);
     } catch {}
-  }, [busy, pipe.nodes.approval, follow]);
+  }, [floorRun, follow]);
   // Camera choice from the $FL settings; retried once in case the scene is still loading.
   const camera = settings.FL.camera;
   useEffect(() => {
@@ -353,380 +751,121 @@ export default function Theater() {
     return () => clearTimeout(t);
   }, [camera]);
 
-  const pushMsg = useCallback((m: Omit<ChatMsg, "id" | "at"> & { at?: number }) => {
-    setMsgs((prev) => [...prev, { id: nid(), at: Date.now(), ...m }]);
+  /* ------------------------------------------------------------ streaming */
+  const stopStream = useCallback(() => {
+    stream.current?.ac.abort();
+    stream.current = null;
   }, []);
 
-  const setNode = (p: Pipeline, patch: Partial<Record<NodeId, NodeStatus>>, notes?: Partial<Record<NodeId, string>>): Pipeline => ({
-    ...p,
-    nodes: { ...p.nodes, ...patch },
-    notes: notes ? { ...p.notes, ...notes } : p.notes,
-  });
-
-  /** A new user turn: Planner lights up. Non-mission turns clear the previous turn's tool chips. */
-  const beginTurn = useCallback((mission?: boolean) => {
-    if (mission) {
-      setQa(null);
-      setPlan(null);
-      setPipe({
-        ...EMPTY_PIPE,
-        nodes: { ...idleNodes(), sentinel: "active", planner: "active" },
-        notes: { sentinel: "below reorder point" },
-        mission: true,
-        dod: DEFAULT_CHECKS,
-        checks: DEFAULT_CHECKS.map((id) => ({ id })),
-        attempt: 0,
-        startedAt: Date.now(),
-      });
-      return;
-    }
-    setPipe((p) => {
-      const running = p.mission && !p.endedAt;
-      if (running) return setNode(p, { planner: "active" });
-      return { ...setNode(p, { planner: "active" }, { planner: "reading your message" }), tools: [] };
-    });
-  }, []);
-
-  /* ------------------------------------------------------- event handler */
-  const handleEvent = useCallback(
-    (e: AnyObj) => {
-      const type: string = e?.type;
-      const d: AnyObj = e?.data ?? {};
-      switch (type) {
-        case "turn.started":
-          setBusyBoth(true);
-          setPipe((p) => (p.nodes.planner === "active" ? p : setNode(p, { planner: "active" })));
-          break;
-        case "message.received": {
-          if (!mirrorRef.current) break;
-          const text = typeof d.message === "string" ? d.message.trim() : "";
-          if (!text) break;
-          const i = localTexts.current.indexOf(text);
-          if (i >= 0) {
-            localTexts.current.splice(i, 1);
-            break;
-          }
-          if (text.startsWith("Sentinel alert")) {
-            pushMsg({ role: "alert", text: text.replace(/^Sentinel alert:\s*/, "").split(". Run run_mission")[0] + "." });
-            beginTurn(true);
-          } else {
-            pushMsg({ role: "user", text });
-            beginTurn(false);
-          }
-          break;
-        }
-        case "message.completed":
-          if (typeof d.message === "string" && d.message.trim()) pushMsg({ role: "bot", text: d.message });
-          setPipe((p) => setNode(p, { planner: "done" }, { planner: "replied" }));
-          break;
-        case "actions.requested": {
-          const acts: AnyObj[] = d.actions ?? [];
-          const names = acts.map((a) => String(a.toolName ?? a.name ?? "tool"));
-          const isMission = names.includes("run_mission");
-          setPipe((p) => {
-            let next = p;
-            if (isMission && !(p.mission && !p.endedAt)) {
-              next = {
-                ...EMPTY_PIPE,
-                nodes: { ...idleNodes(), sentinel: "active", planner: "active" },
-                mission: true,
-                dod: DEFAULT_CHECKS,
-                checks: DEFAULT_CHECKS.map((id) => ({ id })),
-                startedAt: Date.now(),
-                tools: p.tools,
-              };
-            }
-            const tools = [...next.tools];
-            for (const n of names) if (!tools.some((t) => t.name === n && !t.done)) tools.push({ name: n, done: false });
-            return { ...setNode(next, { planner: "active" }, { planner: `calling ${names.join(", ")}` }), tools };
-          });
-          break;
-        }
-        case "action.partial": {
-          const out: AnyObj = d.result?.output ?? {};
-          const stage = out.stage;
-          if (stage === "planned") {
-            setPipe((p) => ({
-              ...setNode(p, { sentinel: "done", planner: "active" }, { sentinel: "alert raised", planner: "mission planned" }),
-              mission: true,
-              startedAt: p.startedAt ?? Date.now(),
-              missionId: out.mission_id,
-              needQty: out.need_qty,
-              needBy: out.need_by,
-              attempt: 1,
-              dod: Array.isArray(out.definition_of_done) ? out.definition_of_done : p.dod,
-              checks: Array.isArray(out.definition_of_done) ? out.definition_of_done.map((id: string) => ({ id })) : p.checks,
-            }));
-          } else if (stage === "dossier") {
-            setQa((q) => ({
-              ...(q ?? {}),
-              molecule: {
-                ...(q?.molecule ?? {}),
-                pubchem_status: out.pubchem_status,
-                cid: out.cid ?? null,
-                structure_image_url: out.structure_image_url ?? null,
-              },
-            }));
-          } else if (stage === "branches_done") {
-            const st = (s: unknown): NodeStatus => (s === "fulfilled" ? "done" : s === "rejected" ? "failed" : "done");
-            setPipe((p) => ({
-              ...setNode(
-                p,
-                {
-                  transfer: st(out.transfer),
-                  sourcing: st(out.sourcing),
-                  negotiators: st(out.sourcing),
-                  scout: st(out.scout),
-                  judge: "active",
-                },
-                { judge: "recomputing checks in code", sourcing: out.rfq_id ? String(out.rfq_id) : p.notes.sourcing }
-              ),
-              attempt: out.attempt ?? p.attempt,
-            }));
-          } else if (stage === "qa_fit") {
-            setQa((q) => ({ ...out, molecule: { ...(q?.molecule ?? {}), ...(out.molecule ?? {}) } }) as QaFit);
-            setPipe((p) => setNode(p, { judge: "active" }, { judge: "Nemotron checking grounding" }));
-          } else if (stage === "verified") {
-            const checks: Check[] = Array.isArray(out.checks) ? out.checks : [];
-            const decision: string = out.decision;
-            setPipe((p) => {
-              const merged = p.checks.length
-                ? p.checks
-                    .map((c) => {
-                      const hit = checks.find((x) => x.id === c.id);
-                      return hit ? { ...c, pass: hit.pass, reason: hit.reason ?? c.reason } : c;
-                    })
-                    .concat(checks.filter((x) => !p.checks.some((c) => c.id === x.id)))
-                : checks;
-              const passed = checks.filter((c) => c.pass).length;
-              const judge: NodeStatus = decision === "accept" ? "done" : "failed";
-              let next = setNode(p, { judge }, { judge: `${decision} · ${passed}/${checks.length} checks` });
-              if (decision === "replan") {
-                next = setNode(next, { planner: "active", sourcing: "idle", negotiators: "idle" }, { planner: `re-planning (attempt ${(out.attempt ?? p.attempt) + 1})` });
-              } else {
-                next = setNode(next, { approval: "active" }, { approval: "deciding", planner: "waiting on the mission" });
+  /** Follows one session's event stream; reconnects from the last index, gives up after 3 failed attempts in a row. */
+  const attachStream = useCallback(
+    (sessionId: string) => {
+      stopStream();
+      const ac = new AbortController();
+      stream.current = { sessionId, ac };
+      (async () => {
+        let index = 0;
+        let failures = 0;
+        const seen = new Set<string>();
+        while (!ac.signal.aborted) {
+          let got = 0;
+          let healthy = false;
+          const opened = Date.now();
+          try {
+            const res = await fetch(`/api/eve/session/${encodeURIComponent(sessionId)}/stream?startIndex=${index}`, { cache: "no-store", signal: ac.signal });
+            if (!res.ok || !res.body) throw new Error(`stream ${res.status}`);
+            healthy = true;
+            if (!ac.signal.aborted) dispatch({ type: "conn", sessionId, conn: "live" });
+            const reader = res.body.getReader();
+            const dec = new TextDecoder();
+            let buf = "";
+            for (;;) {
+              const { value, done } = await reader.read();
+              if (done) break;
+              buf += dec.decode(value, { stream: true });
+              let nl: number;
+              while ((nl = buf.indexOf("\n")) >= 0) {
+                const line = buf.slice(0, nl).trim();
+                buf = buf.slice(nl + 1);
+                if (!line) continue;
+                index += 1;
+                got += 1;
+                let ev: AnyObj;
+                try {
+                  ev = JSON.parse(line);
+                } catch {
+                  continue;
+                }
+                const eid: string | undefined = ev?.meta?.id;
+                if (eid) {
+                  if (seen.has(eid)) continue;
+                  seen.add(eid);
+                }
+                if (ac.signal.aborted) return;
+                dispatch({ type: "event", sessionId, ev });
               }
-              return {
-                ...next,
-                attempt: decision === "replan" ? (out.attempt ?? p.attempt) + 1 : out.attempt ?? p.attempt,
-                decision,
-                checks: merged,
-              };
-            });
+            }
+          } catch {
+            if (ac.signal.aborted) return;
           }
-          break;
-        }
-        case "action.result": {
-          const r: AnyObj = d.result ?? {};
-          const tool = String(r.toolName ?? "");
-          setPipe((p) => ({ ...p, tools: p.tools.map((t) => (t.name === tool ? { ...t, done: true } : t)) }));
-          if (tool !== "run_mission") break;
-          const out: AnyObj = r.output ?? {};
-          if (out.plan) setPlan(out.plan);
-          const apKey: string = typeof out.approval === "string" ? out.approval : out.approval?.status ?? "none";
-          const [apLabel, apStatus] = APPROVAL_LABEL[apKey] ?? [apKey, "done"];
-          setPipe((p) => ({
-            ...setNode(p, { approval: apStatus, sentinel: "done" }, { approval: apLabel }),
-            endedAt: Date.now(),
-            attempt: out.attempts ?? p.attempt,
-            missionId: out.mission_id ?? p.missionId,
-            checks: Array.isArray(out.checks) && out.checks.length ? out.checks : p.checks,
-            planLine: planLineFrom(out) ?? (typeof out.summary === "string" ? out.summary : p.planLine),
-            approval: apLabel,
-          }));
-          const qf: AnyObj | undefined = out.quality_fit;
-          if (qf) {
-            setQa((q) =>
-              q?.suppliers?.length
-                ? q
-                : {
-                    ...(q ?? {}),
-                    lines: qf.requirement ?? q?.lines,
-                    suppliers: qf.fits ?? q?.suppliers,
-                    chosen_supplier_id: out.plan?.purchase?.supplier_id ?? q?.chosen_supplier_id ?? null,
-                    qc_release_days: out.plan?.qc_release_days ?? q?.qc_release_days,
-                    change_control_required: out.plan?.qa?.change_control_required ?? q?.change_control_required,
-                    documents_required: out.plan?.qa?.documents_required ?? q?.documents_required,
-                  }
-            );
+          if (ac.signal.aborted) return;
+          // A stream that delivered events, or stayed open a while, closed normally (proxy time limit): reconnect.
+          failures = got > 0 || (healthy && Date.now() - opened > 5000) ? 0 : failures + 1;
+          if (failures > 3) {
+            dispatch({ type: "conn", sessionId, conn: "lost" });
+            return;
           }
-          break;
+          dispatch({ type: "conn", sessionId, conn: "reconnecting" });
+          await new Promise((r) => setTimeout(r, 600 * failures + 200));
         }
-        case "agent.started": {
-          const name: string = String(d.name ?? "agent").toLowerCase();
-          setPipe((p) => {
-            if (name === "transfer" || name === "sourcing" || name === "scout") return setNode(p, { [name]: "active" } as Partial<Record<NodeId, NodeStatus>>);
-            if (name === "verifier" || name === "judge") return setNode(p, { judge: "active" }, { judge: "Nemotron checking grounding" });
-            if (/negot|supplier|persona/.test(name))
-              return { ...setNode(p, { negotiators: "active" }), negotiators: p.negotiators + 1 };
-            return p;
-          });
-          break;
-        }
-        case "input.requested": {
-          const reqs: AnyObj[] = d.requests ?? [];
-          for (const r of reqs) {
-            const opts: InputOption[] = (r.options ?? r.question?.options ?? []).map((o: AnyObj) => ({
-              id: String(o.id ?? o.value),
-              label: String(o.label ?? o.id),
-            }));
-            const prompt: string = r.prompt ?? r.question?.prompt ?? r.title ?? "Approval needed";
-            pushMsg({ role: "bot", text: prompt, input: [{ requestId: r.requestId ?? r.id, options: opts }] });
-          }
-          setPipe((p) => ({ ...setNode(p, { approval: "waiting" }, { approval: "waiting for you" }), approval: "waiting for you" }));
-          break;
-        }
-        case "turn.waiting":
-          if (d.on === "input") setBusyBoth(false);
-          break;
-        case "turn.completed":
-        case "turn.failed":
-        case "turn.cancelled": {
-          setBusyBoth(false);
-          const failed = type !== "turn.completed";
-          setPipe((p) => {
-            const nodes = { ...p.nodes };
-            for (const n of ALL_NODES) if (nodes[n] === "active") nodes[n] = failed ? "failed" : "done";
-            return { ...p, nodes, endedAt: p.mission && !p.endedAt ? Date.now() : p.endedAt };
-          });
-          if (failed) pushMsg({ role: "system", text: "The turn ended early. Try again." });
-          break;
-        }
-        case "session.waiting":
-        case "session.failed":
-          setBusyBoth(false);
-          break;
-      }
+      })();
     },
-    [pushMsg, beginTurn]
+    [stopStream]
   );
 
-  const logEvent = useCallback((e: AnyObj) => {
-    const type: string = String(e?.type ?? "");
-    if (!type || /appended|delta|\.metadata|logprobs/.test(type)) return;
-    const d: AnyObj = e?.data ?? {};
-    let text = "";
-    if (typeof d.message === "string") text = d.message;
-    else if (type === "actions.requested") text = (d.actions ?? []).map((a: AnyObj) => a.toolName ?? a.name).join(", ");
-    else if (type === "action.partial") text = String(d.result?.output?.stage ?? "");
-    else if (type === "action.result") text = String(d.result?.toolName ?? "");
-    else if (type === "agent.started") text = String(d.name ?? "");
-    else if (type === "turn.waiting") text = String(d.on ?? "");
-    const at = Date.parse(e?.meta?.at ?? "") || Date.now();
-    setEvents((prev) => [...prev.slice(-99), { at, type, text: text.replace(/\s+/g, " ").slice(0, 120) }]);
-  }, []);
-
-  /* ------------------------------------------------------------ streaming */
-  const ensureStream = useCallback(() => {
-    const sid = sessionRef.current;
-    if (!sid || streamingRef.current) return;
-    streamingRef.current = true;
-    const ac = new AbortController();
-    streamAbort.current = ac;
-    (async () => {
-      try {
-        const res = await fetch(`/api/eve/session/${sid}/stream?startIndex=${countRef.current}`, {
-          cache: "no-store",
-          signal: ac.signal,
-        });
-        if (!res.ok || !res.body) throw new Error(`stream ${res.status}`);
-        const reader = res.body.getReader();
-        const dec = new TextDecoder();
-        let buf = "";
-        for (;;) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          buf += dec.decode(value, { stream: true });
-          let nl: number;
-          while ((nl = buf.indexOf("\n")) >= 0) {
-            const line = buf.slice(0, nl).trim();
-            buf = buf.slice(nl + 1);
-            if (!line) continue;
-            let ev: AnyObj;
-            try {
-              ev = JSON.parse(line);
-            } catch {
-              continue;
-            }
-            const eid: string | undefined = ev?.meta?.id;
-            if (eid) {
-              if (seenRef.current.has(eid)) continue;
-              seenRef.current.add(eid);
-            }
-            countRef.current += 1;
-            if (mirrorRef.current && sinceRef.current) {
-              const at = ev?.meta?.at;
-              const t = typeof at === "number" ? at : typeof at === "string" ? Date.parse(at) : NaN;
-              if (!Number.isNaN(t) && t < sinceRef.current) continue;
-            }
-            logEvent(ev);
-            handleEvent(ev);
-          }
-        }
-      } catch (err) {
-        if ((err as Error)?.name === "AbortError") return;
-      } finally {
-        streamingRef.current = false;
-      }
-      if (ac.signal.aborted) return;
-      if (busyRef.current) setTimeout(ensureStream, 800);
-      else if (mirrorRef.current) setTimeout(ensureStream, 2500);
-    })();
-  }, [handleEvent, logEvent]);
-
   /* ---------------------------------------------------------------- send */
+  /** Sends to the current session, or opens a new one and attaches to it. */
   const post = useCallback(
-    async (body: AnyObj) => {
-      setBusyBoth(true);
+    async (body: AnyObj): Promise<boolean> => {
       try {
-        let sid = sessionRef.current;
+        const sid = sessionRef.current;
         if (!sid) {
-          const res = await fetch("/api/eve/session", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify(body),
-          });
-          const j = await res.json();
-          if (!j?.sessionId) throw new Error(j?.error ?? "no session");
-          sid = j.sessionId as string;
-          sessionRef.current = sid;
+          const res = await fetch("/api/eve/session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+          const j: AnyObj = await res.json().catch(() => ({}));
+          if (!res.ok || !j?.sessionId) throw new Error(j?.error ?? `session ${res.status}`);
+          const newSid = String(j.sessionId);
+          sessionRef.current = newSid;
+          dispatch({ type: "attached", sessionId: newSid, mirror: false });
+          attachStream(newSid);
         } else {
-          const res = await fetch(`/api/eve/session/${sid}`, {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify(body),
-          });
+          const res = await fetch(`/api/eve/session/${encodeURIComponent(sid)}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
           if (!res.ok) throw new Error(`send ${res.status}`);
+          if (stream.current?.sessionId !== sid) attachStream(sid);
         }
-        ensureStream();
+        return true;
       } catch (err) {
-        setBusyBoth(false);
-        setPipe((p) => setNode(p, { planner: "failed" }, { planner: "agent unreachable" }));
-        pushMsg({ role: "system", text: `Could not reach the agent (${(err as Error).message}).` });
+        dispatch({ type: "send_failed", reason: `Could not reach the agent (${(err as Error).message}).` });
+        return false;
       }
     },
-    [ensureStream, pushMsg]
+    [attachStream]
   );
 
   const sendText = useCallback(
     (text: string) => {
       const t = text.trim();
-      if (!t) return;
-      pushMsg({ role: "user", text: t });
-      if (mirrorRef.current) localTexts.current.push(t);
-      beginTurn(false);
+      if (!t || busy) return;
+      // When mirroring, the phone's own messages come back through the stream; don't draw them twice.
+      dispatch({ type: "user_sent", text: t, local: !state.mirror });
       post({ message: t });
     },
-    [post, pushMsg, beginTurn]
+    [post, busy, state.mirror]
   );
 
-  /** Fire the real sentinel: the alert lands on the planner's Telegram, and this page mirrors that session live. */
+  /** Fire the real sentinel: the alert lands on the planner's Telegram, and this page mirrors that fresh session. */
   const runOnPhone = useCallback(
     async (m: NonNullable<QuickAction["mission"]>) => {
-      setBusyBoth(true);
-      beginTurn(true);
-      pushMsg({ role: "system", text: "Sentinel alert sent to Telegram. Mirroring that session here." });
-      const clickAt = Date.now();
+      dispatch({ type: "mission_requested", mode: "phone" });
       try {
         const res = await fetch("/api/ops/sentinel", {
           method: "POST",
@@ -734,87 +873,67 @@ export default function Theater() {
           body: JSON.stringify({ material_id: m.material, site_id: m.site }),
         });
         const j: AnyObj = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(j?.error ?? j?.reason ?? `sentinel ${res.status}`);
-        if (!j.sessionId) {
-          setBusyBoth(false);
-          pushMsg({ role: "system", text: j.breaches === 0 ? "No breach for that material right now." : "Alert sent, but no session to mirror." });
-          setPipe((p) => setNode(p, { sentinel: "done", planner: "idle" }));
+        if (!res.ok || j?.ok === false || !j?.sessionId) {
+          const reason = j?.reason ?? j?.error ?? (res.ok ? "the agent did not open a session" : `HTTP ${res.status}`);
+          dispatch({ type: "mission_request_failed", reason: `Sentinel alert not sent: ${reason}.` });
           return;
         }
-        streamAbort.current?.abort();
-        streamingRef.current = false;
-        seenRef.current = new Set();
-        countRef.current = 0;
-        sessionRef.current = String(j.sessionId);
-        mirrorRef.current = true;
-        sinceRef.current = clickAt - 5000;
-        setMirroring(true);
-        ensureStream();
+        const sid = String(j.sessionId);
+        sessionRef.current = sid;
+        dispatch({ type: "attached", sessionId: sid, mirror: true, note: "Sentinel alert sent to Telegram. Mirroring that session here." });
+        attachStream(sid);
       } catch (err) {
-        setBusyBoth(false);
-        setPipe((p) => setNode(p, { sentinel: "failed", planner: "idle" }));
-        pushMsg({ role: "system", text: `Could not fire the sentinel (${(err as Error).message}).` });
+        dispatch({ type: "mission_request_failed", reason: `Sentinel alert not sent: ${(err as Error).message}.` });
       }
     },
-    [beginTurn, ensureStream, pushMsg]
+    [attachStream]
   );
 
   const runAction = useCallback(
     (a: QuickAction) => {
-      if (busyRef.current) return;
+      if (busy) return;
       if (a.mission && a.alert) {
+        stopStream();
         if (runOn === "phone") {
           runOnPhone(a.mission);
           return;
         }
-        // Run on this page: a fresh web session, separate from the Telegram conversation.
-        if (mirrorRef.current) {
-          streamAbort.current?.abort();
-          streamingRef.current = false;
-          sessionRef.current = null;
-          countRef.current = 0;
-          seenRef.current = new Set();
-          mirrorRef.current = false;
-          setMirroring(false);
-        }
-        pushMsg({ role: "alert", text: a.alert });
-        beginTurn(true);
+        sessionRef.current = null;
+        dispatch({ type: "mission_requested", mode: "page", alert: a.alert });
         post({ message: a.message });
       } else sendText(a.message);
     },
-    [post, pushMsg, sendText, beginTurn, runOn, runOnPhone]
+    [busy, post, sendText, runOn, runOnPhone, stopStream]
   );
 
   const answer = useCallback(
     (msgId: string, requestId: string, opt: InputOption) => {
-      setMsgs((prev) => prev.map((m) => (m.id === msgId ? { ...m, answered: opt.label } : m)));
-      pushMsg({ role: "user", text: opt.label });
-      setPipe((p) => ({ ...setNode(p, { approval: "active", planner: "active" }, { approval: `you chose: ${opt.label}` }) }));
+      dispatch({ type: "answered", msgId, label: opt.label });
       post({ inputResponses: [{ requestId, optionId: opt.id }] });
     },
-    [post, pushMsg]
+    [post]
   );
 
-  const ops = useCallback(async (action: "reset" | "sentinel", body?: AnyObj) => {
-    setOpsNote(action === "reset" ? "Resetting synthetic data…" : "Sending alert to the phone…");
-    try {
-      const res = await fetch(`/api/ops/${action}`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(body ?? {}),
-      });
-      setOpsNote(res.ok ? (action === "reset" ? "Demo data reset." : "Alert sent to Telegram.") : `Failed (${res.status}).`);
-      if (res.ok && action === "reset") {
-        setPipe(EMPTY_PIPE);
-        setQa(null);
-        setPlan(null);
-        setEvents([]);
+  const resetAll = useCallback(() => {
+    stopStream();
+    sessionRef.current = null;
+    dispatch({ type: "reset" });
+  }, [stopStream]);
+
+  const ops = useCallback(
+    async (action: "reset") => {
+      setOpsNote("Resetting synthetic data…");
+      try {
+        const res = await fetch(`/api/ops/${action}`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+        setOpsNote(res.ok ? "Demo data reset." : `Failed (${res.status}).`);
+        if (res.ok) resetAll();
+      } catch {
+        setOpsNote("Failed.");
       }
-    } catch {
-      setOpsNote("Failed.");
-    }
-    setTimeout(() => setOpsNote(null), 4000);
-  }, []);
+      setTimeout(() => setOpsNote(null), 4000);
+    },
+    [resetAll]
+  );
 
   /* ---------------------------------------------------------------- render */
   const elapsed = pipe.startedAt ? Math.max(0, ((pipe.endedAt ?? now) - pipe.startedAt) / 1000) : 0;
@@ -1056,22 +1175,10 @@ export default function Theater() {
   const timer = <span className="mr-1 font-mono text-[12px] tabular-nums text-fg2">{pipe.startedAt ? `${mm}:${ss}` : "0:00"}</span>;
 
   const newSession = () => {
-    streamAbort.current?.abort();
-    streamingRef.current = false;
-    sessionRef.current = null;
-    countRef.current = 0;
-    seenRef.current = new Set();
-    mirrorRef.current = false;
-    localTexts.current = [];
-    setMirroring(false);
-    setBusyBoth(false);
-    setMsgs([]);
-    setPipe(EMPTY_PIPE);
-    setQa(null);
-    setPlan(null);
-    setEvents([]);
+    resetAll();
     showToast("New session");
   };
+
 
   const inspector = (
     <Inspector
@@ -1383,11 +1490,12 @@ export default function Theater() {
         </button>
         <span className="flex h-full items-center border-t-2 border-accent px-2 text-ink">{view === "canvas" ? "Canvas" : "Graph"}</span>
         <span className="text-muted">·</span>
-        <span className="font-mono text-[12px] text-fg2">{pipe.missionId ? `Mission ${pipe.missionId}` : pipe.mission ? "Mission starting" : "No mission yet"}</span>
+        <span className="font-mono text-[12px] text-fg2">{pipe.missionId ? `Mission ${pipe.missionId}` : "No mission"}</span>
         <span className="text-muted">·</span>
-        <span className="flex items-center gap-1.5" style={{ color: busy ? "#F25C05" : "#908E87" }}>
-          <span className="h-1.5 w-1.5 rounded-full" style={{ background: busy ? "#F25C05" : "#D4D2CF" }} />
-          {busy ? "Live" : "Idle"}
+        <span className="flex items-center gap-1.5" style={{ color: state.conn === "lost" ? "#DC2626" : busy || timerLive ? "#F25C05" : "#908E87" }} data-phase={phase}>
+          <span className="h-1.5 w-1.5 rounded-full" style={{ background: state.conn === "lost" ? "#DC2626" : busy || timerLive ? "#F25C05" : "#D4D2CF" }} />
+          {state.conn === "lost" ? "Connection lost" : PHASE_LABEL[phase]}
+          {state.conn === "reconnecting" && <span className="text-muted"> · reconnecting</span>}
         </span>
         {mirroring && <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-accent">Mirroring Telegram session</span>}
         <span className="ml-auto hidden font-mono text-[11px] uppercase tracking-[0.06em] text-muted sm:inline">Synthetic data · Corvane Biologics is fictional</span>
