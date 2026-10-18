@@ -6,6 +6,18 @@ import { boardInRedis, filterBoard, loadBoard } from "../lib/board-store.ts";
 import telegram from "./telegram.ts";
 
 const APP_AUTH = { authenticator: "app", principalId: "eve:app", principalType: "runtime" } as const;
+const LAST_TELEGRAM_SESSION = "scos:telegram:last_session";
+
+/** Tiny Upstash REST get/set for the last Telegram session id (no-op without Redis). */
+async function kv(cmd: "get" | "set", value?: string): Promise<string | null> {
+  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+  if (!url || !token) return null;
+  const path = cmd === "get" ? `get/${LAST_TELEGRAM_SESSION}` : `set/${LAST_TELEGRAM_SESSION}/${encodeURIComponent(value ?? "")}`;
+  const res = await fetch(`${url.replace(/\/$/, "")}/${path}`, { method: cmd === "get" ? "GET" : "POST", headers: { Authorization: `Bearer ${token}` } }).catch(() => null);
+  const body = res ? ((await res.json().catch(() => null)) as { result?: string | null } | null) : null;
+  return body?.result ?? null;
+}
 
 // Operator routes for the live demo. Protected by CRON_SECRET (or TELEGRAM_WEBHOOK_SECRET_TOKEN).
 function authorized(request: Request): boolean {
@@ -58,11 +70,25 @@ export default defineChannel({
       const chatId = process.env.TELEGRAM_CHAT_ID;
       if (!chatId) return Response.json({ ok: false, reason: "TELEGRAM_CHAT_ID not set" }, { status: 500 });
       const prompt = await sentinelPrompt(body.material_id, body.site_id);
-      if (!prompt) return Response.json({ ok: true, breaches: 0 });
+      if (!prompt) {
+        return Response.json({
+          ok: false,
+          breaches: 0,
+          reason: body.material_id ? `unknown material/site ${body.material_id} @ ${body.site_id}` : "no material is below its reorder point",
+        });
+      }
+      // Retire the previous Telegram conversation so every alert starts a fresh session on the
+      // current deployment (old sessions stay pinned to the build that created them).
+      const previous = await kv("get");
+      if (previous) {
+        await fetch(new URL(`/eve/v1/session/${previous}/reset`, request.url), { method: "POST" }).catch(() => null);
+      }
       const send = to(telegram, { chatId }).send(prompt, { auth: APP_AUTH as never });
       waitUntil(send);
       const session = await send;
-      return Response.json({ ok: true, prompt, sessionId: (session as { id?: string }).id ?? null });
+      const sessionId = (session as { id?: string }).id ?? null;
+      if (sessionId) await kv("set", sessionId);
+      return Response.json({ ok: true, prompt, sessionId, previousSessionId: previous });
     }),
   ],
 });

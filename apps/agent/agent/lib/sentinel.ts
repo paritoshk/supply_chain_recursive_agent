@@ -11,8 +11,14 @@ export interface Breach {
 /** Deterministic sentinel: action-severity positions without an open mission, worst cover first. */
 export async function lowStockScan(): Promise<Breach[]> {
   return withStore((store) => {
+    // A mission only blocks a new alert while it is genuinely in flight: degraded/completed/failed are
+    // finished, and anything not touched for 20 minutes was abandoned (session reset, redeploy).
+    const cutoff = Date.now() - 20 * 60_000;
     const open = new Set(
-      store.missions().filter((m) => !["completed", "failed"].includes(m.status)).map((m) => `${m.material_id}|${m.site_id}`),
+      store
+        .missions()
+        .filter((m) => ["planning", "running", "verifying"].includes(m.status) && Date.parse(m.created_at) > cutoff)
+        .map((m) => `${m.material_id}|${m.site_id}`),
     );
     return filteredPairs(store, {})
       .map(({ material_id, site_id }) => positionFor(store, material_id, site_id))
