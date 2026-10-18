@@ -1,6 +1,44 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  Circle,
+  Clock,
+  FileText,
+  FlaskConical,
+  Github,
+  GripVertical,
+  LayoutGrid,
+  Loader2,
+  Maximize2,
+  MessageSquare,
+  MoreHorizontal,
+  Network,
+  PanelRight,
+  Play,
+  Plus,
+  RotateCcw,
+  Settings,
+  SlidersHorizontal,
+  Star,
+  X,
+  XCircle,
+} from "lucide-react";
+import FooterWithSuite from "@/components/ui/footer-with-suite";
+import BeamWordmarkFooter from "@/components/ui/beam-wordmark-footer";
+
+const AgenticFactory3D = dynamic(() => import("@/components/ui/agentic-factory-3d"), {
+  ssr: false,
+  loading: () => <div className="flex h-full w-full items-center justify-center bg-[#141311] label-mono">Loading mission floor…</div>,
+});
+
+function machine() {
+  return typeof window !== "undefined" ? window.__machine : undefined;
+}
 
 /* ------------------------------------------------------------------ types */
 
@@ -169,15 +207,8 @@ const ACTIONS: QuickAction[] = [
   { key: "cork", label: "Price expiring mannitol at Cork", message: "Price expiring mannitol at Cork" },
 ];
 
-const TAGS = [
-  "Recursive agents",
-  "Crusoe Managed Inference",
-  "Nemotron doers · Nemotron judge",
-  "Telegram @supplychief_bot",
-  "You.com search",
-  "PubChem",
-  "Synthetic data",
-];
+const HEADER_TAGS = ["Recursive agents", "Crusoe", "Nemotron", "Telegram", "You.com", "PubChem", "Synthetic data"];
+
 
 /* ----------------------------------------------------------------- utils */
 
@@ -227,6 +258,12 @@ export default function Theater() {
   const [opsNote, setOpsNote] = useState<string | null>(null);
   const [runOn, setRunOn] = useState<"phone" | "page">("phone");
   const [mirroring, setMirroring] = useState(false);
+  const [events, setEvents] = useState<EventRow[]>([]);
+  const [inspTab, setInspTab] = useState<"data" | "events">("data");
+  const [view, setView] = useState<"canvas" | "graph">("canvas");
+  const [drawer, setDrawer] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [plan, setPlan] = useState<AnyObj | null>(null);
 
   const sessionRef = useRef<string | null>(null);
   const countRef = useRef(0);
@@ -256,6 +293,34 @@ export default function Theater() {
 
   useEffect(() => () => streamAbort.current?.abort(), []);
 
+  // Drive the 3D mission floor from the pipeline: focus the station of the latest active node, play during a turn.
+  const focusKey = (() => {
+    const n = pipe.nodes;
+    const hot = (id: NodeId) => n[id] === "active" || n[id] === "waiting";
+    if (hot("approval") || hot("judge")) return "cashdesk";
+    if (hot("negotiators") || hot("sourcing")) return "storefront";
+    if (hot("transfer") || hot("scout")) return "admin";
+    if (hot("planner")) return "engine";
+    if (hot("sentinel")) return "cabinet";
+    return null;
+  })();
+  useEffect(() => {
+    try {
+      if (pipe.mission) machine()?.setMode("order");
+    } catch {}
+  }, [pipe.mission]);
+  useEffect(() => {
+    try {
+      if (focusKey) machine()?.focusStation(focusKey);
+    } catch {}
+  }, [focusKey]);
+  useEffect(() => {
+    try {
+      if (busy && pipe.nodes.approval !== "waiting") machine()?.play();
+      else machine()?.pause();
+    } catch {}
+  }, [busy, pipe.nodes.approval]);
+
   const pushMsg = useCallback((m: Omit<ChatMsg, "id" | "at"> & { at?: number }) => {
     setMsgs((prev) => [...prev, { id: nid(), at: Date.now(), ...m }]);
   }, []);
@@ -270,6 +335,7 @@ export default function Theater() {
   const beginTurn = useCallback((mission?: boolean) => {
     if (mission) {
       setQa(null);
+      setPlan(null);
       setPipe({
         ...EMPTY_PIPE,
         nodes: { ...idleNodes(), sentinel: "active", planner: "active" },
@@ -424,6 +490,7 @@ export default function Theater() {
           setPipe((p) => ({ ...p, tools: p.tools.map((t) => (t.name === tool ? { ...t, done: true } : t)) }));
           if (tool !== "run_mission") break;
           const out: AnyObj = r.output ?? {};
+          if (out.plan) setPlan(out.plan);
           const apKey: string = typeof out.approval === "string" ? out.approval : out.approval?.status ?? "none";
           const [apLabel, apStatus] = APPROVAL_LABEL[apKey] ?? [apKey, "done"];
           setPipe((p) => ({
@@ -502,6 +569,21 @@ export default function Theater() {
     [pushMsg, beginTurn]
   );
 
+  const logEvent = useCallback((e: AnyObj) => {
+    const type: string = String(e?.type ?? "");
+    if (!type || /appended|delta|\.metadata|logprobs/.test(type)) return;
+    const d: AnyObj = e?.data ?? {};
+    let text = "";
+    if (typeof d.message === "string") text = d.message;
+    else if (type === "actions.requested") text = (d.actions ?? []).map((a: AnyObj) => a.toolName ?? a.name).join(", ");
+    else if (type === "action.partial") text = String(d.result?.output?.stage ?? "");
+    else if (type === "action.result") text = String(d.result?.toolName ?? "");
+    else if (type === "agent.started") text = String(d.name ?? "");
+    else if (type === "turn.waiting") text = String(d.on ?? "");
+    const at = Date.parse(e?.meta?.at ?? "") || Date.now();
+    setEvents((prev) => [...prev.slice(-99), { at, type, text: text.replace(/\s+/g, " ").slice(0, 120) }]);
+  }, []);
+
   /* ------------------------------------------------------------ streaming */
   const ensureStream = useCallback(() => {
     const sid = sessionRef.current;
@@ -545,6 +627,7 @@ export default function Theater() {
               const t = typeof at === "number" ? at : typeof at === "string" ? Date.parse(at) : NaN;
               if (!Number.isNaN(t) && t < sinceRef.current) continue;
             }
+            logEvent(ev);
             handleEvent(ev);
           }
         }
@@ -557,7 +640,7 @@ export default function Theater() {
       if (busyRef.current) setTimeout(ensureStream, 800);
       else if (mirrorRef.current) setTimeout(ensureStream, 2500);
     })();
-  }, [handleEvent]);
+  }, [handleEvent, logEvent]);
 
   /* ---------------------------------------------------------------- send */
   const post = useCallback(
@@ -692,6 +775,8 @@ export default function Theater() {
       if (res.ok && action === "reset") {
         setPipe(EMPTY_PIPE);
         setQa(null);
+        setPlan(null);
+        setEvents([]);
       }
     } catch {
       setOpsNote("Failed.");
@@ -703,144 +788,700 @@ export default function Theater() {
   const elapsed = pipe.startedAt ? Math.max(0, ((pipe.endedAt ?? now) - pipe.startedAt) / 1000) : 0;
   const mm = Math.floor(elapsed / 60);
   const ss = Math.floor(elapsed % 60).toString().padStart(2, "0");
+  const pending = [...msgs].reverse().find((m) => m.input?.length && !m.answered) ?? null;
+  const missions = ACTIONS.filter((a) => a.mission);
+  const asks = ACTIONS.filter((a) => !a.mission);
+
+  const inspector = (
+    <Inspector
+      pipe={pipe}
+      qa={qa}
+      events={events}
+      tab={inspTab}
+      setTab={setInspTab}
+      elapsed={pipe.startedAt ? `${mm}:${ss}` : "0:00"}
+      mirroring={mirroring}
+    />
+  );
 
   return (
-    <main className="mx-auto w-full max-w-[1440px] px-5 pb-10 pt-6 lg:px-8">
-      {/* header */}
-      <header className="flex flex-col gap-3 border-b border-hair pb-5">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <span className="label-mono" style={{ color: "#F25C05" }}>
-              Mission theater · Corvane Biologics
-            </span>
-            <h1 className="mt-1 font-display text-[30px] font-light leading-tight tracking-[-0.012em] text-ink">
-              Supplier Chief of Staff
-            </h1>
-            <p className="mt-1 text-[16px] text-fg2">
-              Texts you before a material runs out <span className="text-muted">and fixes it with a team of agents.</span>
-            </p>
+    <div className="min-h-screen bg-page text-[13px] text-ink">
+      {/* app bar */}
+      <div className="relative">
+      <header className="sticky top-0 z-30 border-b border-hair bg-surface">
+        <div className="flex h-14 items-center gap-3 whitespace-nowrap px-4">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] bg-ink text-[11px] font-medium text-white">SC</div>
+          <div className="flex min-w-0 flex-col justify-center">
+          <nav className="flex min-w-0 items-center gap-1.5 whitespace-nowrap text-[13px] leading-tight" aria-label="Breadcrumb">
+            <span className="hidden text-muted sm:inline">Corvane Biologics</span>
+            <ChevronRight className="hidden h-3.5 w-3.5 text-muted sm:inline" />
+            <span className="hidden text-muted md:inline">Supplier Chief of Staff</span>
+            <ChevronRight className="hidden h-3.5 w-3.5 text-muted md:inline" />
+            <span className="truncate font-medium text-ink">Mission theater</span>
+            <Star className="h-3.5 w-3.5 shrink-0 text-muted" />
+          </nav>
+          <div className="mt-0.5 hidden flex-nowrap gap-1 overflow-hidden min-[1100px]:flex">
+            {HEADER_TAGS.map((t) => (
+              <span key={t} className="shrink-0 whitespace-nowrap rounded-[3px] border border-hair px-1 font-mono text-[9px] uppercase leading-[14px] tracking-[0.05em] text-muted">
+                {t}
+              </span>
+            ))}
           </div>
-          <div className="flex items-center gap-3">
-            {opsNote && <span className="text-[13px] text-accent">{opsNote}</span>}
-            <button
-              className="rounded-full border border-hair bg-surface px-3 py-1.5 text-[13px] text-fg2 hover:border-ink hover:text-ink"
-              onClick={() => ops("reset")}
-            >
-              Reset demo
+          </div>
+          <div className="ml-auto flex shrink-0 items-center gap-2">
+            {opsNote && <span className="hidden text-[12px] text-accent md:inline">{opsNote}</span>}
+            <span className="hidden font-mono text-[10px] uppercase tracking-[0.06em] text-muted lg:inline">Run on</span>
+            <div className="hidden h-8 items-center rounded-[6px] border border-hair p-0.5 lg:flex" role="group" aria-label="Run missions on">
+              {(["phone", "page"] as const).map((o) => (
+                <button
+                  key={o}
+                  onClick={() => setRunOn(o)}
+                  aria-pressed={runOn === o}
+                  className={`h-full rounded-[4px] px-2.5 text-[12px] ${runOn === o ? "bg-muted-surface text-ink shadow-[inset_0_0_0_1px_#D4D2CF]" : "text-muted hover:text-ink"}`}
+                >
+                  {o === "phone" ? "My phone" : "This page"}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => ops("reset")} className="flex h-8 items-center gap-1.5 rounded-[6px] px-2.5 text-[12px] text-fg2 hover:bg-muted-surface">
+              <RotateCcw className="h-3.5 w-3.5" /> Reset demo
             </button>
+            <a href={ARCH_URL} target="_blank" rel="noreferrer" className="hidden h-8 items-center gap-1.5 rounded-[6px] px-2.5 text-[12px] text-fg2 hover:bg-muted-surface md:flex">
+              <FileText className="h-3.5 w-3.5" /> Architecture PDF
+            </a>
+            <a href={REPO_URL} target="_blank" rel="noreferrer" className="hidden h-8 items-center gap-1.5 rounded-[6px] px-2.5 text-[12px] text-fg2 hover:bg-muted-surface md:flex">
+              <Github className="h-3.5 w-3.5" /> GitHub
+            </a>
+            <div className="relative">
+              <button
+                onClick={() => setMenuOpen((o) => !o)}
+                disabled={busy}
+                className="flex h-8 items-center gap-1.5 rounded-full bg-ink px-3.5 text-[12px] font-medium text-white disabled:opacity-50"
+              >
+                <Play className="h-3 w-3" /> Run mission <ChevronDown className="h-3.5 w-3.5" />
+              </button>
+              {menuOpen && (
+                <div className="absolute right-0 top-9 z-40 w-[300px] rounded-[8px] border border-hair bg-surface p-1 shadow-[0_12px_32px_-12px_rgba(20,19,17,0.25)]">
+                  {missions.map((a) => (
+                    <button
+                      key={a.key}
+                      onClick={() => {
+                        setMenuOpen(false);
+                        runAction(a);
+                      }}
+                      className="flex w-full flex-col items-start rounded-[6px] px-3 py-2 text-left hover:bg-muted-surface"
+                    >
+                      <span className="text-[13px] text-ink">{a.label.replace(/^(Mission|Guardrail): /, "")}</span>
+                      <span className="font-mono text-[10px] uppercase tracking-[0.05em] text-muted">
+                        {a.ids} · {runOn === "phone" ? "runs on your phone" : "runs on this page"}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-        <div className="flex flex-wrap gap-1.5" aria-label="Stack">
-          {TAGS.map((t) => (
-            <span key={t} className="rounded-full border border-hair bg-surface px-2.5 py-0.5 label-mono">
-              {t}
-            </span>
+
+        {/* toolbar */}
+        <div className="flex min-h-11 items-center gap-2 border-t border-hair px-4 py-1.5">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-0.5 gap-y-1">
+          <span className="mr-1 font-mono text-[10px] uppercase tracking-[0.06em] text-muted">Ask</span>
+          {asks.map((a) => (
+            <ToolButton key={a.key} disabled={busy} onClick={() => runAction(a)} icon={<MessageSquare className="h-3.5 w-3.5" />}>
+              {a.label}
+            </ToolButton>
           ))}
-        </div>
-        <div className="mt-1 flex flex-wrap items-center gap-2">
-          <span className="label-mono">Run missions on</span>
-          {(["phone", "page"] as const).map((o) => (
+          <span className="mx-2 h-5 w-px bg-hair" />
+          <span className="mr-1 font-mono text-[10px] uppercase tracking-[0.06em] text-muted">Missions</span>
+          {missions.map((a) => (
+            <ToolButton key={a.key} disabled={busy} onClick={() => runAction(a)} icon={<FlaskConical className="h-3.5 w-3.5" />} ids={a.ids}>
+              {a.label.replace(/^Mission: /, "").replace(/^Guardrail: (.*)$/, "$1 (guardrail)")}
+            </ToolButton>
+          ))}
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
             <button
-              key={o}
-              onClick={() => setRunOn(o)}
-              aria-pressed={runOn === o}
-              className="rounded-full border px-3 py-1 text-[13px] transition-colors"
-              style={runOn === o ? { borderColor: "#F25C05", color: "#141311" } : { borderColor: "#EAE8E5", color: "#908E87" }}
+              onClick={() => setDrawer((o) => !o)}
+              className="flex h-8 items-center gap-1.5 rounded-[6px] px-2.5 text-[12px] text-fg2 hover:bg-muted-surface min-[1440px]:hidden"
             >
-              {o === "phone" ? "Run on my phone" : "This page"}
+              <PanelRight className="h-3.5 w-3.5" /> Inspector
             </button>
-          ))}
-          <span className="text-[12px] text-muted">
-            {runOn === "phone" ? "Fires the real sentinel to Telegram; this page mirrors it live." : "Runs a separate web session."}
-          </span>
+            {(["canvas", "graph"] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setView(t)}
+                className={`flex h-8 items-center gap-1.5 border-b-2 px-2.5 text-[13px] ${view === t ? "border-accent text-ink" : "border-transparent text-muted hover:text-ink"}`}
+              >
+                {t === "canvas" ? <LayoutGrid className="h-3.5 w-3.5" /> : <Network className="h-3.5 w-3.5" />}
+                {t === "canvas" ? "Canvas" : "Graph"}
+              </button>
+            ))}
+          </div>
         </div>
-        <nav className="flex flex-wrap gap-2" aria-label="Quick actions">
-          {ACTIONS.map((a) => (
-            <button
-              key={a.key}
-              disabled={busy}
-              onClick={() => runAction(a)}
-              className="group flex items-center gap-2 rounded-full border border-hair bg-surface px-4 py-2 text-[14px] text-ink transition-colors hover:border-ink disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <span>{a.label}</span>
-              {a.ids && <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-muted">{a.ids}</span>}
-            </button>
-          ))}
-        </nav>
       </header>
 
       {/* body */}
-      <section className="mt-6 grid grid-cols-1 gap-6 min-[1100px]:grid-cols-[390px_1fr]">
-        <div className="flex justify-center min-[1100px]:block">
-          <Phone
-            msgs={msgs}
-            busy={busy}
-            draft={draft}
-            setDraft={setDraft}
-            onSend={() => {
-              if (busy) return;
-              sendText(draft);
-              setDraft("");
-            }}
-            onAnswer={answer}
-            scrollRef={scrollRef}
-          />
-        </div>
-
-        <div className="flex min-w-0 flex-col gap-4">
-          {/* pipeline */}
-          <div className="rounded-[8px] border border-hair bg-surface" data-testid="pipeline">
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-hair px-5 py-3">
-              <span className="label-mono">Live agent pipeline</span>
-              <span className="font-mono text-[12px] text-ink">{pipe.missionId ?? (pipe.mission ? "mission starting…" : "chat turn")}</span>
-              <span className="font-mono text-[12px] tabular-nums text-fg2">{pipe.startedAt ? `${mm}:${ss}` : "0:00"}</span>
-              {pipe.attempt > 0 && <span className="text-[13px] text-fg2">attempt {pipe.attempt}</span>}
-              {pipe.needQty != null && (
-                <span className="text-[13px] text-fg2">
-                  need {pipe.needQty} kg by {pipe.needBy}
-                </span>
-              )}
-              {mirroring && <span className="label-mono" style={{ color: "#F25C05" }}>Mirroring Telegram session</span>}
-              {busy && <span className="ml-auto text-[13px] text-accent">running</span>}
-            </div>
-            <PipelineGraph pipe={pipe} />
-            <div className="border-t border-hair px-5 py-3">
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                <span className="label-mono">Definition of done</span>
-                {(pipe.checks.length ? pipe.checks : DEFAULT_CHECKS.map((id) => ({ id }) as Check)).map((c) => (
-                  <span
-                    key={c.id}
-                    title={c.reason}
-                    className="font-mono text-[12px]"
-                    style={{ color: c.pass === true ? "#16A34A" : c.pass === false ? "#DC2626" : "#908E87" }}
-                  >
-                    {c.pass === true ? "✓" : c.pass === false ? "✗" : "○"} {c.id}
-                  </span>
-                ))}
-              </div>
-              <p className="mt-2 text-[14px] text-ink">
-                <span className="text-muted">plan </span>
-                {pipe.planLine ?? (pipe.mission ? "waiting for the judge…" : "Tap a mission chip to run the full pipeline.")}
-                {pipe.approval && <span className="text-fg2"> · approval: {pipe.approval}</span>}
-              </p>
+      <div className="grid grid-cols-1 gap-3 p-3 min-[1100px]:grid-cols-[400px_minmax(0,1fr)] min-[1440px]:grid-cols-[400px_minmax(0,1fr)_320px]">
+        {/* left: phone + factory */}
+        <aside className="flex flex-col items-center gap-3 min-[1100px]:items-stretch">
+          <div className="flex justify-center">
+            <Phone
+              msgs={msgs}
+              busy={busy}
+              draft={draft}
+              setDraft={setDraft}
+              onSend={() => {
+                if (busy) return;
+                sendText(draft);
+                setDraft("");
+              }}
+              onAnswer={answer}
+              scrollRef={scrollRef}
+            />
+          </div>
+          <div className="w-full max-w-[400px] overflow-hidden rounded-[8px] border border-hair bg-surface">
+            <CardHead id="$FL" title="Mission floor" type="3D · live" />
+            <div className="h-[360px] bg-[#141311]">
+              <AgenticFactory3D height={360} embed />
             </div>
           </div>
+        </aside>
 
-          <QaPanel qa={qa} mission={pipe.mission} />
+        {/* center canvas */}
+        <main className="min-w-0">
+          {view === "graph" ? (
+            <Card id="$PL" title="Agent pipeline" type="Live graph">
+              <PipelineGraph pipe={pipe} />
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 min-[1700px]:grid-cols-2">
+              <div className="min-[1700px]:col-span-2">
+                <Card id="$PL" title="Agent pipeline" type="Live graph" right={<span className="font-mono text-[11px] tabular-nums text-fg2">{pipe.startedAt ? `${mm}:${ss}` : "0:00"}</span>}>
+                  <PipelineGraph pipe={pipe} />
+                </Card>
+              </div>
+              <div className="grid grid-cols-1 gap-3 min-[1300px]:grid-cols-2 min-[1700px]:contents">
+                <Card id="$MO" title="Molecule" type="PubChem">
+                  <MoleculeBody qa={qa} mission={pipe.mission} />
+                </Card>
+                <Card id="$PO" title="Plan & approval" type="Decision">
+                  <PlanBody pipe={pipe} plan={plan} pending={pending} onAnswer={answer} />
+                </Card>
+                <Card id="$LN" title="Production lines & batches" type="Feasibility">
+                  <LinesBody qa={qa} mission={pipe.mission} />
+                </Card>
+                <Card id="$DD" title="Definition of done" type="Judge">
+                  <DodBody pipe={pipe} />
+                </Card>
+              </div>
+              <div className="min-[1700px]:col-span-2">
+                <Card id="$QF" title="Supplier quality ranking" type="Grade fit">
+                  <SuppliersBody qa={qa} mission={pipe.mission} />
+                </Card>
+              </div>
+            </div>
+          )}
+        </main>
+
+        {/* right inspector (wide screens) */}
+        <aside className="hidden min-[1440px]:block">
+          <div className="sticky top-[116px]">{inspector}</div>
+        </aside>
+      </div>
+
+      {/* drawer inspector (narrower screens) */}
+      {drawer && (
+        <div className="fixed inset-y-0 right-0 z-40 w-[340px] max-w-full overflow-y-auto border-l border-hair bg-page p-3 shadow-[-12px_0_32px_-16px_rgba(20,19,17,0.3)] min-[1440px]:hidden">
+          <button onClick={() => setDrawer(false)} className="mb-2 flex h-8 items-center gap-1.5 rounded-[6px] px-2 text-[12px] text-fg2 hover:bg-muted-surface">
+            <X className="h-3.5 w-3.5" /> Close
+          </button>
+          {inspector}
         </div>
-      </section>
+      )}
 
-      <footer className="mt-8 flex flex-wrap gap-x-6 gap-y-1 border-t border-hair pt-4 label-mono">
-        <a className="hover:text-ink" href="https://github.com/paritoshk/supply_chain_recursive_agent/blob/main/docs/architecture.pdf" target="_blank" rel="noreferrer">
-          Architecture (PDF)
-        </a>
-        <a className="hover:text-ink" href="https://github.com/paritoshk/supply_chain_recursive_agent" target="_blank" rel="noreferrer">
-          Repo
-        </a>
-        <span>All data synthetic · Corvane Biologics is fictional</span>
-      </footer>
-    </main>
+      {/* bottom tab bar */}
+      <div className="sticky bottom-0 z-20 flex h-9 items-center gap-3 border-t border-hair bg-surface px-4 text-[12px]">
+        <Plus className="h-3.5 w-3.5 text-muted" />
+        <span className="flex h-full items-center border-t-2 border-accent px-2 text-ink">{view === "canvas" ? "Canvas" : "Graph"}</span>
+        <span className="text-muted">·</span>
+        <span className="font-mono text-[11px] text-fg2">{pipe.missionId ? `Mission ${pipe.missionId}` : pipe.mission ? "Mission starting" : "No mission yet"}</span>
+        <span className="text-muted">·</span>
+        <span className="flex items-center gap-1.5" style={{ color: busy ? "#F25C05" : "#908E87" }}>
+          <span className="h-1.5 w-1.5 rounded-full" style={{ background: busy ? "#F25C05" : "#D4D2CF" }} />
+          {busy ? "Live" : "Idle"}
+        </span>
+        {mirroring && <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-accent">Mirroring Telegram session</span>}
+        <span className="ml-auto hidden font-mono text-[10px] uppercase tracking-[0.06em] text-muted sm:inline">Synthetic data · Corvane Biologics is fictional</span>
+      </div>
+      </div>
+
+      <FooterWithSuite
+        brandName="Supplier Chief"
+        tagline="Texts you before a material runs out — and fixes it with a team of agents."
+        navLinks={[
+          { text: "Mission theater", url: "#" },
+          { text: "Architecture PDF", url: ARCH_URL },
+          { text: "Evals", url: "https://github.com/paritoshk/supply_chain_recursive_agent/blob/main/docs/evals/RESULTS.md" },
+          { text: "Repo", url: REPO_URL },
+          { text: "Evidence board", url: "https://supplier-chief-of-staff.vercel.app/board" },
+        ]}
+        socialLinks={[
+          { text: "Telegram @supplychief_bot", url: "https://t.me/supplychief_bot" },
+          { text: "GitHub", url: REPO_URL },
+        ]}
+        description="A recursive agent team on Crusoe Managed Inference for specialty-pharma supply. Fictional company, synthetic data."
+        ctaText="Text the bot"
+        ctaUrl="https://t.me/supplychief_bot"
+        email=""
+        copyright="© 2026 Supplier Chief of Staff · Built at the Crusoe Recursive Agents Hackathon"
+        className="border-t border-hair"
+      />
+      <div className="w-full bg-[#02040b]">
+        <BeamWordmarkFooter
+          brand="SUPPLYCHIEF"
+          wordmark="SUPPLYCHIEF"
+          company="Supplier Chief of Staff"
+          year={2026}
+          accent="#F25C05"
+          socials={[
+            { label: "GitHub", href: REPO_URL, icon: "github" },
+          ]}
+          credits={[
+            { lead: "Built at the ", label: "Crusoe Recursive Agents Hackathon" },
+            { lead: "Text the bot: ", label: "@supplychief_bot", href: "https://t.me/supplychief_bot" },
+          ]}
+          columns={[
+            {
+              title: "Product",
+              links: [
+                { label: "Mission theater", href: "#" },
+                { label: "Evidence board", href: "https://supplier-chief-of-staff.vercel.app/board" },
+                { label: "Telegram bot", href: "https://t.me/supplychief_bot" },
+              ],
+            },
+            {
+              title: "Docs",
+              links: [
+                { label: "Architecture PDF", href: ARCH_URL },
+                { label: "Evals", href: "https://github.com/paritoshk/supply_chain_recursive_agent/blob/main/docs/evals/RESULTS.md" },
+                { label: "Repo", href: REPO_URL },
+              ],
+            },
+          ]}
+          fontSans='var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif'
+          wordWeight={400}
+          wordTop="#2B3150"
+          wordFoot="#070A18"
+        />
+      </div>
+    </div>
   );
+}
+
+/* ------------------------------------------------------------- workbench */
+
+const ARCH_URL = "https://github.com/paritoshk/supply_chain_recursive_agent/blob/main/docs/architecture.pdf";
+const REPO_URL = "https://github.com/paritoshk/supply_chain_recursive_agent";
+
+function ToolButton(props: { children: React.ReactNode; onClick: () => void; disabled?: boolean; icon?: React.ReactNode; ids?: string }) {
+  return (
+    <button
+      onClick={props.onClick}
+      disabled={props.disabled}
+      className="flex h-8 items-center gap-1.5 whitespace-nowrap rounded-[6px] px-2 text-[13px] text-ink hover:bg-muted-surface disabled:cursor-not-allowed disabled:opacity-45"
+    >
+      <span className="text-fg3">{props.icon}</span>
+      <span>{props.children}</span>
+      {props.ids && <span className="font-mono text-[9.5px] uppercase tracking-[0.04em] text-muted">{props.ids}</span>}
+    </button>
+  );
+}
+
+function IdChip({ id }: { id: string }) {
+  return <span className="rounded-[4px] border border-hair bg-muted-surface px-1.5 py-[1px] font-mono text-[10.5px] text-fg2">{id}</span>;
+}
+
+function CardHead({ id, title, type, right }: { id: string; title: string; type?: string; right?: React.ReactNode }) {
+  return (
+    <div className="flex h-10 items-center gap-2 border-b border-hair px-2.5">
+      <GripVertical className="h-3.5 w-3.5 shrink-0 text-[#D4D2CF]" />
+      <IdChip id={id} />
+      <span className="truncate text-[13px] font-medium text-ink">{title}</span>
+      {type && (
+        <span className="hidden shrink-0 rounded-[4px] border border-hair px-1.5 py-[1px] font-mono text-[10px] uppercase tracking-[0.04em] text-muted sm:inline">
+          {type}
+        </span>
+      )}
+      <div className="ml-auto flex shrink-0 items-center gap-2 text-muted">
+        {right}
+        <Maximize2 className="h-3.5 w-3.5" />
+        <Settings className="h-3.5 w-3.5" />
+        <MoreHorizontal className="h-3.5 w-3.5" />
+      </div>
+    </div>
+  );
+}
+
+function Card(props: { id: string; title: string; type?: string; right?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <section className="flex h-full min-w-0 flex-col overflow-hidden rounded-[8px] border border-hair bg-surface" data-card={props.id}>
+      <CardHead id={props.id} title={props.title} type={props.type} right={props.right} />
+      <div className="min-w-0 flex-1">{props.children}</div>
+    </section>
+  );
+}
+
+function Empty({ mission, text }: { mission: boolean; text?: string }) {
+  return (
+    <div className="flex h-full min-h-[120px] items-center justify-center px-4 py-6 text-center text-[12px] text-muted">
+      {mission ? text ?? "Gathering data for this mission…" : "Waiting for a mission…"}
+    </div>
+  );
+}
+
+function Row({ k, v }: { k: string; v: React.ReactNode }) {
+  return (
+    <>
+      <dt className="text-muted">{k}</dt>
+      <dd className="min-w-0 truncate text-ink">{v}</dd>
+    </>
+  );
+}
+
+function MoleculeBody({ qa, mission }: { qa: QaFit | null; mission: boolean }) {
+  const mol = qa?.molecule;
+  if (!mol) return <Empty mission={mission} text="Looking the molecule up on PubChem…" />;
+  return (
+    <div className="flex gap-3 p-3">
+      <div className="flex h-[150px] w-[150px] shrink-0 items-center justify-center rounded-[6px] border border-hair bg-white">
+        {mol.structure_image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={mol.structure_image_url} alt={`PubChem structure${mol.cid ? `, CID ${mol.cid}` : ""}`} className="max-h-[140px] max-w-[140px] object-contain" />
+        ) : (
+          <span className="px-3 text-center text-[11px] text-muted">No single structure (mixture or biologic)</span>
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        {qa?.material_name && <div className="text-[13px] text-ink">{qa.material_name}</div>}
+        <dl className="mt-1 grid grid-cols-[64px_1fr] gap-x-2 gap-y-1 text-[12px]">
+          <Row k="CID" v={mol.cid ?? "—"} />
+          <Row k="Formula" v={mol.molecular_formula ?? "—"} />
+          <Row k="MW" v={mol.molecular_weight != null ? `${mol.molecular_weight} g/mol` : "—"} />
+          <Row k="CAS" v={mol.cas?.length ? mol.cas.slice(0, 2).join(", ") : "—"} />
+          <Row k="PubChem" v={mol.pubchem_status ?? "—"} />
+        </dl>
+        {mol.explanation && <p className="mt-2 line-clamp-4 text-[12px] leading-snug text-fg2">{mol.explanation}</p>}
+      </div>
+    </div>
+  );
+}
+
+function LinesBody({ qa, mission }: { qa: QaFit | null; mission: boolean }) {
+  const lines = qa?.lines ?? [];
+  const batches = qa?.batches ?? [];
+  if (!lines.length && !batches.length) return <Empty mission={mission} text="Waiting for the judge to recompute line feasibility…" />;
+  return (
+    <div className="flex flex-col gap-3 p-3">
+      {lines.slice(0, 2).map((l) => (
+        <div key={l.line_id} className="rounded-[6px] border border-hair p-2.5">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="text-[13px] text-ink">{l.line_name ?? l.line_id}</span>
+            <span className="font-mono text-[10px] uppercase tracking-[0.05em] text-muted">{l.line_id}</span>
+          </div>
+          <div className="mt-1 flex flex-wrap gap-1">
+            {l.line_type && <Tag>{l.line_type}</Tag>}
+            {l.cleanroom_grade && <Tag>cleanroom {l.cleanroom_grade}</Tag>}
+            {l.needs_parenteral && <Tag>parenteral</Tag>}
+            {l.needs_low_endotoxin && <Tag>low endotoxin</Tag>}
+            {(l.needs_compendia ?? []).map((c) => (
+              <Tag key={c}>{c}</Tag>
+            ))}
+          </div>
+          {l.rationale && <p className="mt-1.5 text-[12px] leading-snug text-fg2">{l.rationale}</p>}
+        </div>
+      ))}
+      <div>
+        <div className="flex items-center gap-3">
+          <span className="label-mono">Batches · next 60 days</span>
+          {qa?.batches_total != null && (
+            <span className="text-[12px] text-fg2">
+              {qa.batches_total} planned · <span style={{ color: (qa.batches_at_risk ?? 0) > 0 ? "#DC2626" : "#16A34A" }}>{qa.batches_at_risk ?? 0} at risk</span>
+            </span>
+          )}
+        </div>
+        <div className="mt-1.5 flex flex-wrap gap-1" data-testid="batch-strip">
+          {batches.length === 0 && <span className="text-[12px] text-muted">—</span>}
+          {batches.map((b) => (
+            <span
+              key={b.batch_no}
+              title={`${b.batch_no} · ${b.start_date}${b.line_name ? ` · ${b.line_name}` : ""}${b.material_needed != null ? ` · needs ${b.material_needed}, available ${b.available_at_start ?? "?"}` : ""}`}
+              className="h-4 w-4 rounded-[3px] border"
+              style={{ borderColor: b.feasible ? "#16A34A" : "#DC2626", background: b.feasible ? "rgba(22,163,74,0.12)" : "rgba(220,38,38,0.12)" }}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SuppliersBody({ qa, mission }: { qa: QaFit | null; mission: boolean }) {
+  const suppliers = [...(qa?.suppliers ?? [])].sort((a, b) => a.rank - b.rank);
+  if (!suppliers.length) return <Empty mission={mission} text="Ranked once the judge recomputes the checks…" />;
+  return (
+    <div className="overflow-x-auto px-3 pb-2">
+      <table className="w-full border-collapse text-[12px]">
+        <thead>
+          <tr className="text-left text-muted">
+            <th className="w-8 py-2 pl-2 font-normal">#</th>
+            <th className="py-2 font-normal">Supplier</th>
+            <th className="py-2 font-normal">Approved grade</th>
+            <th className="py-2 font-normal">Meets line requirement</th>
+            <th className="w-[150px] py-2 font-normal">Quality score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {suppliers.map((s) => {
+            const chosen = s.supplier_id === qa?.chosen_supplier_id;
+            return (
+              <tr key={s.supplier_id} className="border-t border-hair" style={chosen ? { boxShadow: "inset 3px 0 0 #F25C05" } : undefined}>
+                <td className="py-1.5 pl-2 font-mono text-fg2">{s.rank}</td>
+                <td className="py-1.5 text-ink">
+                  {s.supplier_name ?? s.supplier_id}
+                  {chosen && (
+                    <span className="ml-2 rounded-full border px-1.5 font-mono text-[9.5px] uppercase tracking-[0.06em]" style={{ borderColor: "#F25C05", color: "#F25C05" }}>
+                      chosen
+                    </span>
+                  )}
+                </td>
+                <td className="py-1.5 text-fg2">{s.approved_grade ?? "—"}</td>
+                <td className="py-1.5" style={{ color: s.meets_requirement ? "#16A34A" : "#DC2626" }}>
+                  {s.meets_requirement ? "✓ meets" : `✗ ${(s.gaps ?? []).join(", ") || "gap"}`}
+                </td>
+                <td className="py-1.5">
+                  <div className="flex items-center gap-2">
+                    <div className="h-1.5 w-[96px] rounded-full bg-[#EAE8E5]">
+                      <div className="h-1.5 rounded-full" style={{ width: `${Math.max(0, Math.min(100, s.quality_score))}%`, background: chosen ? "#F25C05" : "#908E87" }} />
+                    </div>
+                    <span className="font-mono text-[11px] text-fg2">{s.quality_score}</span>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function DodBody({ pipe }: { pipe: Pipeline }) {
+  const checks = pipe.checks.length ? pipe.checks : DEFAULT_CHECKS.map((id) => ({ id }) as Check);
+  return (
+    <ul className="divide-y divide-hair px-3 py-1">
+      {checks.map((c) => (
+        <li key={c.id} className="flex items-start gap-2 py-1.5">
+          <span className="mt-[1px] w-3 font-mono text-[12px]" style={{ color: c.pass === true ? "#16A34A" : c.pass === false ? "#DC2626" : "#908E87" }}>
+            {c.pass === true ? "✓" : c.pass === false ? "✗" : "○"}
+          </span>
+          <span className="w-[130px] shrink-0 font-mono text-[11.5px] text-ink">{c.id}</span>
+          <span className="min-w-0 flex-1 truncate text-[12px] text-fg2" title={c.reason}>
+            {c.reason ?? (c.pass == null ? (pipe.mission ? "pending" : "—") : c.pass ? "pass" : "fail")}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function PlanBody(props: {
+  pipe: Pipeline;
+  plan: AnyObj | null;
+  pending: ChatMsg | null;
+  onAnswer: (msgId: string, requestId: string, opt: InputOption) => void;
+}) {
+  const { pipe, plan, pending, onAnswer } = props;
+  const t = plan?.transfer;
+  const p = plan?.purchase;
+  if (!pipe.mission && !plan && !pending) return <Empty mission={false} />;
+  const ap = pipe.nodes.approval;
+  return (
+    <div className="flex flex-col gap-2 p-3">
+      <dl className="grid grid-cols-[80px_1fr] gap-x-2 gap-y-1 text-[12px]">
+        <Row k="Transfer" v={t?.qty ? `${t.qty} kg from ${t.from_site_id}${t.arrives_in_days != null ? ` · ${t.arrives_in_days} d` : ""}` : plan ? "none" : "—"} />
+        <Row k="Purchase" v={p?.qty ? `${p.qty} kg · ${p.supplier_name}` : plan ? "none" : "—"} />
+        <Row k="Landed" v={p?.landed_unit_usd != null ? `${fmtUsd(p.landed_unit_usd)}/kg · ${p.lead_time_days ?? "?"} d lead` : "—"} />
+        <Row k="RFQ" v={p?.rfq_id ?? "—"} />
+        <Row k="Value" v={fmtUsd(p?.value_usd) ?? "—"} />
+        <Row
+          k="Approval"
+          v={<span style={{ color: STATUS_COLOR[ap] }}>{pipe.approval ?? (pipe.mission ? "waiting for the judge" : "—")}</span>}
+        />
+      </dl>
+      {!plan && pipe.planLine && <p className="text-[12px] text-fg2">{pipe.planLine}</p>}
+      {pending?.input?.map((req) => (
+        <div key={req.requestId} className="mt-1 flex flex-wrap gap-2 border-t border-hair pt-2">
+          {req.options.map((o, i) => (
+            <button
+              key={o.id}
+              onClick={() => onAnswer(pending.id, req.requestId, o)}
+              className={`h-8 rounded-full px-3.5 text-[12px] ${i === 0 ? "bg-ink text-white" : "border border-hair text-ink hover:border-ink"}`}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+type EventRow = { at: number; type: string; text: string };
+
+const MODELS: [string, string][] = [
+  ["Doers", "Nemotron 3.5 Super VL"],
+  ["Judge", "code + Nemotron 3 Super 120B"],
+  ["Suppliers", "Nemotron 3 Nano"],
+  ["Inference", "Crusoe Managed Inference"],
+];
+
+function Inspector(props: {
+  pipe: Pipeline;
+  qa: QaFit | null;
+  events: EventRow[];
+  tab: "data" | "events";
+  setTab: (t: "data" | "events") => void;
+  elapsed: string;
+  mirroring: boolean;
+}) {
+  const { pipe, qa, events, tab, setTab, elapsed } = props;
+  const deps: [string, NodeId, string?][] = [
+    ["Sentinel", "sentinel"],
+    ["Planner", "planner"],
+    ["Transfer", "transfer", "Planner →"],
+    ["Sourcing", "sourcing", "Planner →"],
+    [`Negotiator${pipe.negotiators ? ` ×${pipe.negotiators}` : "s"}`, "negotiators", "Sourcing →"],
+    ["Scout", "scout", "Planner →"],
+    ["Judge", "judge"],
+    ["Approval / PO", "approval"],
+  ];
+  return (
+    <div className="flex flex-col overflow-hidden rounded-[8px] border border-hair bg-surface">
+      <div className="flex h-10 items-center gap-2 border-b border-hair px-3">
+        <SlidersHorizontal className="h-3.5 w-3.5 text-muted" />
+        <span className="font-mono text-[10.5px] uppercase tracking-[0.06em] text-fg2">Mission inspector</span>
+        {props.mirroring && <span className="ml-auto font-mono text-[9.5px] uppercase tracking-[0.05em] text-accent">Telegram</span>}
+      </div>
+      <div className="flex gap-4 border-b border-hair px-3">
+        {(["data", "events"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`h-9 border-b-2 text-[13px] ${tab === t ? "border-ink text-ink" : "border-transparent text-muted hover:text-ink"}`}
+          >
+            {t === "data" ? "Data" : `Events${events.length ? ` (${events.length})` : ""}`}
+          </button>
+        ))}
+      </div>
+
+      {tab === "data" ? (
+        <div className="flex flex-col gap-3 p-3">
+          <div>
+            <div className="label-mono mb-1">Mission</div>
+            <dl className="grid grid-cols-[88px_1fr] gap-x-2 gap-y-1 text-[12px]">
+              <Row k="Mission" v={<span className="font-mono text-[11.5px]">{pipe.missionId ?? "—"}</span>} />
+              <Row k="Material" v={qa?.material_id ? `${qa.material_id}` : "—"} />
+              <Row k="Site" v={qa?.site_name ? `${qa.site_name} · ${qa.site_id}` : qa?.site_id ?? "—"} />
+              <Row k="Need" v={pipe.needQty != null ? `${pipe.needQty} kg` : "—"} />
+              <Row k="Need by" v={pipe.needBy ?? "—"} />
+              <Row k="Attempt" v={pipe.attempt || "—"} />
+              <Row k="Elapsed" v={<span className="font-mono tabular-nums">{elapsed}</span>} />
+              <Row k="Judge" v={pipe.decision ?? "—"} />
+            </dl>
+          </div>
+          <div>
+            <div className="label-mono mb-1">Models</div>
+            <dl className="grid grid-cols-[88px_1fr] gap-x-2 gap-y-1 text-[12px]">
+              {MODELS.map(([k, v]) => (
+                <Row key={k} k={k} v={v} />
+              ))}
+            </dl>
+          </div>
+          <div>
+            <div className="label-mono mb-1">QA flags</div>
+            <div className="mb-1.5 flex h-8 overflow-hidden rounded-[6px] border border-hair text-[12px]">
+              <span className="flex flex-1 items-center justify-center border-r border-hair text-fg2">
+                QC release&nbsp;<span className="text-ink">{qa?.qc_release_days != null ? `${qa.qc_release_days} d` : "—"}</span>
+              </span>
+              <span
+                className="flex flex-1 items-center justify-center"
+                style={{ color: qa?.change_control_required == null ? "#908E87" : qa.change_control_required ? "#D97706" : "#16A34A" }}
+              >
+                {qa?.change_control_required == null ? "Change control —" : qa.change_control_required ? "Change control" : "No change control"}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {(qa?.documents_required ?? []).length === 0 && <span className="text-[12px] text-muted">No documents yet</span>}
+              {(qa?.documents_required ?? []).map((d) => (
+                <Tag key={d}>{d}</Tag>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <ul className="max-h-[420px] overflow-y-auto px-3 py-2 font-mono text-[11px]" data-testid="event-log">
+          {events.length === 0 && <li className="py-2 font-sans text-[12px] text-muted">No events yet. Send a message or run a mission.</li>}
+          {[...events].reverse().map((e, i) => (
+            <li key={i} className="flex gap-2 border-b border-hair py-1 last:border-0">
+              <span className="shrink-0 tabular-nums text-muted">{new Date(e.at).toLocaleTimeString([], { hour12: false })}</span>
+              <span className="shrink-0 text-ink">{e.type}</span>
+              <span className="min-w-0 truncate font-sans text-fg2" title={e.text}>
+                {e.text}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="border-t border-hair">
+        <div className="flex h-9 items-center gap-2 px-3">
+          <span className="font-mono text-[10.5px] uppercase tracking-[0.06em] text-fg2">Dependencies</span>
+          <span className="ml-auto flex items-center gap-1 text-[11px] text-muted">
+            <Network className="h-3 w-3" /> sub-agents
+          </span>
+        </div>
+        <ul className="px-2 pb-2">
+          {deps.map(([label, id, parent]) => {
+            const st = pipe.nodes[id];
+            return (
+              <li
+                key={id}
+                className="flex h-7 items-center gap-2 rounded-[4px] px-1.5 text-[12px]"
+                style={st === "active" || st === "waiting" ? { background: "#FAF9F8", boxShadow: "inset 0 0 0 1px #F25C05" } : undefined}
+              >
+                <StatusIcon st={st} />
+                {parent && <span className="text-[11px] text-muted">{parent}</span>}
+                <span className="text-ink">{label}</span>
+                <span className="ml-auto text-[11px]" style={{ color: STATUS_COLOR[st] }}>
+                  {STATUS_TEXT[st]}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+function StatusIcon({ st }: { st: NodeStatus }) {
+  const c = STATUS_COLOR[st];
+  if (st === "done") return <CheckCircle2 className="h-3.5 w-3.5" style={{ color: c }} />;
+  if (st === "failed") return <XCircle className="h-3.5 w-3.5" style={{ color: c }} />;
+  if (st === "active") return <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: c }} />;
+  if (st === "waiting") return <Clock className="h-3.5 w-3.5" style={{ color: c }} />;
+  return <Circle className="h-3.5 w-3.5" style={{ color: "#D4D2CF" }} />;
 }
 
 /* --------------------------------------------------------------- pipeline */
@@ -848,7 +1489,7 @@ export default function Theater() {
 type NodeDef = { id: NodeId; title: string; models: string[]; x: number; y: number };
 
 const GRAPH_H = 380;
-const NODE_W = 138;
+const NODE_W = 124;
 const NODE_H = 78;
 
 const NODE_DEFS: NodeDef[] = [
@@ -895,9 +1536,9 @@ function PipelineGraph({ pipe }: { pipe: Pipeline }) {
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => setW(Math.max(860, el.clientWidth)));
+    const ro = new ResizeObserver(() => setW(Math.max(800, el.clientWidth)));
     ro.observe(el);
-    setW(Math.max(860, el.clientWidth));
+    setW(Math.max(800, el.clientWidth));
     return () => ro.disconnect();
   }, []);
 
@@ -1020,194 +1661,6 @@ function PipelineGraph({ pipe }: { pipe: Pipeline }) {
             ))}
           </div>
         )}
-      </div>
-    </div>
-  );
-}
-
-/* --------------------------------------------------------------------- QA */
-
-function QaPanel({ qa, mission }: { qa: QaFit | null; mission: boolean }) {
-  const mol = qa?.molecule ?? null;
-  const lines = qa?.lines ?? [];
-  const batches = qa?.batches ?? [];
-  const suppliers = [...(qa?.suppliers ?? [])].sort((a, b) => a.rank - b.rank);
-  const title = qa?.material_name
-    ? `${qa.material_name}${qa.site_name ? ` @ ${qa.site_name}` : ""}`
-    : mission
-      ? "Gathering molecule and line data…"
-      : "Run a mission to see the molecule, the line it feeds and the supplier ranking.";
-
-  return (
-    <div className="rounded-[8px] border border-hair bg-surface" data-testid="qa-panel">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-hair px-5 py-3">
-        <span className="label-mono">Molecule + production line QA</span>
-        <span className="text-[14px] text-ink">{title}</span>
-        {qa?.material_id && (
-          <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted">
-            {qa.material_id}
-            {qa.site_id ? ` · ${qa.site_id}` : ""}
-          </span>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 p-5 min-[1300px]:grid-cols-[230px_1fr]">
-        {/* molecule */}
-        <div className="rounded-[8px] border border-hair bg-surface p-3">
-          <div className="flex items-center justify-between">
-            <span className="label-mono">Molecule</span>
-            {mol?.cid != null && <span className="font-mono text-[11px] text-fg2">CID {mol.cid}</span>}
-          </div>
-          <div className="mt-2 flex h-[150px] items-center justify-center rounded-[6px] border border-hair bg-white">
-            {mol?.structure_image_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={mol.structure_image_url} alt={`PubChem structure${mol.cid ? `, CID ${mol.cid}` : ""}`} className="max-h-[140px] max-w-full object-contain" />
-            ) : (
-              <span className="px-3 text-center text-[12px] text-muted">
-                {mol?.pubchem_status && mol.pubchem_status !== "ok" ? "No single structure (mixture or biologic)" : "PubChem structure appears here"}
-              </span>
-            )}
-          </div>
-          <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-[12px]">
-            <dt className="text-muted">Formula</dt>
-            <dd className="text-ink">{mol?.molecular_formula ?? "—"}</dd>
-            <dt className="text-muted">MW</dt>
-            <dd className="text-ink">{mol?.molecular_weight != null ? `${mol.molecular_weight} g/mol` : "—"}</dd>
-            <dt className="text-muted">CAS</dt>
-            <dd className="text-ink">{mol?.cas?.length ? mol.cas.slice(0, 2).join(", ") : "—"}</dd>
-          </dl>
-          {mol?.explanation && <p className="mt-2 text-[12px] leading-snug text-fg2">{mol.explanation}</p>}
-        </div>
-
-        <div className="flex min-w-0 flex-col gap-4">
-          {/* lines */}
-          <div className="grid grid-cols-1 gap-3 min-[1300px]:grid-cols-2">
-            {lines.length === 0 && (
-              <div className="rounded-[8px] border border-hair p-3 text-[12px] text-muted">
-                <span className="label-mono block">Production line</span>
-                <span className="mt-1 block">The line this material feeds, its cleanroom grade and the grade it requires.</span>
-              </div>
-            )}
-            {lines.slice(0, 2).map((l) => (
-              <div key={l.line_id} className="rounded-[8px] border border-hair p-3">
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-[14px] text-ink">{l.line_name ?? l.line_id}</span>
-                  <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-muted">{l.line_id}</span>
-                </div>
-                <div className="mt-1 flex flex-wrap gap-1">
-                  {l.line_type && <Tag>{l.line_type}</Tag>}
-                  {l.cleanroom_grade && <Tag>cleanroom {l.cleanroom_grade}</Tag>}
-                  {l.needs_parenteral && <Tag>parenteral</Tag>}
-                  {l.needs_low_endotoxin && <Tag>low endotoxin</Tag>}
-                  {(l.needs_compendia ?? []).map((c) => (
-                    <Tag key={c}>{c}</Tag>
-                  ))}
-                </div>
-                {l.rationale && <p className="mt-1.5 text-[12px] leading-snug text-fg2">{l.rationale}</p>}
-              </div>
-            ))}
-          </div>
-
-          {/* batches */}
-          <div>
-            <div className="flex items-center gap-3">
-              <span className="label-mono">Batches · next 60 days</span>
-              {qa?.batches_total != null && (
-                <span className="text-[12px] text-fg2">
-                  {qa.batches_total} planned ·{" "}
-                  <span style={{ color: (qa.batches_at_risk ?? 0) > 0 ? "#DC2626" : "#16A34A" }}>{qa.batches_at_risk ?? 0} at risk</span>
-                </span>
-              )}
-            </div>
-            <div className="mt-1.5 flex flex-wrap gap-1" data-testid="batch-strip">
-              {batches.length === 0 && <span className="text-[12px] text-muted">—</span>}
-              {batches.map((b) => (
-                <span
-                  key={b.batch_no}
-                  title={`${b.batch_no} · ${b.start_date}${b.line_name ? ` · ${b.line_name}` : ""}${b.material_needed != null ? ` · needs ${b.material_needed}, available ${b.available_at_start ?? "?"}` : ""}`}
-                  className="h-4 w-4 rounded-[3px] border"
-                  style={{
-                    borderColor: b.feasible ? "#16A34A" : "#DC2626",
-                    background: b.feasible ? "rgba(22,163,74,0.12)" : "rgba(220,38,38,0.12)",
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* suppliers */}
-          <div>
-            <span className="label-mono">Supplier quality ranking</span>
-            <table className="mt-1.5 w-full border-collapse text-[12px]">
-              <thead>
-                <tr className="text-left text-muted">
-                  <th className="w-8 py-1 font-normal">#</th>
-                  <th className="py-1 font-normal">Supplier</th>
-                  <th className="py-1 font-normal">Approved grade</th>
-                  <th className="py-1 font-normal">Meets line</th>
-                  <th className="w-[140px] py-1 font-normal">Quality</th>
-                </tr>
-              </thead>
-              <tbody>
-                {suppliers.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="border-t border-hair py-2 text-muted">
-                      Ranked once the judge recomputes the checks.
-                    </td>
-                  </tr>
-                )}
-                {suppliers.map((s) => {
-                  const chosen = s.supplier_id === qa?.chosen_supplier_id;
-                  return (
-                    <tr key={s.supplier_id} className="border-t border-hair" style={chosen ? { boxShadow: "inset 3px 0 0 #F25C05" } : undefined}>
-                      <td className="py-1.5 pl-2 font-mono text-fg2">{s.rank}</td>
-                      <td className="py-1.5 text-ink">
-                        {s.supplier_name ?? s.supplier_id}
-                        {chosen && (
-                          <span className="ml-2 rounded-full border px-1.5 font-mono text-[9.5px] uppercase tracking-[0.06em]" style={{ borderColor: "#F25C05", color: "#F25C05" }}>
-                            chosen
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-1.5 text-fg2">{s.approved_grade ?? "—"}</td>
-                      <td className="py-1.5" style={{ color: s.meets_requirement ? "#16A34A" : "#DC2626" }}>
-                        {s.meets_requirement ? "✓ meets" : `✗ ${(s.gaps ?? []).join(", ") || "gap"}`}
-                      </td>
-                      <td className="py-1.5">
-                        <div className="flex items-center gap-2">
-                          <div className="h-1.5 w-[90px] rounded-full bg-[#EAE8E5]">
-                            <div
-                              className="h-1.5 rounded-full"
-                              style={{ width: `${Math.max(0, Math.min(100, s.quality_score))}%`, background: chosen ? "#F25C05" : "#908E87" }}
-                            />
-                          </div>
-                          <span className="font-mono text-[11px] text-fg2">{s.quality_score}</span>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* QA flags */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-hair pt-3 text-[12px]">
-            <span className="label-mono">QA flags</span>
-            <span className="text-fg2">
-              QC release <span className="text-ink">{qa?.qc_release_days != null ? `${qa.qc_release_days} days` : "—"}</span>
-            </span>
-            <span className="text-fg2">
-              Change control{" "}
-              <span style={{ color: qa?.change_control_required == null ? "#908E87" : qa.change_control_required ? "#D97706" : "#16A34A" }}>
-                {qa?.change_control_required == null ? "—" : qa.change_control_required ? "required" : "not required"}
-              </span>
-            </span>
-            {(qa?.documents_required ?? []).map((d) => (
-              <Tag key={d}>{d}</Tag>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );
