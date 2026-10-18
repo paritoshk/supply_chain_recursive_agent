@@ -1,4 +1,4 @@
-import { addDays as addIsoDays, positionFor, qcReleaseDays, runTool, toolsByName, transferReleaseDays, type Position, type QaPacket, type Store } from "@supply-agent/core";
+import { addDays as addIsoDays, positionFor, qcReleaseDays, runTool, toolsByName, transferReleaseDays, type Position, type QaPacket, type Store, qualityFit } from "@supply-agent/core";
 import { MODELS } from "./models.ts";
 import { withStore, withStoreBoardOnly } from "./store.ts";
 
@@ -72,6 +72,10 @@ export async function prepareMission(materialId: string, siteId: string, trigger
         description: lineIds.length
           ? `Every one of the ${batches.length} batches scheduled in the next ${FEASIBILITY_HORIZON_DAYS} days on ${lineIds.join(", ")} has enough released ${materialId} at its start. Simulated day by day: transfers count from arrival + ${transferDays} days receipt verification, purchases from arrival + ${qcDays} days QC release; quarantined stock never counts.`
           : `No batches scheduled in the next ${FEASIBILITY_HORIZON_DAYS} days consume ${materialId} at ${siteId}; passes when that is still true.`,
+      },
+      {
+        id: "grade_fit",
+        description: "The chosen supplier's approved grade meets what the consuming lines demand (sterile and parenteral lines: parenteral, low-endotoxin, USP-NF + Ph. Eur.), and the pick is ranked against every approved source by quality (CEP, DMF, lot rejection rate, on-time delivery).",
       },
       { id: "grounded", description: "Every number in the recommendation comes from a tool output (quote, cover projection, transfer proposal, line feasibility)." },
     ];
@@ -167,6 +171,10 @@ export async function finishMission(
 ) {
   "use step";
   return withStore((store) => {
+    if (!store.mission(missionId)) {
+      // State was reset mid-mission: re-record the mission instead of failing the whole run.
+      store.addMission({ id: missionId, trigger: "restored", material_id: board?.material_id ?? null, site_id: board?.site_id ?? null, status: "running" } as never);
+    }
     store.updateMission(missionId, { status, summary });
     store.addFinding({ ...finding, cited_tool_calls: [] } as never);
     if (board) {
@@ -247,7 +255,7 @@ const APPROVED = new Set(["quality_approved", "released_for_use"]);
 export async function evaluateChecks(
   brief: MissionBrief,
   rfqId: string | null,
-): Promise<{ checks: CheckResult[]; plan: ComputedPlan; proposal: unknown; feasibility: Omit<FeasibilityFacts, "qa_packet">; qa_packet: QaPacket }> {
+): Promise<{ checks: CheckResult[]; plan: ComputedPlan; proposal: unknown; feasibility: Omit<FeasibilityFacts, "qa_packet">; qa_packet: QaPacket; quality_fit: ReturnType<typeof qualityFit> }> {
   "use step";
   // Reads only; the line_feasibility board items (report + QA packet) are merged into fresh state afterwards.
   return withStoreBoardOnly(async (store) => {
@@ -334,6 +342,32 @@ export async function evaluateChecks(
             (first ? `; first at risk ${first.batch_no} on ${first.start_date} (${first.line_name}) needs ${first.material_needed} ${p.unit}, ${first.available_at_start} released` : ""),
       },
     ];
+    // Quality fit: does each approved source meet what the consuming lines demand, and who is highest quality?
+    const fit = qualityFit(
+      material ?? { grade: "", compendia: [], endotoxin_class: null, material_class: "compendial_excipient" },
+      lf.lines.map((l) => ({ external_id: l.line_id, name: l.name, line_type: l.line_type, cleanroom_grade: l.cleanroom_grade })),
+      store
+        .materialSuppliers({ material_id: brief.material_id })
+        .filter((ms) => APPROVED.has(ms.qualification_state))
+        .map((ms) => ({
+          supplier_id: ms.supplier_id,
+          supplier_name: store.supplier(ms.supplier_id)?.name ?? ms.supplier_id,
+          approved_grade: ms.approved_grade ?? null,
+          qualification_state: ms.qualification_state,
+          dmf: Boolean(ms.dmf),
+          cep: Boolean(ms.cep),
+          rejection_rate: ms.rejection_rate ?? null,
+          otd_pct: ms.otd_pct ?? null,
+        })),
+    );
+    const chosenFit = purchase ? fit.fits.find((f) => f.supplier_id === purchase.supplier_id) : null;
+    checks.push({
+      id: "grade_fit",
+      pass: purchase == null || Boolean(chosenFit?.meets_requirement),
+      reason: purchase
+        ? `${purchase.supplier_name}: ${chosenFit?.approved_grade ?? "grade unknown"} vs ${fit.requirement.map((r) => r.rationale).join("; ") || "no line requirement"}${chosenFit?.gaps.length ? ` (gaps: ${chosenFit.gaps.join(", ")})` : ""}; quality rank ${chosenFit?.rank ?? "-"} of ${fit.fits.length}`
+        : "no purchase",
+    });
     const fastest = usable.length ? Math.min(...usable.map((r) => r.lead_time_days)) : null;
     const unfixable = purchaseQty > 0 && (fastest == null || fastest + qcDays - daysAvailable > 28);
     const qa = lf.qa_packet;
@@ -370,6 +404,7 @@ export async function evaluateChecks(
         lines: lf.lines,
       },
       qa_packet: qa,
+      quality_fit: fit,
     };
   });
 }

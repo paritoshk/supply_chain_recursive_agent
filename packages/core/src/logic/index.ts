@@ -10,3 +10,4 @@ export * from "./qa.ts";
 export * from "./production.ts";
 export * from "./learning.ts";
 export * from "./risk.ts";
+export * from "./fit.ts";

@@ -112,6 +112,7 @@ export default defineWorkflowTool({
     let checks: CheckResult[] = [];
     let plan = null as ComputedPlan | null;
     let feasibility = null as Awaited<ReturnType<typeof evaluateChecks>>["feasibility"] | null;
+    let qualityFitResult = null as Awaited<ReturnType<typeof evaluateChecks>>["quality_fit"] | null;
     let qaPacket = null as Awaited<ReturnType<typeof evaluateChecks>>["qa_packet"] | null;
     let grounded = null as Grounded | null;
     let decision: "accept" | "replan" | "escalate" = "escalate";
@@ -158,6 +159,25 @@ export default defineWorkflowTool({
       plan = evaluated.plan;
       feasibility = evaluated.feasibility;
       qaPacket = evaluated.qa_packet;
+      qualityFitResult = evaluated.quality_fit;
+      yield {
+        stage: "qa_fit",
+        attempt,
+        material_id: brief.material_id,
+        material_name: brief.material_name,
+        site_id: brief.site_id,
+        site_name: brief.site_name,
+        molecule: dossier,
+        lines: evaluated.quality_fit.requirement,
+        batches: (evaluated.feasibility.batches ?? []).slice(0, 24),
+        batches_total: evaluated.feasibility.batches_total,
+        batches_at_risk: evaluated.feasibility.batches_at_risk,
+        suppliers: evaluated.quality_fit.fits,
+        chosen_supplier_id: evaluated.plan.purchase?.supplier_id ?? null,
+        qc_release_days: evaluated.plan.qc_release_days,
+        change_control_required: evaluated.plan.qa.change_control_required,
+        documents_required: evaluated.plan.qa.documents_required,
+      };
 
       // Judge, part 2: a different model checks that the doers' claims match the recomputed facts.
       const g = await ctx
@@ -297,6 +317,7 @@ export default defineWorkflowTool({
           }
         : null,
       dossier,
+      quality_fit: qualityFitResult,
       discovery_candidates: (scout?.candidates ?? []).slice(0, 3),
       summary,
     };

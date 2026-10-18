@@ -51,3 +51,12 @@ html, body {
     radial-gradient(circle at 70% 60%, rgba(255,255,255,0.25) 0 2px, transparent 3px);
   background-size: 38px 38px, 52px 52px;
 }
+
+@keyframes edge-flow { to { stroke-dashoffset: -24; } }
+.edge-flow { animation: edge-flow 0.9s linear infinite; }
+
+@keyframes node-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(242, 92, 5, 0.18); }
+  50% { box-shadow: 0 0 0 5px rgba(242, 92, 5, 0.08); }
+}
+.node-pulse { animation: node-pulse 1.6s ease-in-out infinite; }
