@@ -2,7 +2,7 @@ import { BoardKind, createStore, defaultPersistence, openStore, type BoardItem }
 import { defineChannel, GET, POST } from "eve/channels";
 import { sentinelPrompt } from "../lib/alert.ts";
 import { renderBoardHtml } from "../lib/board-html.ts";
-import { boardInRedis, filterBoard, loadBoard } from "../lib/board-store.ts";
+import { boardInRedis, clearBoard, filterBoard, loadBoard } from "../lib/board-store.ts";
 import telegram from "./telegram.ts";
 
 const APP_AUTH = { authenticator: "app", principalId: "eve:app", principalType: "runtime" } as const;
@@ -51,10 +51,17 @@ export default defineChannel({
     // Evidence board as a read-only HTML page (public; synthetic data and public sources only, no secrets).
     GET("/board", async (request) => {
       const { items, filter } = await boardItems(request);
-      const refresh = Number(new URL(request.url).searchParams.get("refresh")) || 0;
-      return new Response(renderBoardHtml(items, { filter, refreshSeconds: refresh }), {
+      const q = new URL(request.url).searchParams;
+      const refresh = Number(q.get("refresh")) || 0;
+      const maxRuns = q.get("all") || q.get("mission_id") ? undefined : 4;
+      return new Response(renderBoardHtml(items, { filter, refreshSeconds: refresh, maxRuns }), {
         headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, s-maxage=5, stale-while-revalidate=30" },
       });
+    }),
+    // Clear the evidence board (operator only) so the next demo run starts from an empty board.
+    POST("/ops/board/clear", async (request) => {
+      if (!authorized(request)) return new Response("unauthorized", { status: 401 });
+      return Response.json({ ok: true, removed: await clearBoard() });
     }),
     // Reseed the synthetic Corvane state (deterministic seed) before a demo run.
     POST("/ops/reset", async (request) => {

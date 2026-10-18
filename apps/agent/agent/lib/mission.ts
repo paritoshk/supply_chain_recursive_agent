@@ -49,7 +49,10 @@ export async function prepareMission(materialId: string, siteId: string, trigger
     const existing = store
       .missions()
       .find((m) => m.material_id === materialId && m.site_id === siteId && !["completed", "failed"].includes(m.status));
-    const mission = existing ?? store.addMission({ trigger, material_id: materialId, site_id: siteId, status: "planning" });
+    // Mission ids are unique per run (they survive demo resets), so board items always correlate with one run.
+    const stamp = new Date().toISOString().slice(5, 16).replace(/[-:T]/g, "");
+    const runId = `MSN-${stamp.slice(0, 4)}-${stamp.slice(4)}-${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
+    const mission = existing ?? store.addMission({ id: runId, trigger, material_id: materialId, site_id: siteId, status: "planning" });
     const rop = position.reorder_point ?? position.safety_stock;
     const needQty = Math.max(0, Math.ceil(rop - position.released_qty + position.daily_rate * (position.lead_time_days ?? 0)));
     const coverBeforeSafety = Math.max(0, (position.cover_days ?? 0) - position.safety_days);

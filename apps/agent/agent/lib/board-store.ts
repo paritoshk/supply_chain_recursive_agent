@@ -78,3 +78,11 @@ export function filterBoard(
   );
   return f.limit ? out.slice(0, f.limit) : out;
 }
+
+/** Deletes every board item (operator "clear board"); returns how many were removed. */
+export async function clearBoard(): Promise<number> {
+  const before = (await loadBoard(true)).length;
+  await pipeline([["DEL", KEY]]);
+  cache = null;
+  return before;
+}

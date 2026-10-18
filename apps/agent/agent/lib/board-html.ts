@@ -219,12 +219,37 @@ ${sources(item.source_urls)}
 </article>`;
 }
 
-export function renderBoardHtml(all: BoardItem[], opts: { filter?: string; refreshSeconds?: number } = {}): string {
+export function renderBoardHtml(all: BoardItem[], opts: { filter?: string; refreshSeconds?: number; maxRuns?: number } = {}): string {
   // A dossier card already shows its structure image; skip the standalone structure card for that material.
   const dossierImages = new Set(all.filter((i) => i.kind === "material_dossier" && i.image_url).map((i) => i.material_id));
   const items = all.filter((i) => !(i.kind === "structure_image" && dossierImages.has(i.material_id)));
+  // Group by run (mission id), newest run first; each run is one section with its own cards.
+  const runs = new Map<string, BoardItem[]>();
+  for (const it of items) {
+    const key = it.mission_id ?? "__other";
+    if (!runs.has(key)) runs.set(key, []);
+    runs.get(key)!.push(it);
+  }
+  const ordered = [...runs.entries()].sort((a, b) => {
+    const newest = (xs: BoardItem[]) => xs.reduce((m, x) => (x.created_at > m ? x.created_at : m), "");
+    if (a[0] === "__other") return 1;
+    if (b[0] === "__other") return -1;
+    return newest(b[1]).localeCompare(newest(a[1]));
+  });
+  const runHeader = (id: string, xs: BoardItem[]) => {
+    if (id === "__other") return `<div class="run-head"><span class="label">Other evidence</span><h2>Lookups outside a mission</h2></div>`;
+    const summary = xs.find((x) => x.kind === "mission_summary");
+    const first = xs.reduce((m, x) => (x.created_at < m ? x.created_at : m), xs[0]!.created_at);
+    const material = xs.find((x) => x.material_id)?.material_id ?? "";
+    const when = first.replace("T", " ").slice(0, 16) + " UTC";
+    const title = summary?.title ?? `${material} · in progress`;
+    return `<div class="run-head"><span class="label">Run ${esc(id)} · ${esc(when)} · ${xs.length} items · <a href="?mission_id=${encodeURIComponent(id)}">only this run</a></span><h2>${esc(title)}</h2></div>`;
+  };
+  const shown = opts.maxRuns ? ordered.slice(0, opts.maxRuns) : ordered;
+  const hidden = ordered.length - shown.length;
+  const more = hidden > 0 ? `<p class="note">${hidden} older run(s) hidden. <a href="?all=1">Show all runs</a></p>` : "";
   const cards = items.length
-    ? items.map(card).join("\n")
+    ? more + shown.map(([id, xs]) => `<section class="run">${runHeader(id, xs)}<div class="board">${xs.map(card).join("\n")}</div></section>`).join("\n")
     : `<p class="empty">Nothing on the board yet. Dossiers, line-feasibility reports, QA packets and supplier evidence appear here as the agent works.</p>`;
   return `<!doctype html>
 <html lang="en">
@@ -243,7 +268,9 @@ ${opts.refreshSeconds ? `<meta http-equiv="refresh" content="${Math.max(5, Math.
   main { max-width:1280px; margin:0 auto; padding:40px 24px 64px; }
   .top h1 { font-family:"Inter Tight", Inter, sans-serif; font-weight:600; font-size:28px; letter-spacing:-0.01em; margin:4px 0 6px; }
   .top p { margin:0; color:var(--muted); max-width:720px; }
-  .board { margin-top:32px; columns:3 360px; column-gap:16px; }
+  .board { margin-top:16px; columns:3 360px; column-gap:16px; }
+  .run { margin-top:40px; padding-top:20px; border-top:1px solid var(--line); }
+  .run-head h2 { font-family:"Inter Tight", Inter, sans-serif; font-weight:400; font-size:20px; margin:4px 0 0; }
   .card { break-inside:avoid; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:18px 18px 14px; margin:0 0 16px; }
   .card h2 { font-family:"Inter Tight", Inter, sans-serif; font-weight:600; font-size:17px; line-height:1.3; margin:6px 0 2px; }
   .label { display:block; font-family:"Geist Mono", ui-monospace, monospace; font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin:14px 0 6px; }
@@ -263,7 +290,10 @@ ${opts.refreshSeconds ? `<meta http-equiv="refresh" content="${Math.max(5, Math.
   .kv dd { margin:0; overflow-wrap:anywhere; }
   .list { margin:0; padding-left:16px; }
   .list li { margin:3px 0; }
-  .table-wrap { overflow-x:auto; margin-top:12px; }
+  .table-wrap { overflow:auto; max-height:320px; margin-top:12px; border:1px solid var(--line); border-radius:6px; }
+  .card { min-width:0; overflow:hidden; overflow-wrap:anywhere; word-break:break-word; }
+  .card img { max-width:100%; height:auto; }
+  .card ul { padding-left:18px; }
   table { width:100%; border-collapse:collapse; font-size:12.5px; font-variant-numeric:tabular-nums; }
   th { text-align:left; font-weight:500; color:var(--muted); border-bottom:1px solid var(--line); padding:4px 6px 4px 0; }
   td { border-bottom:1px solid var(--line); padding:4px 6px 4px 0; white-space:nowrap; }
@@ -282,7 +312,7 @@ ${opts.refreshSeconds ? `<meta http-equiv="refresh" content="${Math.max(5, Math.
 <h1>What the agent looked at</h1>
 <p>Chemical dossiers, production-line feasibility, QA packets and supplier evidence gathered during missions. Corvane Biologics is fictional and its inventory, schedules and suppliers are synthetic; PubChem and web evidence are live.</p>
 </section>
-<section class="board">
+<section class="runs">
 ${cards}
 </section>
 </main>
