@@ -1,5 +1,6 @@
 import { runTool, toolsByName } from "@supply-agent/core";
 import { defineWorkflowTool } from "eve/tools";
+import { sleep } from "workflow";
 import { z } from "zod";
 import {
   AUTHORITY_LIMIT_USD,
@@ -145,7 +146,11 @@ export default defineWorkflowTool({
           : Promise.resolve({ data: transfer as unknown }),
         ctx.agent("sourcing").send(`Source the remaining need from approved suppliers. Negotiate with each one through a negotiator.\n${context}`, { outputSchema: SourcingOut, signal: ctx.abortSignal }).then((r) => r.result()),
         attempt === 1
-          ? ctx.agent("scout").send(`Discover additional suppliers and regulatory signals for this material.\n${context}`, { outputSchema: ScoutOut, signal: ctx.abortSignal }).then((r) => r.result())
+          ? // Discovery is long-term evidence, never on the critical path: cap it so a slow web search can't stall the mission.
+            Promise.race([
+              ctx.agent("scout").send(`Discover additional suppliers and regulatory signals for this material.\n${context}`, { outputSchema: ScoutOut, signal: ctx.abortSignal }).then((r) => r.result()),
+              sleep("90s").then(() => ({ data: null as unknown })),
+            ])
           : Promise.resolve({ data: scout as unknown }),
       ]);
       if (t.status === "fulfilled" && t.value.data) transfer = t.value.data as unknown as Transfer;
