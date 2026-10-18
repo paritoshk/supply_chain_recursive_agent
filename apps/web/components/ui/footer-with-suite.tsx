@@ -41,18 +41,18 @@ export default function FooterWithSuite({
   return (
     <footer
       className={cn(
-        "w-full relative overflow-hidden bg-white dark:bg-neutral-950 select-none",
+        "w-full relative overflow-hidden bg-[#141311] text-[#FDFDFC] select-none",
         className,
       )}
     >
-      <div className="grid grid-cols-2 gap-8 px-8 pt-12 pb-4 md:px-12">
+      <div className="grid grid-cols-2 gap-8 px-8 pt-16 pb-6 md:px-[64px]">
         <div className="flex flex-col gap-0">
           {navLinks.map((link, i) => (
             <a
               key={i}
               href={link.url}
               {...(/^https?:/.test(link.url) ? { target: "_blank", rel: "noreferrer" } : {})}
-              className="py-0.75 text-[11px] tracking-[0.14em] uppercase text-neutral-900 dark:text-neutral-100 hover:text-neutral-400 dark:hover:text-neutral-500 transition-colors duration-200"
+              className="py-1 font-mono text-[12px] tracking-[0.06em] uppercase text-[#FDFDFC] hover:text-[#F25C05] transition-colors duration-200"
             >
               {link.text}
             </a>
@@ -65,7 +65,7 @@ export default function FooterWithSuite({
               key={i}
               href={link.url}
               {...(/^https?:/.test(link.url) ? { target: "_blank", rel: "noreferrer" } : {})}
-              className="py-0.75 text-[11px] tracking-[0.14em] uppercase text-neutral-900 dark:text-neutral-100 hover:text-neutral-400 dark:hover:text-neutral-500 transition-colors duration-200"
+              className="py-1 font-mono text-[12px] tracking-[0.06em] uppercase text-[#FDFDFC] hover:text-[#F25C05] transition-colors duration-200"
             >
               {link.text}
             </a>
@@ -73,7 +73,7 @@ export default function FooterWithSuite({
         </div>
 
         <div className="flex flex-col gap-0">
-          <p className="text-[11px] tracking-[0.12em] uppercase text-neutral-900 dark:text-neutral-100 leading-relaxed">
+          <p className="font-mono text-[12px] tracking-[0.06em] uppercase text-[#B5B3B0] leading-relaxed max-w-[520px]">
             {description}
           </p>
 
@@ -83,7 +83,7 @@ export default function FooterWithSuite({
             href={ctaUrl}
             target="_blank"
             rel="noreferrer"
-            className="text-[11px] tracking-[0.14em] uppercase text-neutral-900 dark:text-neutral-100 hover:text-neutral-400 dark:hover:text-neutral-500 transition-colors duration-200"
+            className="font-mono text-[12px] tracking-[0.06em] uppercase text-[#FDFDFC] hover:text-[#F25C05] transition-colors duration-200"
           >
             {ctaText}
           </a>
@@ -93,7 +93,7 @@ export default function FooterWithSuite({
           {email && (
           <a
             href={`mailto:${email}`}
-            className="text-[11px] tracking-[0.14em] uppercase text-neutral-900 dark:text-neutral-100 hover:text-neutral-400 dark:hover:text-neutral-500 transition-colors duration-200 break-all"
+            className="font-mono text-[12px] tracking-[0.06em] uppercase text-[#FDFDFC] hover:text-[#F25C05] transition-colors duration-200 break-all"
           >
             {email}
           </a>
@@ -101,21 +101,21 @@ export default function FooterWithSuite({
 
           <div className="h-4" />
 
-          <p className="text-[11px] tracking-[0.12em] uppercase text-neutral-400 dark:text-neutral-500">
+          <p className="font-mono text-[12px] tracking-[0.06em] uppercase text-[#908E87]">
             {copyright}
           </p>
         </div>
       </div>
 
       <p
-        className="inset-x-0 text-center font-display font-light tracking-[-0.03em] text-neutral-900 dark:text-neutral-100"
+        className="inset-x-0 text-center font-display font-light tracking-[-0.03em] text-[#FDFDFC] leading-[1.05] py-8"
         style={{ fontSize: "clamp(3rem, 15vw, 13rem)" }}
       >
         {brandName}
       </p>
 
-      <div className="flex items-center justify-between px-8 md:px-12 py-3 border-t border-neutral-200 dark:border-neutral-800 mt-1">
-        <p className="text-[10px] tracking-[0.14em] uppercase text-neutral-400 dark:text-neutral-500">
+      <div className="flex items-center justify-between px-8 md:px-[64px] py-4 border-t border-[#3D3B39] mt-1">
+        <p className="font-mono text-[12px] tracking-[0.06em] uppercase text-[#908E87]">
           {tagline}
         </p>
       </div>
