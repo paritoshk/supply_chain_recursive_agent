@@ -1,4 +1,5 @@
 import { defaultPersistence, openStore, type BoardItem, type Store } from "@supply-agent/core";
+import { boardInRedis, loadBoard, putBoard } from "./board-store.ts";
 
 /**
  * Opens the shared supply state (one JSON blob: Upstash Redis on Vercel, a local file in dev),
@@ -10,8 +11,25 @@ export async function withStore<T>(fn: (store: Store) => Promise<T> | T, opts: {
   try {
     const persistence = defaultPersistence();
     const store = await openStore(persistence);
+    // With Redis the board lives in its own hash: hydrate it into the store, persist only what fn adds,
+    // and keep it out of the state blob (legacy items in the blob are migrated on the way through).
+    const redisBoard = boardInRedis();
+    let before = new Set<string>();
+    let legacy: BoardItem[] = [];
+    if (redisBoard) {
+      const hashed = await loadBoard();
+      const inHash = new Set(hashed.map((b) => b.key || b.id));
+      legacy = store.boardItems().filter((b) => !inHash.has(b.key || b.id));
+      for (const b of [...hashed].reverse()) store.addBoardItem(b);
+      before = new Set(store.boardItems().map((b) => b.id));
+    }
     const result = await fn(store);
-    if (opts.write) await persistence.save(store.snapshot());
+    if (opts.write) {
+      const snap = store.snapshot();
+      if (redisBoard) snap.board = [];
+      await persistence.save(snap);
+    }
+    if (redisBoard) await putBoard([...legacy, ...store.boardItems().filter((b) => !before.has(b.id))]);
     return result;
   } finally {
     await release?.();
@@ -50,6 +68,7 @@ async function acquireLock(): Promise<(() => Promise<void>) | null> {
 /** Upserts board items into freshly loaded state (short read-modify-write, no network in between). */
 export async function mergeBoardItems(items: BoardItem[]): Promise<void> {
   if (!items.length) return;
+  if (boardInRedis()) return putBoard(items);
   await withStore((store) => {
     for (const item of items) store.addBoardItem(item);
   }, { write: true });
@@ -61,6 +80,8 @@ export async function mergeBoardItems(items: BoardItem[]): Promise<void> {
  * whole snapshot read before the I/O would overwrite RFQs, quotes or negotiations written meanwhile.
  */
 export async function withStoreBoardOnly<T>(fn: (store: Store) => Promise<T> | T): Promise<T> {
+  // With Redis, withStore already writes new board items to the board hash and never saves the snapshot.
+  if (boardInRedis()) return withStore(fn);
   let added: BoardItem[] = [];
   const result = await withStore(async (store) => {
     const before = new Set(store.boardItems().map((b) => b.id));

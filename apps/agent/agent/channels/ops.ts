@@ -2,6 +2,7 @@ import { BoardKind, createStore, defaultPersistence, openStore, type BoardItem }
 import { defineChannel, GET, POST } from "eve/channels";
 import { sentinelPrompt } from "../lib/alert.ts";
 import { renderBoardHtml } from "../lib/board-html.ts";
+import { boardInRedis, filterBoard, loadBoard } from "../lib/board-store.ts";
 import telegram from "./telegram.ts";
 
 const APP_AUTH = { authenticator: "app", principalId: "eve:app", principalType: "runtime" } as const;
@@ -17,13 +18,13 @@ async function boardItems(request: Request): Promise<{ items: BoardItem[]; filte
   const q = new URL(request.url).searchParams;
   const kind = BoardKind.safeParse(q.get("kind") ?? undefined);
   const limit = Math.min(200, Math.max(1, Number(q.get("limit")) || 60));
-  const store = await openStore(defaultPersistence());
   const f = {
     mission_id: q.get("mission_id") || undefined,
     material_id: q.get("material_id") || undefined,
     kind: kind.success ? kind.data : undefined,
   };
-  const items = store.boardItems({ ...f, limit });
+  // Redis: read only the board hash (cached a few seconds), never the whole supply state.
+  const items = boardInRedis() ? filterBoard(await loadBoard(), { ...f, limit }) : (await openStore(defaultPersistence())).boardItems({ ...f, limit });
   return { items, filter: Object.entries(f).filter(([, v]) => v).map(([k, v]) => `${k}=${v}`).join(" ") };
 }
 
@@ -40,7 +41,7 @@ export default defineChannel({
       const { items, filter } = await boardItems(request);
       const refresh = Number(new URL(request.url).searchParams.get("refresh")) || 0;
       return new Response(renderBoardHtml(items, { filter, refreshSeconds: refresh }), {
-        headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
+        headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, s-maxage=5, stale-while-revalidate=30" },
       });
     }),
     // Reseed the synthetic Corvane state (deterministic seed) before a demo run.
